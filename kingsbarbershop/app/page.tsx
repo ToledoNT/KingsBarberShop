@@ -1,6 +1,6 @@
-import Footer from "./components/Footer";
-import Header from "./components/Header";
-import AgendamentoForm from "./components/AgendamentoForm";
+import Footer from "./components/ui/Footer";
+import Header from "./components/ui/Header";
+import AgendamentoForm from "./components/forms/AgendamentoForm";
 import Image from "next/image";
 
 export default function Home() {

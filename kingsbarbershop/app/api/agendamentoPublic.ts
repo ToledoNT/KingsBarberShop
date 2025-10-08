@@ -1,24 +1,6 @@
 import axios from "axios";
+import { Agendamento } from "../interfaces/agendamentoInterface";
 
-// =====================
-// Interface Agendamento
-// =====================
-export interface Agendamento {
-  id?: string;
-  nome: string;
-  telefone: string;
-  email: string;
-  data: string;        // YYYY-MM-DD
-  hora: string;        // HH:mm
-  servico: string;     // "corte", "barba", "combo"
-  barbeiro: string;
-  criadoEm?: string;
-  atualizadoEm?: string;
-}
-
-// =====================
-// Axios config
-// =====================
 const api = axios.create({
   baseURL: "http://localhost:4001/api",
   headers: { "Content-Type": "application/json" },

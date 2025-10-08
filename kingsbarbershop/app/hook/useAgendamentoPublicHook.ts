@@ -1,23 +1,9 @@
 "use client";
 
 import { useState, useEffect, ChangeEvent } from "react";
-import { Agendamento, AppointmentService } from "../api/agendamentoPublic";
+import { AppointmentService } from "../api/agendamentoPublic";
 import { validateEmail } from "@/app/utils/validators";
-
-interface AgendamentoFormData {
-  nome: string;
-  telefone: string;
-  email: string;
-  data: string;
-  hora: string;
-  servico: string;
-  barbeiro: string;
-}
-
-interface Barbeiro {
-  nome: string;
-  horarios: string[];
-}
+import { Agendamento, AgendamentoFormData, Barbeiro } from "../interfaces/agendamentoInterface";
 
 const barbeiros: Barbeiro[] = [
   { nome: "João", horarios: ["09:00", "10:00", "11:00", "14:00", "15:00"] },
@@ -47,7 +33,6 @@ export function useAgendamentoForm() {
   const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Atualiza horários disponíveis sempre que barbeiro ou data mudam
   useEffect(() => {
     if (!form.barbeiro || !form.data) {
       setHorariosDisponiveis([]);
@@ -73,7 +58,6 @@ export function useAgendamentoForm() {
     return async (e: React.FormEvent) => {
       e.preventDefault();
 
-      // checa campos obrigatórios
       const requiredFields: (keyof AgendamentoFormData)[] = [
         "nome",
         "telefone",
@@ -91,7 +75,6 @@ export function useAgendamentoForm() {
         return;
       }
 
-      // valida email
       if (!validateEmail(form.email)) {
         alert("Email inválido!");
         return;

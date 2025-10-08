@@ -1,6 +1,6 @@
 "use client";
 
-import { useAgendamentoForm } from "@/app/hook/useAgendamentoFormHook";
+import { useAgendamentoForm } from "@/app/hook/useAgendamentoPublicHook";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Select from "../ui/Select";

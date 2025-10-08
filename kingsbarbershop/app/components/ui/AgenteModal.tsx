@@ -2,15 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Agendamento, AgendamentoModalProps } from "@/app/interfaces/agendamentoInterface";
-import Select from "@/app/components/ui/Select"; 
-
-export interface HorarioDisponivel {
-  id: string;
-  barbeiro: string;
-  data: string;
-  inicio: string;
-  fim: string;
-}
+import Select from "@/app/components/ui/Select";
 
 export default function AgendamentoModal({
   agendamento,
@@ -18,6 +10,9 @@ export default function AgendamentoModal({
   onSave,
   horariosDisponiveis = [],
 }: AgendamentoModalProps) {
+  // Não renderiza modal se não houver agendamento
+  if (!agendamento) return null;
+
   const [localAgendamento, setLocalAgendamento] = useState<Agendamento>(agendamento);
 
   useEffect(() => {
@@ -31,8 +26,8 @@ export default function AgendamentoModal({
 
   // Transforma em opções para o Select
   const horarioOptions = horariosDoBarbeiro.map((h) => ({
-    value: h.inicio, // valor salvo no agendamento
-    label: `${h.data} ${h.inicio} - ${h.fim}`, // exibido para o usuário
+    value: h.inicio,
+    label: `${h.data} ${h.inicio} - ${h.fim}`,
   }));
 
   return (
@@ -108,19 +103,17 @@ export default function AgendamentoModal({
             required
           />
 
-          {/* Select de horários em 24h */}
-          {horarioOptions.length > 0 && (
-            <Select
-              name="hora"
-              value={localAgendamento.hora}
-              onChange={(e) =>
-                setLocalAgendamento({ ...localAgendamento, hora: e.target.value })
-              }
-              options={horarioOptions}
-              placeholder="Selecione o horário"
-              required
-            />
-          )}
+          {/* Select de horários */}
+          <Select
+            name="hora"
+            value={localAgendamento.hora}
+            onChange={(e) =>
+              setLocalAgendamento({ ...localAgendamento, hora: e.target.value })
+            }
+            options={horarioOptions}
+            placeholder="Selecione o horário"
+            required
+          />
 
           <input
             type="text"

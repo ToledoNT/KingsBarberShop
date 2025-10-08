@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import Input from "./Input"; // ajuste conforme seu caminho
+import Input from "./Input"; 
 import Table from "./Table";
-import { HorarioDisponivel } from "./AgenteModal";
+import { HorarioDisponivel } from "@/app/interfaces/agendamentoInterface";
 import { HorariosProps } from "@/app/interfaces/agendamentoInterface";
 
 export default function Horarios({
@@ -23,14 +23,17 @@ export default function Horarios({
       updateHorario(editando, novoHorario);
       setEditando(null);
     } else {
-      addHorario(novoHorario);
+      // Gera um ID temporário para novos horários
+      const id = String(Date.now());
+      addHorario({ ...novoHorario, id });
     }
 
     setNovoHorario({ barbeiro: "", data: "", inicio: "", fim: "" });
   };
 
   const handleEdit = (h: HorarioDisponivel) => {
-    setEditando(h.id || null);
+    if (!h.id) return;
+    setEditando(h.id);
     setNovoHorario({ barbeiro: h.barbeiro, data: h.data, inicio: h.inicio, fim: h.fim });
   };
 
@@ -45,20 +48,30 @@ export default function Horarios({
   const data = horarios.map(h => ({
     ...h,
     acoes: (
-      <div className="flex gap-1">
-        <button onClick={() => handleEdit(h)} className="px-3 py-1 bg-blue-600 rounded text-xs">Editar</button>
+      <div className="flex gap-2">
+        <button
+          onClick={() => handleEdit(h)}
+          className="px-3 py-1 bg-blue-600 rounded text-xs hover:bg-blue-500 transition"
+        >
+          Editar
+        </button>
         {h.id && (
-          <button onClick={() => removeHorario(h.id)} className="px-3 py-1 bg-red-600 rounded text-xs">Remover</button>
+          <button
+            onClick={() => removeHorario(h.id)}
+            className="px-3 py-1 bg-red-600 rounded text-xs hover:bg-red-500 transition"
+          >
+            Remover
+          </button>
         )}
       </div>
     ),
   }));
 
   return (
-    <section className="bg-[#1B1B1B] p-3 rounded-xl shadow flex flex-col gap-2">
+    <section className="bg-[#1B1B1B] p-4 rounded-xl shadow flex flex-col gap-4">
       <h2 className="text-base font-semibold text-[#FFA500]">Horários Disponíveis</h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-3">
         <Input
           name="barbeiro"
           type="text"
@@ -90,7 +103,10 @@ export default function Horarios({
         />
       </div>
 
-      <button onClick={handleAddOrSave} className="bg-green-600 px-4 py-2 rounded text-sm">
+      <button
+        onClick={handleAddOrSave}
+        className="bg-green-600 px-4 py-2 rounded text-sm hover:bg-green-500 transition"
+      >
         {editando ? "Salvar Alterações" : "Adicionar Horário"}
       </button>
 

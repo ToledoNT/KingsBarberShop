@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Agendamento, HorarioDisponivel } from "../interfaces/agendamentoInterface";
 import { AppointmentService } from "../api/agendamentoPublic";
 import { ProcedimentoService } from "../api/procedimento";
-import { Procedimento } from "../interfaces/procedimenttosInterface";
+import { Procedimento } from "../interfaces/profissionaisInterface";
 
 const appointmentService = new AppointmentService();
 const procedimentoService = new ProcedimentoService();

@@ -1,10 +1,13 @@
 "use client";
+
+import { useState } from "react";
 import Sidebar from "@/app/components/ui/Sidebar";
 import DashboardCard from "@/app/components/ui/DashboardCard";
 import Table from "@/app/components/ui/Table";
 
 export default function AdminHome() {
-  // Dados mockados (substituir com API)
+  const [collapsed, setCollapsed] = useState(false);
+
   const dashboardMetrics = [
     { title: "Agendamentos Hoje", value: 12 },
     { title: "Procedimentos", value: 25 },
@@ -26,20 +29,22 @@ export default function AdminHome() {
 
   return (
     <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5]">
-      <Sidebar />
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
-      <main className="flex-1 p-8 flex flex-col gap-8">
-        {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {dashboardMetrics.map(metric => (
+      <main className="flex-1 flex flex-col gap-6 md:gap-8 p-4 md:p-6 overflow-y-auto h-screen">
+        {/* Cards do Dashboard */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {dashboardMetrics.map((metric) => (
             <DashboardCard key={metric.title} title={metric.title} value={metric.value} />
           ))}
         </div>
 
         {/* Tabela de Agendamentos */}
-        <section className="bg-[#1B1B1B] p-6 rounded-xl shadow">
-          <h2 className="text-xl font-bold mb-4">Agendamentos</h2>
-          <Table columns={columns} data={agendamentos} />
+        <section className="bg-[#1B1B1B] p-4 md:p-6 rounded-xl shadow flex-1 overflow-x-auto">
+          <h2 className="text-lg md:text-xl font-bold mb-4 text-[#FFA500]">Agendamentos</h2>
+          <div className="min-w-[500px]">
+            <Table columns={columns} data={agendamentos} />
+          </div>
         </section>
       </main>
     </div>

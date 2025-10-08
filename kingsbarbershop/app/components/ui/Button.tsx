@@ -10,10 +10,12 @@ export default function Button({
   type = "button",
   disabled = false,
   fullWidth = false,
+  className = "",
+  loading = false,
 }: ButtonProps) {
   const base =
-    "rounded-full font-medium h-12 px-6 text-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#FFA500]";
-  
+    "rounded-lg font-medium h-12 px-6 text-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#FFA500]";
+
   const styles =
     variant === "primary"
       ? "bg-[#FFA500] text-black hover:bg-[#E59400] active:scale-[0.97]"
@@ -23,14 +25,12 @@ export default function Button({
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled}
-      className={`
-        ${base} ${styles}
-        ${fullWidth ? "w-full" : ""}
-        ${disabled ? "opacity-50 cursor-not-allowed" : ""}
-      `}
+      disabled={disabled || loading}
+      className={`${base} ${styles} ${fullWidth ? "w-full" : ""} ${className} ${
+        disabled || loading ? "opacity-50 cursor-not-allowed" : ""
+      }`}
     >
-      {children}
+      {loading ? "Carregando..." : children}
     </button>
   );
 }

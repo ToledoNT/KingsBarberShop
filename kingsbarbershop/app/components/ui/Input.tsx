@@ -17,6 +17,8 @@ export default function Input({
   className = "",
 }: InputProps) {
   const handleBlur = () => {
+    if (!onChange) return;
+
     if (type === "email") {
       onChange({
         target: { name, value: trimField(String(value)) },
@@ -34,7 +36,7 @@ export default function Input({
     <input
       name={name}
       type={type}
-      value={value}
+      value={value ?? ""} 
       placeholder={placeholder || name}
       onChange={onChange}
       onBlur={handleBlur}
@@ -42,8 +44,7 @@ export default function Input({
       disabled={disabled}
       min={min}
       step={step}
-      className={`p-3 rounded bg-[#0D0D0D] text-[#E5E5E5] border border-[#333] focus:outline-none focus:border-[#FFA500] 
-        appearance-HorariosPropsnone ${className}`}
+      className={`p-3 rounded bg-[#0D0D0D] text-[#E5E5E5] border border-[#333] focus:outline-none focus:border-[#FFA500] ${className}`}
     />
   );
 }

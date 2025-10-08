@@ -27,6 +27,7 @@ export interface Agendamento {
   barbeiro: string;
   criadoEm?: string;
   atualizadoEm?: string;
+  status?: "Pendente" | "Concluído" | "Cancelado"; // novo campo de status
 }
 
 export interface HorarioDisponivel {
@@ -38,18 +39,17 @@ export interface HorarioDisponivel {
 }
 
 export interface AgendamentoModalProps {
-  agendamento: Agendamento;
+  agendamento: Agendamento | null; // ✅ aceita null
   onClose: () => void;
   onSave: (updated: Agendamento) => void;
   horariosDisponiveis?: HorarioDisponivel[];
 }
 
-
 export interface HorariosProps {
   horarios: HorarioDisponivel[];
   novoHorario: Omit<HorarioDisponivel, "id">;
   setNovoHorario: Dispatch<SetStateAction<Omit<HorarioDisponivel, "id">>>;
-  addHorario: (novo: Omit<HorarioDisponivel, "id">) => void;
+  addHorario: (novo: HorarioDisponivel) => void; // <--- aqui
   updateHorario: (id: string, atualizado: Omit<HorarioDisponivel, "id">) => void;
   removeHorario: (id: string) => void;
 }

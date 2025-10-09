@@ -4,10 +4,19 @@ import { useAgendamentoForm } from "@/app/hook/useAgendamentoPublicHook";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
-import { validateEmail } from "@/app/utils/validators";
+import { formatPhoneNumber, validateEmail } from "@/app/utils/validators";
 
 export default function AgendamentoForm() {
   const { form, handleChange, handleSubmit, barbeiros, horariosDisponiveis, loading } = useAgendamentoForm();
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Formatar o telefone
+    const formattedPhone = formatPhoneNumber(e.target.value);
+    // Atualizar diretamente o estado do telefone
+    handleChange({
+      target: { name: "telefone", value: formattedPhone },
+    } as React.ChangeEvent<HTMLInputElement>);
+  };
 
   return (
     <div className="w-full flex justify-center mt-6 mb-12">
@@ -41,7 +50,7 @@ export default function AgendamentoForm() {
             type="tel"
             value={form.telefone}
             placeholder="Telefone"
-            onChange={handleChange}
+            onChange={handlePhoneChange} // Chamando handlePhoneChange para formatar o telefone
             required
           />
           <Input

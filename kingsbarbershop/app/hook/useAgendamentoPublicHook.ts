@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, ChangeEvent } from "react";
-import { AppointmentService } from "../api/agendamentoPublic";
 import { validateEmail } from "@/app/utils/validators";
 import { Agendamento, AgendamentoFormData, Barbeiro } from "../interfaces/agendamentoInterface";
+import { AppointmentService } from "../api/agendamentoAdmin";
 
 const barbeiros: Barbeiro[] = [
   { nome: "João", horarios: ["09:00", "10:00", "11:00", "14:00", "15:00"] },

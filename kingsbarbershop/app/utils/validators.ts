@@ -2,15 +2,23 @@ export function validateEmail(email: string): boolean {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(email.trim());
 }
-
-export function formatTelefone(value: string): string {
-  const numbers = value.replace(/\D/g, "");
-  if (numbers.length <= 10) {
-    return numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3").replace(/-$/, "");
-  }
-  return numbers.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3").replace(/-$/, "");
-}
-
 export function trimField(value: string): string {
   return value.trim();
 }
+// Função para formatar o número de telefone
+export const formatPhoneNumber = (value: string) => {
+  const cleaned = value.replace(/\D/g, "");
+  if (cleaned.length <= 10) {
+    const match = cleaned.match(/^(\d{2})(\d{4})(\d{4})$/);
+    if (match) {
+      return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
+  } else if (cleaned.length === 11) {
+    const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
+    if (match) {
+      return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
+  }
+
+  return value;
+};

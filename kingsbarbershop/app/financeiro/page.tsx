@@ -2,16 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/app/components/ui/Sidebar";
-
-export interface FinanceiroMov {
-  id: string;
-  clienteNome: string;
-  procedimento: string;
-  valor: number;
-  data: string;
-  profissionalId: string;
-  pago?: boolean; // true se o valor foi pago
-}
+import { FinanceiroMov } from "../interfaces/financeiroInterface";
 
 export default function FinanceiroPage() {
   const [movimentos, setMovimentos] = useState<FinanceiroMov[]>([]);

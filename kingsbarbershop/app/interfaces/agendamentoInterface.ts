@@ -16,6 +16,12 @@ export interface Barbeiro {
   horarios: string[];
 }
 
+export enum StatusAgendamento {
+  PENDENTE = "Pendente",
+  CONCLUIDO = "Concluído",
+  CANCELADO = "Cancelado",
+}
+
 export interface Agendamento {
   id?: string;
   nome: string;
@@ -27,7 +33,7 @@ export interface Agendamento {
   barbeiro: string;
   criadoEm?: string;
   atualizadoEm?: string;
-  status?: "Pendente" | "Concluído" | "Cancelado"; // novo campo de status
+  status?: StatusAgendamento; 
 }
 
 export interface HorarioDisponivel {
@@ -39,7 +45,7 @@ export interface HorarioDisponivel {
 }
 
 export interface AgendamentoModalProps {
-  agendamento: Agendamento | null; // ✅ aceita null
+  agendamento: Agendamento | null;
   onClose: () => void;
   onSave: (updated: Agendamento) => void;
   horariosDisponiveis?: HorarioDisponivel[];
@@ -49,7 +55,7 @@ export interface HorariosProps {
   horarios: HorarioDisponivel[];
   novoHorario: Omit<HorarioDisponivel, "id">;
   setNovoHorario: Dispatch<SetStateAction<Omit<HorarioDisponivel, "id">>>;
-  addHorario: (novo: HorarioDisponivel) => void; // <--- aqui
+  addHorario: (novo: HorarioDisponivel) => void;
   updateHorario: (id: string, atualizado: Omit<HorarioDisponivel, "id">) => void;
   removeHorario: (id: string) => void;
 }
@@ -82,4 +88,10 @@ export interface Column {
 export interface TableProps {
   columns: Column[];
   data: Record<string, any>[];
+}
+
+export interface AgendamentoPrivadoFormProps {
+  agendamento?: Agendamento;
+  onSave: (a: Agendamento) => Promise<void>;
+  onCancel?: () => void;
 }

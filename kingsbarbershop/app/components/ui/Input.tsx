@@ -1,7 +1,4 @@
-"use client";
-
-import React from "react";
-import { formatTelefone, trimField } from "@/app/utils/validators";
+// Input.tsx
 import { InputProps } from "@/app/interfaces/inputInterface";
 
 export default function Input({
@@ -10,36 +7,22 @@ export default function Input({
   value,
   placeholder,
   onChange,
+  onValidate, // Adiciona essa prop
   required = false,
   disabled = false,
   min,
   step,
   className = "",
-}: InputProps) {
-  const handleBlur = () => {
-    if (!onChange) return;
-
-    if (type === "email") {
-      onChange({
-        target: { name, value: trimField(String(value)) },
-      } as any);
-    }
-
-    if (type === "tel") {
-      onChange({
-        target: { name, value: formatTelefone(String(value)) },
-      } as any);
-    }
-  };
-
+  onBlur, // Adicionando o onBlur aqui
+}: InputProps & { onValidate?: (val: string) => void; onBlur?: () => void }) {
   return (
     <input
       name={name}
       type={type}
-      value={value ?? ""} 
+      value={value ?? ""}
       placeholder={placeholder || name}
       onChange={onChange}
-      onBlur={handleBlur}
+      onBlur={onBlur} // Propaga o onBlur para o input
       required={required}
       disabled={disabled}
       min={min}

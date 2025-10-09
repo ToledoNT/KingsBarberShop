@@ -22,8 +22,8 @@ export class AppointmentService {
 
   async createAppointment(data: Partial<Agendamento>): Promise<Agendamento> {
     try {
+      console.log(data)
       const res = await api.post("/appointments/create", data);
-      console.log(data);
       if (res.data && res.data.status === false) throw new Error(res.data.message);
       return res.data.data || res.data;
     } catch (err: any) {
@@ -59,6 +59,21 @@ export class AppointmentService {
     } catch (err) {
       console.error(err);
       return null;
+    }
+  }
+
+  // =====================
+  // Função para buscar horários disponíveis
+  // =====================
+  async fetchHorariosDisponiveis(barbeiro: string, data: string): Promise<string[]> {
+    try {
+      const res = await api.get<{ status: boolean; data: string[] }>(`/appointments/horarios-disponiveis`, {
+        params: { barbeiro, data },
+      });
+      return res.data.data || [];
+    } catch (err) {
+      console.error(err);
+      return [];
     }
   }
 }

@@ -9,5 +9,6 @@ export interface InputProps {
   min?: string | number;
   max?: string | number;
   step?: string | number;
+  pattern?: string; 
   className?: string;
 }

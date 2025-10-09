@@ -1,12 +1,6 @@
 import React from "react";
 import Button from "../ui/Button";
-
-
-interface FinanceiroCardProps {
-  mov: FinanceiroMov;
-  onEdit: (mov: FinanceiroMov) => void;
-  onDelete: (id?: string) => void;
-}
+import { FinanceiroCardProps } from "@/app/interfaces/financeiroInterface";
 
 const FinanceiroCard: React.FC<FinanceiroCardProps> = ({ mov, onEdit, onDelete }) => (
   <div className="bg-[#2A2A2A] rounded-xl p-4 flex justify-between items-center shadow hover:shadow-lg transition">

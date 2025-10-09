@@ -6,9 +6,9 @@ import { MenuItem } from "@/app/interfaces/agendamentoInterface";
 
 const menuItems: MenuItem[] = [
   { name: "Dashboard", icon: Home, path: "/admin" },
-  { name: "Agendamentos", icon: Calendar, path: "/admin/agendamentos" },
-  { name: "Financeiro", icon: DollarSign, path: "/admin/financeiro" },
-  { name: "Profissionais", icon: Users, path: "/admin/profissionais" },
+  { name: "Agendamentos", icon: Calendar, path: "/agendamentos" },
+  { name: "Financeiro", icon: DollarSign, path: "/financeiro" },
+  { name: "Profissionais", icon: Users, path: "/profissionais" },
 ];
 
 export default function Sidebar({

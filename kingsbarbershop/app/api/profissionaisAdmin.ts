@@ -1,4 +1,3 @@
-// /services/profissionalService.ts
 import axios from "axios";
 import { Profissional } from "../interfaces/profissionaisInterface";
 
@@ -11,6 +10,7 @@ const api = axios.create({
 // Serviço de Profissionais
 // =====================
 export class ProfissionalService {
+  // Função para buscar todos os profissionais
   async fetchProfissionais(): Promise<Profissional[]> {
     try {
       const res = await api.get<{ status: boolean; data: Profissional[] }>("/profissionais/all");
@@ -21,8 +21,21 @@ export class ProfissionalService {
     }
   }
 
+  // Função para buscar todos os barbeiros (pode ser adaptado conforme a API)
+  async fetchBarbeiros(): Promise<{ nome: string }[]> {
+    try {
+      const res = await api.get<{ status: boolean; data: { nome: string }[] }>("/barbeiros/all"); // Substitua a URL conforme necessário
+      return res.data.data || [];
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  }
+
+  // Função para criar um novo profissional
   async createProfissional(data: Partial<Profissional>): Promise<Profissional> {
     try {
+      console.log(data);
       const res = await api.post("/profissionais/create", data);
       if (res.data && res.data.status === false) throw new Error(res.data.message);
       return res.data.data || res.data;
@@ -34,6 +47,7 @@ export class ProfissionalService {
     }
   }
 
+  // Função para atualizar um profissional
   async updateProfissional(id: string, data: Partial<Profissional>): Promise<Profissional | null> {
     try {
       const res = await api.put(`/profissionais/update/${id}`, data);
@@ -44,6 +58,7 @@ export class ProfissionalService {
     }
   }
 
+  // Função para deletar um profissional
   async deleteProfissional(id: string): Promise<void> {
     try {
       await api.delete(`/profissionais/delete/${id}`);
@@ -52,6 +67,7 @@ export class ProfissionalService {
     }
   }
 
+  // Função para buscar um profissional pelo ID
   async fetchProfissionalById(id: string): Promise<Profissional | null> {
     try {
       const res = await api.get(`/profissionais/${id}`);

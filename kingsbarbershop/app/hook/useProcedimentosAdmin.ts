@@ -1,0 +1,91 @@
+import { useState, useEffect } from "react";
+import { Procedimento } from "../interfaces/profissionaisInterface";
+import { ProcedimentoService } from "../api/procedimentoAdmin";
+
+const procedimentoService = new ProcedimentoService();
+
+export function useProcedimentosAdmin() {
+  const [procedimentos, setProcedimentos] = useState<Procedimento[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Função para buscar os procedimentos
+  const fetchProcedimentos = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await procedimentoService.fetchProcedimentos();
+      setProcedimentos(data);
+    } catch (err) {
+      console.error(err);
+      setError("Erro ao carregar procedimentos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Chamando fetchProcedimentos quando o hook for montado
+  useEffect(() => {
+    fetchProcedimentos();
+  }, []);
+
+  // Função para adicionar um procedimento
+  const addProcedimento = async (p: Omit<Procedimento, "id">) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const novo = await procedimentoService.createProcedimento(p);
+      setProcedimentos(prev => [...prev, novo]);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Erro ao adicionar procedimento");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para atualizar um procedimento
+  const updateProcedimento = async (id: string, p: Omit<Procedimento, "id">) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const atualizado = await procedimentoService.updateProcedimento(id, p);
+      if (atualizado) {
+        setProcedimentos(prev =>
+          prev.map(item => (item.id === id ? atualizado : item))
+        );
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Erro ao atualizar procedimento");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para remover um procedimento
+  const removeProcedimento = async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await procedimentoService.deleteProcedimento(id);
+      setProcedimentos(prev => prev.filter(item => item.id !== id));
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Erro ao remover procedimento");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Retornando os dados e funções para o componente
+  return {
+    procedimentos,
+    addProcedimento,
+    updateProcedimento,
+    removeProcedimento,
+    loading,
+    error,
+    fetchProcedimentos,
+  };
+}

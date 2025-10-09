@@ -22,6 +22,7 @@ export class ProcedimentoService {
 
   async createProcedimento(data: Partial<Procedimento>): Promise<Procedimento> {
     try {
+      console.log(data);
       const res = await api.post("/procedimentos/create", data);
       if (res.data && res.data.status === false) throw new Error(res.data.message);
       return res.data.data || res.data;

@@ -1,11 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Button from "../ui/Button";
 import { Profissional, Props } from "@/app/interfaces/profissionaisInterface";
-import ProfissionalForm from "./ProfissionalForm";
 import ProfissionalCard from "./ProfissionalCard";
-
+import { ProfissionalForm } from "./ProfissionalForm";  // Certifique-se de que está importando o componente correto
 
 const ProfissionaisSection: React.FC<Props> = ({
   profissionais,
@@ -76,7 +75,7 @@ const ProfissionaisSection: React.FC<Props> = ({
               profissional={p}
               onSelect={setSelectedProfissional}
               onEdit={(prof) => { setSelectedProfissional(prof); setActiveTab("criar"); }}
-              onDelete={(id) => id && handleDelete(id)} // garante compatibilidade com optional
+              onDelete={(id) => id && handleDelete(id)} // Garante compatibilidade com optional
             />
           ))}
         </div>

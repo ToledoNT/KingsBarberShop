@@ -1,15 +1,11 @@
-// /interfaces/profissionalInterface.ts
-
-// --- Profissional ---
 export interface Profissional {
-  id?: string;
+  id: string;
   nome: string;
-  email?: string;
-  telefone?: string;
+  email: string;
+  telefone: string;
   procedimentos: Procedimento[];
 }
 
-// --- Props para componente que lista Profissionais ---
 export interface ProfissionaisProps {
   profissionais: Profissional[];
   novoProfissional: Omit<Profissional, "id" | "procedimentos">;
@@ -19,14 +15,12 @@ export interface ProfissionaisProps {
   removeProfissional: (id: string) => void;
 }
 
-// --- Procedimento ---
 export interface Procedimento {
-  id?: string;
+  id: string;
   nome: string;
   valor: number;
 }
 
-// --- Props para componente que lista Procedimentos ---
 export interface ProcedimentosProps {
   procedimentos: Procedimento[];
   novoProcedimento: Omit<Procedimento, "id">;
@@ -36,14 +30,12 @@ export interface ProcedimentosProps {
   removeProcedimento: (id: string) => void;
 }
 
-// --- Profissional Form ---
 export interface ProfissionalFormProps {
   profissional?: Profissional | null;
   onSave: (prof: Partial<Profissional>) => void;
   onCancel?: () => void;
 }
 
-// --- Procedimento Form ---
 export interface ProcedimentoFormProps {
   procedimento?: Procedimento | null;
   onSave: (proc: Partial<Procedimento>) => void;
@@ -68,4 +60,21 @@ export interface Props extends ProfissionaisProps {
   setSelectedProfissional: (p: Profissional | null) => void;
   activeTab: "ver" | "criar";
   setActiveTab: (tab: "ver" | "criar") => void;
+}
+
+export interface ProfissionaisPageProps extends ProfissionaisProps {
+  selectedProfissional: Profissional | null;
+  setSelectedProfissional: (p: Profissional | null) => void;
+  activeTab: "ver" | "criar";
+  setActiveTab: (tab: "ver" | "criar") => void;
+}
+
+export interface ProcedimentosProfissionaisProps {
+  profissionais: Profissional[];
+  procedimentos: Procedimento[];
+  novoProcedimento: Omit<Procedimento, "id">;
+  setNovoProcedimento: React.Dispatch<React.SetStateAction<Omit<Procedimento, "id">>>;
+  addProcedimento: (proc: Omit<Procedimento, "id">) => void; // Mudado aqui também
+  updateProcedimento: (id: string, proc: Omit<Procedimento, "id">) => void; // E aqui
+  removeProcedimento: (id: string) => void;
 }

@@ -132,14 +132,14 @@ export default function Horarios() {
               value={novoHorario.inicio}
               onChange={(e) => setNovoHorario((prev) => ({ ...prev, inicio: e.target.value }))}
               className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
-              step={60} // força minutos inteiros e 24h
+              step={60} 
             />
             <input
               type="time"
               value={novoHorario.fim}
               onChange={(e) => setNovoHorario((prev) => ({ ...prev, fim: e.target.value }))}
               className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
-              step={60} // força minutos inteiros e 24h
+              step={60} 
             />
             <Button onClick={handleAddOrUpdateHorario} variant="primary" fullWidth={false}>
               {editandoHorarioId ? "Atualizar" : "Adicionar"}

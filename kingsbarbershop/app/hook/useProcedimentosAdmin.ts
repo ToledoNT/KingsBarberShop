@@ -9,7 +9,6 @@ export function useProcedimentosAdmin() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Função para buscar os procedimentos
   const fetchProcedimentos = async () => {
     setLoading(true);
     setError(null);
@@ -24,12 +23,10 @@ export function useProcedimentosAdmin() {
     }
   };
 
-  // Chamando fetchProcedimentos quando o hook for montado
   useEffect(() => {
     fetchProcedimentos();
   }, []);
 
-  // Função para adicionar um procedimento
   const addProcedimento = async (p: Omit<Procedimento, "id">) => {
     setLoading(true);
     setError(null);
@@ -44,7 +41,6 @@ export function useProcedimentosAdmin() {
     }
   };
 
-  // Função para atualizar um procedimento
   const updateProcedimento = async (id: string, p: Omit<Procedimento, "id">) => {
     setLoading(true);
     setError(null);
@@ -63,7 +59,6 @@ export function useProcedimentosAdmin() {
     }
   };
 
-  // Função para remover um procedimento
   const removeProcedimento = async (id: string) => {
     setLoading(true);
     setError(null);
@@ -78,7 +73,6 @@ export function useProcedimentosAdmin() {
     }
   };
 
-  // Retornando os dados e funções para o componente
   return {
     procedimentos,
     addProcedimento,

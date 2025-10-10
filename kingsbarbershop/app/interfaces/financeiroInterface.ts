@@ -5,9 +5,8 @@ export interface FinanceiroMov {
   valor: number;
   data: string;
   profissionalId: string;
-  pago?: boolean; // true se o valor foi pago
+  pago?: boolean; 
 }
-
 
 export interface FinanceiroCardProps {
   mov: FinanceiroMov;

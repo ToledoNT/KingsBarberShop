@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Button from "../ui/Button";
-import { Procedimento, ProcedimentoCardProps } from "@/app/interfaces/profissionaisInterface";
+import { ProcedimentoCardProps } from "@/app/interfaces/profissionaisInterface";
 
 const ProcedimentoCard: React.FC<ProcedimentoCardProps> = ({ procedimento, onEdit, onDelete }) => (
   <div className="bg-[#2A2A2A] rounded-xl p-4 flex justify-between items-center shadow hover:shadow-lg transition">

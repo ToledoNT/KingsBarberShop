@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Sidebar from "@/app/components/ui/Sidebar";
-import DashboardCard from "@/app/components/ui/DashboardCard";
 import Table from "@/app/components/ui/Table";
+import DashboardCard from "../components/dashboard/DashBoardCard";
 
 export default function AdminHome() {
   const [collapsed, setCollapsed] = useState(false);
@@ -13,7 +13,7 @@ export default function AdminHome() {
     { title: "Procedimentos", value: 25 },
     { title: "Receita Mensal", value: "R$ 3.500" },
   ];
-
+  //Chamar api pra buscar os Agendamentos
   const agendamentos = [
     { nome: "João", barbeiro: "Carlos", data: "2025-10-08", hora: "10:00", servico: "Corte" },
     { nome: "Maria", barbeiro: "Ana", data: "2025-10-08", hora: "12:00", servico: "Barba" },

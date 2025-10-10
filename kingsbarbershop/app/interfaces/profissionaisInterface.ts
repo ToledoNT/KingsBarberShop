@@ -21,31 +21,11 @@ export interface Procedimento {
   valor: number;
 }
 
-export interface ProcedimentosProps {
-  procedimentos: Procedimento[];
-  novoProcedimento: Omit<Procedimento, "id">;
-  setNovoProcedimento: React.Dispatch<React.SetStateAction<Omit<Procedimento, "id">>>;
-  addProcedimento: (novo: Omit<Procedimento, "id">) => void;
-  updateProcedimento: (id: string, atualizado: Omit<Procedimento, "id">) => void;
-  removeProcedimento: (id: string) => void;
-}
 
 export interface ProfissionalFormProps {
   profissional?: Profissional | null;
   onSave: (prof: Partial<Profissional>) => void;
   onCancel?: () => void;
-}
-
-export interface ProcedimentoFormProps {
-  procedimento?: Procedimento | null;
-  onSave: (proc: Partial<Procedimento>) => void;
-  onCancel?: () => void;
-}
-
-export interface ProcedimentoCardProps {
-  procedimento: Procedimento;
-  onEdit: (p: Procedimento) => void;
-  onDelete: (id?: string) => void;
 }
 
 export interface ProfissionalCardProps {
@@ -78,3 +58,24 @@ export interface ProcedimentosProfissionaisProps {
   updateProcedimento: (id: string, proc: Omit<Procedimento, "id">) => void; // E aqui
   removeProcedimento: (id: string) => void;
 }
+
+export interface ProcedimentoCardProps {
+  procedimento: Procedimento;
+  onEdit: (p: Procedimento) => void;
+  onDelete: (id?: string) => void;
+}
+
+// export interface ProcedimentosProps {
+//   procedimentos: Procedimento[];
+//   novoProcedimento: Omit<Procedimento, "id">;
+//   setNovoProcedimento: React.Dispatch<React.SetStateAction<Omit<Procedimento, "id">>>;
+//   addProcedimento: (novo: Omit<Procedimento, "id">) => void;
+//   updateProcedimento: (id: string, atualizado: Omit<Procedimento, "id">) => void;
+//   removeProcedimento: (id: string) => void;
+// }
+
+// export interface ProcedimentoFormProps {
+//   procedimento?: Procedimento | null;
+//   onSave: (proc: Partial<Procedimento>) => void;
+//   onCancel?: () => void;
+// }

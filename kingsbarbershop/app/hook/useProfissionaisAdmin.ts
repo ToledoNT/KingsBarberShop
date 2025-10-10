@@ -11,7 +11,6 @@ export function useProfissionaisAdmin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar os profissionais da API
   const fetchProfissionais = async () => {
     setLoading(true);
     setError(null);
@@ -26,18 +25,15 @@ export function useProfissionaisAdmin() {
     }
   };
 
-  // Chamar a função para carregar os profissionais quando o componente for montado
   useEffect(() => {
     fetchProfissionais();
   }, []);
 
-  // Função para adicionar um novo profissional
   const addProfissional = async (p: Omit<Profissional, "id">) => {
     setLoading(true);
     setError(null);
     try {
       const novo = await service.createProfissional(p);
-      // Atualiza a lista de profissionais com o novo profissional
       setProfissionais(prev => [...prev, novo]);
     } catch (err: any) {
       console.error(err);
@@ -47,7 +43,6 @@ export function useProfissionaisAdmin() {
     }
   };
 
-  // Função para atualizar um profissional existente
   const updateProfissional = async (id: string, p: Omit<Profissional, "id">) => {
     setLoading(true);
     setError(null);
@@ -67,13 +62,11 @@ export function useProfissionaisAdmin() {
     }
   };
 
-  // Função para remover um profissional
   const removeProfissional = async (id: string) => {
     setLoading(true);
     setError(null);
     try {
       await service.deleteProfissional(id);
-      // Atualiza o estado removendo o profissional deletado
       setProfissionais(prev => prev.filter(item => item.id !== id));
     } catch (err: any) {
       console.error(err);

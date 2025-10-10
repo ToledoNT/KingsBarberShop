@@ -6,11 +6,7 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// =====================
-// Serviço de Profissionais
-// =====================
 export class ProfissionalService {
-  // Função para buscar todos os profissionais
   async fetchProfissionais(): Promise<Profissional[]> {
     try {
       const res = await api.get<{ status: boolean; data: Profissional[] }>("/profissionais/all");
@@ -21,7 +17,6 @@ export class ProfissionalService {
     }
   }
 
-  // Função para buscar todos os barbeiros (pode ser adaptado conforme a API)
   async fetchBarbeiros(): Promise<{ nome: string }[]> {
     try {
       const res = await api.get<{ status: boolean; data: { nome: string }[] }>("/barbeiros/all"); // Substitua a URL conforme necessário
@@ -32,7 +27,6 @@ export class ProfissionalService {
     }
   }
 
-  // Função para criar um novo profissional
   async createProfissional(data: Partial<Profissional>): Promise<Profissional> {
     try {
       console.log(data);
@@ -47,7 +41,6 @@ export class ProfissionalService {
     }
   }
 
-  // Função para atualizar um profissional
   async updateProfissional(id: string, data: Partial<Profissional>): Promise<Profissional | null> {
     try {
       const res = await api.put(`/profissionais/update/${id}`, data);
@@ -58,7 +51,6 @@ export class ProfissionalService {
     }
   }
 
-  // Função para deletar um profissional
   async deleteProfissional(id: string): Promise<void> {
     try {
       await api.delete(`/profissionais/delete/${id}`);
@@ -67,7 +59,6 @@ export class ProfissionalService {
     }
   }
 
-  // Função para buscar um profissional pelo ID
   async fetchProfissionalById(id: string): Promise<Profissional | null> {
     try {
       const res = await api.get(`/profissionais/${id}`);

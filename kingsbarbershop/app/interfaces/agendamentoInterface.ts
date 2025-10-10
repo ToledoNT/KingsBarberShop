@@ -1,6 +1,3 @@
-import { LucideIcon } from "lucide-react";
-import { ReactNode, Dispatch, SetStateAction } from "react";
-
 export interface AgendamentoFormData {
   nome: string;
   telefone: string;
@@ -44,51 +41,51 @@ export interface HorarioDisponivel {
   fim: string;
 }
 
-export interface AgendamentoModalProps {
-  agendamento: Agendamento | null;
-  onClose: () => void;
-  onSave: (updated: Agendamento) => void;
-  horariosDisponiveis?: HorarioDisponivel[];
-}
+// export interface AgendamentoModalProps {
+//   agendamento: Agendamento | null;
+//   onClose: () => void;
+//   onSave: (updated: Agendamento) => void;
+//   horariosDisponiveis?: HorarioDisponivel[];
+// }
 
-export interface HorariosProps {
-  horarios: HorarioDisponivel[];
-  novoHorario: Omit<HorarioDisponivel, "id">;
-  setNovoHorario: Dispatch<SetStateAction<Omit<HorarioDisponivel, "id">>>;
-  addHorario: (novo: HorarioDisponivel) => void;
-  updateHorario: (id: string, atualizado: Omit<HorarioDisponivel, "id">) => void;
-  removeHorario: (id: string) => void;
-}
+// export interface HorariosProps {
+//   horarios: HorarioDisponivel[];
+//   novoHorario: Omit<HorarioDisponivel, "id">;
+//   setNovoHorario: Dispatch<SetStateAction<Omit<HorarioDisponivel, "id">>>;
+//   addHorario: (novo: HorarioDisponivel) => void;
+//   updateHorario: (id: string, atualizado: Omit<HorarioDisponivel, "id">) => void;
+//   removeHorario: (id: string) => void;
+// }
 
-export interface AgendamentosSectionProps {
-  agendamentos: Agendamento[];
-}
+// export interface AgendamentosSectionProps {
+//   agendamentos: Agendamento[];
+// }
 
-export interface AgendamentoActionsProps {
-  onEdit: () => void;
-  onDelete: () => void;
-}
+// export interface AgendamentoActionsProps {
+//   onEdit: () => void;
+//   onDelete: () => void;
+// }
 
-export interface ModalProps {
-  children: ReactNode;
-  onClose: () => void;
-}
+// export interface ModalProps {
+//   children: ReactNode;
+//   onClose: () => void;
+// }
 
-export interface MenuItem {
-  name: string;
-  icon: LucideIcon;
-  path: string;
-}
+// export interface MenuItem {
+//   name: string;
+//   icon: LucideIcon;
+//   path: string;
+// }
 
-export interface Column {
-  header: string;
-  accessor: string;
-}
+// export interface Column {
+//   header: string;
+//   accessor: string;
+// }
 
-export interface TableProps {
-  columns: Column[];
-  data: Record<string, any>[];
-}
+// export interface TableProps {
+//   columns: Column[];
+//   data: Record<string, any>[];
+// }
 
 export interface AgendamentoPrivadoFormProps {
   agendamento?: Agendamento;

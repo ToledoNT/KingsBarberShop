@@ -6,9 +6,6 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// =====================
-// Serviço de Agendamento
-// =====================
 export class AppointmentService {
   async fetchAppointments(): Promise<Agendamento[]> {
     try {
@@ -62,9 +59,6 @@ export class AppointmentService {
     }
   }
 
-  // =====================
-  // Função para buscar horários disponíveis
-  // =====================
   async fetchHorariosDisponiveis(barbeiro: string, data: string): Promise<string[]> {
     try {
       const res = await api.get<{ status: boolean; data: string[] }>(`/appointments/horarios-disponiveis`, {

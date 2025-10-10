@@ -11,7 +11,6 @@ export default function FinanceiroPage() {
   const [dataInicial, setDataInicial] = useState("");
   const [dataFinal, setDataFinal] = useState("");
 
-  // Dados de exemplo
   useEffect(() => {
     setMovimentos([
       { id: "1", clienteNome: "João", procedimento: "Corte", valor: 50, data: "2025-10-01T10:00:00", profissionalId: "p1", pago: true },
@@ -20,7 +19,6 @@ export default function FinanceiroPage() {
     ]);
   }, []);
 
-  // Filtrar movimentos
   const movimentosFiltrados = movimentos.filter(mov => {
     const buscaLower = busca.toLowerCase();
     const nomeMatch = mov.clienteNome.toLowerCase().includes(buscaLower);

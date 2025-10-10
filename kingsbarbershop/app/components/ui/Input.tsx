@@ -1,4 +1,3 @@
-// Input.tsx
 import { InputProps } from "@/app/interfaces/inputInterface";
 
 export default function Input({
@@ -7,13 +6,13 @@ export default function Input({
   value,
   placeholder,
   onChange,
-  onValidate, // Adiciona essa prop
+  onValidate,
   required = false,
   disabled = false,
   min,
   step,
   className = "",
-  onBlur, // Adicionando o onBlur aqui
+  onBlur, 
 }: InputProps & { onValidate?: (val: string) => void; onBlur?: () => void }) {
   return (
     <input
@@ -22,7 +21,7 @@ export default function Input({
       value={value ?? ""}
       placeholder={placeholder || name}
       onChange={onChange}
-      onBlur={onBlur} // Propaga o onBlur para o input
+      onBlur={onBlur} 
       required={required}
       disabled={disabled}
       min={min}

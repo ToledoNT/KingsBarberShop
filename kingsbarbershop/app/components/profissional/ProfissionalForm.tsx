@@ -22,7 +22,7 @@ const ProfissionalForm: React.FC<ProfissionalFormProps> = ({ profissional, onSav
   const handleSubmit = () => {
     if (!nome || !email || !telefone) return;
     onSave({ id: profissional?.id, nome, email, telefone, procedimentos: profissional?.procedimentos || [] });
-    setNome(""); setEmail(""); setTelefone(""); // Limpa o formulário após salvar
+    setNome(""); setEmail(""); setTelefone(""); 
   };
 
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -10,9 +10,7 @@ export default function AgendamentoForm() {
   const { form, handleChange, handleSubmit, barbeiros, horariosDisponiveis, loading } = useAgendamentoForm();
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Formatar o telefone
     const formattedPhone = formatPhoneNumber(e.target.value);
-    // Atualizar diretamente o estado do telefone
     handleChange({
       target: { name: "telefone", value: formattedPhone },
     } as React.ChangeEvent<HTMLInputElement>);
@@ -50,7 +48,7 @@ export default function AgendamentoForm() {
             type="tel"
             value={form.telefone}
             placeholder="Telefone"
-            onChange={handlePhoneChange} // Chamando handlePhoneChange para formatar o telefone
+            onChange={handlePhoneChange} 
             required
           />
           <Input

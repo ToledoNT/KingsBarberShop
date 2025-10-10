@@ -6,11 +6,7 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// =====================
-// Serviço de Horários Disponíveis
-// =====================
 export class HorarioService {
-  // Buscar horários disponíveis de um barbeiro em uma data
   async fetchHorariosDisponiveis(barbeiro: string, data: string): Promise<HorarioDisponivel[]> {
     try {
       const res = await api.get<{ status: boolean; data: HorarioDisponivel[] }>("/horarios-disponiveis", {
@@ -23,7 +19,6 @@ export class HorarioService {
     }
   }
 
-  // Criar novo horário disponível
   async createHorarioDisponivel(horario: Partial<HorarioDisponivel>): Promise<HorarioDisponivel> {
     try {
         console.log(horario)
@@ -38,7 +33,6 @@ export class HorarioService {
     }
   }
 
-  // Atualizar horário existente
   async updateHorarioDisponivel(id: string, horario: Partial<HorarioDisponivel>): Promise<HorarioDisponivel> {
     try {
       const res = await api.put(`/horarios-disponiveis/update/${id}`, horario);
@@ -51,7 +45,6 @@ export class HorarioService {
     }
   }
 
-  // Deletar horário
   async deleteHorarioDisponivel(id: string): Promise<void> {
     try {
       await api.delete(`/horarios-disponiveis/delete/${id}`);
@@ -61,7 +54,6 @@ export class HorarioService {
     }
   }
 
-  // Buscar horário por ID
   async fetchHorarioById(id: string): Promise<HorarioDisponivel | null> {
     try {
       const res = await api.get(`/horarios-disponiveis/${id}`);

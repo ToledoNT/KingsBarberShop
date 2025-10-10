@@ -187,16 +187,23 @@ export default function ProfissionaisProcedimentosPage() {
           )}
 
           {activeProfissionalTab === "ver" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-              {profissionais.length === 0 && <p className="text-gray-400">Nenhum profissional cadastrado.</p>}
-              {profissionais.map(p => (
-                <ProfissionalCard
-                  key={p.id}
-                  profissional={p}
-                  onSelect={handleSelectProfissional}
-                  onEdit={(prof) => { setSelectedProfissional(prof); setActiveProfissionalTab("criar"); }}
-                  onDelete={handleDeleteProfissional}
-                />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+  {profissionais.length === 0 && (
+    <p className="text-gray-400">Nenhum profissional cadastrado.</p>
+  )}
+  {profissionais.map((p: Profissional) => (
+    <ProfissionalCard
+      key={p.id}
+      profissional={p}
+      onSelect={handleSelectProfissional}
+      onEdit={(prof: Profissional) => {
+        setSelectedProfissional(prof);
+        setActiveProfissionalTab("criar");
+      }}
+      onDelete={handleDeleteProfissional}
+    />
+  
+
               ))}
             </div>
           )}

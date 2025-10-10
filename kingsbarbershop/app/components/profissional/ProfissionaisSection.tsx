@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Button from "../ui/Button";
 import { Profissional, Props } from "@/app/interfaces/profissionaisInterface";
 import ProfissionalCard from "./ProfissionalCard";
-import { ProfissionalForm } from "./ProfissionalForm";  // Certifique-se de que está importando o componente correto
+import { ProfissionalForm } from "./ProfissionalForm";  
 
 const ProfissionaisSection: React.FC<Props> = ({
   profissionais,
@@ -17,20 +17,16 @@ const ProfissionaisSection: React.FC<Props> = ({
   setActiveTab
 }) => {
 
-  // --- Função de save unificada ---
   const handleSave = (prof: Partial<Profissional>) => {
     if (!prof.nome) return;
 
     if (selectedProfissional?.id) {
-      // Atualiza profissional existente
       updateProfissional(selectedProfissional.id, prof as Omit<Profissional, "id">);
     } else {
-      // Adiciona novo profissional
       addProfissional(prof as Omit<Profissional, "id">);
     }
   };
 
-  // --- Wrapper seguro para delete ---
   const handleDelete = (id: string) => {
     removeProfissional(id);
     if (selectedProfissional?.id === id) setSelectedProfissional(null);

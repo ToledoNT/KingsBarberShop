@@ -6,9 +6,6 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// =====================
-// Serviço de Procedimentos
-// =====================
 export class ProcedimentoService {
   async fetchProcedimentos(): Promise<Procedimento[]> {
     try {

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import Table from "../ui/Table";
-import { Procedimento, ProcedimentosProfissionaisProps, Profissional } from "@/app/interfaces/profissionaisInterface";
+import { Procedimento, ProcedimentosProfissionaisProps } from "@/app/interfaces/profissionaisInterface";
 import { useProcedimentosAdmin } from "@/app/hook/useProcedimentosAdmin";
 
 const ProcedimentosProfissionais: React.FC<ProcedimentosProfissionaisProps> = ({ 
@@ -33,11 +33,9 @@ const ProcedimentosProfissionais: React.FC<ProcedimentosProfissionaisProps> = ({
 
     try {
       if (editando) {
-        // Usando a função do hook para atualizar na API
         await updateProcedimentoAPI(editando, novoProcedimento);
         setEditando(null);
       } else {
-        // Usando a função do hook para adicionar na API
         await addProcedimentoAPI(novoProcedimento);
       }
 
@@ -57,7 +55,6 @@ const ProcedimentosProfissionais: React.FC<ProcedimentosProfissionaisProps> = ({
 
   const handleRemove = async (id: string) => {
     try {
-      // Usando a função do hook para remover da API
       await removeProcedimentoAPI(id);
     } catch (error) {
       console.error("Erro ao remover procedimento:", error);
@@ -71,7 +68,6 @@ const ProcedimentosProfissionais: React.FC<ProcedimentosProfissionaisProps> = ({
     { header: "Ações", accessor: "acoes" },
   ];
 
-  // Usando os procedimentos da API em vez dos passados por props
   const data = procedimentosDaAPI
     .filter(p => p.id)
     .map(p => ({

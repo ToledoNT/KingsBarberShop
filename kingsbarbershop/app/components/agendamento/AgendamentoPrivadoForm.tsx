@@ -28,7 +28,6 @@ export default function AgendamentoPrivadoForm({
 
   const [horariosDisponiveis, setHorariosDisponiveis] = useState<HorarioDisponivel[]>([]);
 
-  // Atualiza horários disponíveis quando barbeiro ou data mudarem
   useEffect(() => {
     if (form.barbeiro && form.data) {
       const filtrados = todosHorarios.filter(
@@ -40,14 +39,12 @@ export default function AgendamentoPrivadoForm({
     }
   }, [form.barbeiro, form.data, todosHorarios]);
 
-  // Inicializa formulário caso tenha agendamento
   useEffect(() => {
     if (agendamento) {
       setForm({ ...agendamento });
     }
   }, [agendamento]);
 
-  // Funções para atualizar o estado do formulário
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));

@@ -16,7 +16,6 @@ export function useAgendamentosAdmin() {
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ barbeiro: "", data: "" });
 
-  // --- Buscar barbeiros ---
   const fetchBarbeiros = async () => {
     setLoading(true);
     setError(null);
@@ -30,7 +29,6 @@ export function useAgendamentosAdmin() {
     }
   };
 
-  // --- Buscar agendamentos ---
   const fetchAgendamentos = async () => {
     setLoading(true);
     setError(null);
@@ -44,7 +42,6 @@ export function useAgendamentosAdmin() {
     }
   };
 
-  // --- Buscar horários disponíveis ---
   const fetchHorariosDisponiveis = async (barbeiro: string, data: string) => {
     setLoading(true);
     setError(null);
@@ -58,7 +55,6 @@ export function useAgendamentosAdmin() {
     }
   };
 
-  // --- CRUD Agendamentos ---
   const addAgendamento = async (novo: Agendamento) => {
     setLoading(true);
     setError(null);
@@ -101,7 +97,6 @@ export function useAgendamentosAdmin() {
     }
   };
 
-  // --- CRUD Horários ---
   const addHorario = async (novo: HorarioDisponivel) => {
     setLoading(true);
     setError(null);
@@ -141,7 +136,6 @@ export function useAgendamentosAdmin() {
     }
   };
 
-  // --- Efeitos iniciais ---
   useEffect(() => {
     fetchAgendamentos();
     fetchBarbeiros();

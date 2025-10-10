@@ -15,15 +15,21 @@ export default function Horarios() {
     inicio: "",
     fim: "",
   });
+
   const [editandoHorarioId, setEditandoHorarioId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"exibir" | "criar">("exibir");
+
+  // Função para gerar ID único consistente
+  const gerarIdHorario = (h: HorarioDisponivel) => {
+    return `${h.barbeiro}-${h.data}-${h.inicio}-${h.fim}`.replace(/\s+/g, "");
+  };
 
   const handleAddOrUpdateHorario = async () => {
     if (!novoHorario.barbeiro || !novoHorario.data || !novoHorario.inicio || !novoHorario.fim) return;
 
     const horarioFormatado: HorarioDisponivel = {
       ...novoHorario,
-      id: editandoHorarioId || `${novoHorario.barbeiro}-${novoHorario.data}-${novoHorario.inicio}`,
+      id: editandoHorarioId || gerarIdHorario(novoHorario),
     };
 
     try {
@@ -60,21 +66,17 @@ export default function Horarios() {
 
   return (
     <section className="bg-[#1B1B1B] rounded-2xl shadow p-4 md:p-6 flex flex-col gap-4">
+      {/* Tabs */}
       <div className="flex gap-2 flex-wrap">
-        <Button
-          variant={activeTab === "exibir" ? "primary" : "secondary"}
-          onClick={() => setActiveTab("exibir")}
-        >
+        <Button variant={activeTab === "exibir" ? "primary" : "secondary"} onClick={() => setActiveTab("exibir")}>
           Exibir Horários
         </Button>
-        <Button
-          variant={activeTab === "criar" ? "primary" : "secondary"}
-          onClick={() => setActiveTab("criar")}
-        >
+        <Button variant={activeTab === "criar" ? "primary" : "secondary"} onClick={() => setActiveTab("criar")}>
           Criar Horário
         </Button>
       </div>
 
+      {/* Exibir horários */}
       {activeTab === "exibir" && (
         <div className="flex flex-col gap-2 mt-4">
           {horarios.length === 0 ? (
@@ -95,11 +97,7 @@ export default function Horarios() {
                   <Button onClick={() => handleEditHorario(h)} variant="primary" className="text-sm">
                     Editar
                   </Button>
-                  <Button
-                    onClick={() => handleRemoveHorario(h.id!)}
-                    variant="secondary"
-                    className="text-sm"
-                  >
+                  <Button onClick={() => handleRemoveHorario(h.id!)} variant="secondary" className="text-sm">
                     Deletar
                   </Button>
                 </div>
@@ -109,6 +107,7 @@ export default function Horarios() {
         </div>
       )}
 
+      {/* Criar / Editar horário */}
       {activeTab === "criar" && (
         <div className="bg-[#2A2A2A] rounded-xl p-4 shadow flex flex-col gap-3 mt-4">
           <h3 className="font-semibold text-lg">{editandoHorarioId ? "Editar Horário" : "Criar Horário"}</h3>
@@ -126,20 +125,19 @@ export default function Horarios() {
               onChange={(e) => setNovoHorario((prev) => ({ ...prev, data: e.target.value }))}
               className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
             />
-            {/* Forçar formato 24h */}
             <input
               type="time"
               value={novoHorario.inicio}
               onChange={(e) => setNovoHorario((prev) => ({ ...prev, inicio: e.target.value }))}
               className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
-              step={60} 
+              step={60}
             />
             <input
               type="time"
               value={novoHorario.fim}
               onChange={(e) => setNovoHorario((prev) => ({ ...prev, fim: e.target.value }))}
               className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
-              step={60} 
+              step={60}
             />
             <Button onClick={handleAddOrUpdateHorario} variant="primary" fullWidth={false}>
               {editandoHorarioId ? "Atualizar" : "Adicionar"}

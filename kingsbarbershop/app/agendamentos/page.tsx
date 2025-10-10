@@ -126,19 +126,20 @@ export default function CriarAgendamentoPage() {
         <h1 className="text-3xl font-bold text-[#FFA500] mb-6">Painel Administrativo</h1>
 
         <div className="flex flex-col gap-8">
-          {/* Horários */}
+          {/* --- Horários --- */}
           <section className="bg-[#1B1B1B] rounded-2xl shadow p-4 md:p-6 flex flex-col gap-4">
             <div className="flex gap-2 flex-wrap">
               <Button variant={activeHorarioTab === "exibir" ? "primary" : "secondary"} onClick={() => setActiveHorarioTab("exibir")}>Exibir Horários</Button>
               <Button variant={activeHorarioTab === "criar" ? "primary" : "secondary"} onClick={() => setActiveHorarioTab("criar")}>Criar Horário</Button>
             </div>
 
+            {/* Exibir Horários */}
             {activeHorarioTab === "exibir" && (
               <div className="flex flex-col gap-2 mt-4">
                 {horarios.length === 0 ? (
                   <p className="text-gray-400">Nenhum horário disponível.</p>
                 ) : (
-                  horarios.map(h => (
+                  horarios.map((h) => (
                     <div key={h.id} className="bg-[#2A2A2A] rounded-xl p-3 flex flex-col sm:flex-row sm:justify-between sm:items-center shadow hover:shadow-lg transition gap-2">
                       <div>
                         <p className="font-semibold">{h.barbeiro}</p>
@@ -154,6 +155,7 @@ export default function CriarAgendamentoPage() {
               </div>
             )}
 
+            {/* Criar / Editar Horário */}
             {activeHorarioTab === "criar" && (
               <div className="bg-[#2A2A2A] rounded-xl p-4 shadow flex flex-col gap-3 mt-4">
                 <h3 className="font-semibold text-lg">{editandoHorarioId ? "Editar Horário" : "Criar Horário"}</h3>
@@ -171,16 +173,28 @@ export default function CriarAgendamentoPage() {
                     onChange={(e) => setNovoHorario(prev => ({ ...prev, data: e.target.value }))}
                     className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
                   />
+                  {/* Horário início */}
                   <input
-                    type="time"
+                    type="text"
+                    placeholder="HH:MM"
                     value={novoHorario.inicio}
-                    onChange={(e) => setNovoHorario(prev => ({ ...prev, inicio: e.target.value }))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const sanitized = val.replace(/[^0-9:]/g, '').slice(0, 5);
+                      setNovoHorario(prev => ({ ...prev, inicio: sanitized }));
+                    }}
                     className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
                   />
+                  {/* Horário fim */}
                   <input
-                    type="time"
+                    type="text"
+                    placeholder="HH:MM"
                     value={novoHorario.fim}
-                    onChange={(e) => setNovoHorario(prev => ({ ...prev, fim: e.target.value }))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const sanitized = val.replace(/[^0-9:]/g, '').slice(0, 5);
+                      setNovoHorario(prev => ({ ...prev, fim: sanitized }));
+                    }}
                     className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
                   />
                   <Button onClick={handleAddOrUpdateHorario} variant="primary" fullWidth={false}>
@@ -191,7 +205,7 @@ export default function CriarAgendamentoPage() {
             )}
           </section>
 
-          {/* Agendamentos */}
+          {/* --- Agendamentos --- */}
           <section className="bg-[#1B1B1B] rounded-2xl shadow p-4 md:p-6 flex flex-col gap-4">
             <div className="flex gap-2 flex-wrap">
               <Button variant={activeAgendamentoTab === "exibir" ? "primary" : "secondary"} onClick={() => setActiveAgendamentoTab("exibir")}>Exibir Agendamentos</Button>

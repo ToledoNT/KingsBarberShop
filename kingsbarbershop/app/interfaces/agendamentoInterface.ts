@@ -41,6 +41,11 @@ export interface HorarioDisponivel {
   fim: string;
 }
 
+export interface AgendamentoPrivadoFormProps {
+  agendamento?: Agendamento;
+  onSave: (a: Agendamento) => Promise<void>;
+  onCancel?: () => void;
+}
 // export interface AgendamentoModalProps {
 //   agendamento: Agendamento | null;
 //   onClose: () => void;
@@ -87,8 +92,3 @@ export interface HorarioDisponivel {
 //   data: Record<string, any>[];
 // }
 
-export interface AgendamentoPrivadoFormProps {
-  agendamento?: Agendamento;
-  onSave: (a: Agendamento) => Promise<void>;
-  onCancel?: () => void;
-}

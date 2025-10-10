@@ -65,6 +65,11 @@ export interface ProcedimentoCardProps {
   onDelete: (id?: string) => void;
 }
 
+export interface HorarioInputProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
 // export interface ProcedimentosProps {
 //   procedimentos: Procedimento[];
 //   novoProcedimento: Omit<Procedimento, "id">;

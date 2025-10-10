@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Agendamento } from "../interfaces/agendamentoInterface";
+import { Agendamento } from "../../interfaces/agendamentoInterface";
 
 const api = axios.create({
   baseURL: "http://localhost:4001/api",

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { HorarioDisponivel } from "../interfaces/agendamentoInterface";
+import { HorarioDisponivel } from "../../interfaces/agendamentoInterface";
 
 const api = axios.create({
   baseURL: "http://localhost:4001/api",

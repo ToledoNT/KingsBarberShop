@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Agendamento, HorarioDisponivel } from "../interfaces/agendamentoInterface";
-import { ProfissionalService } from "../api/profissionaisAdmin";
-import { AppointmentService } from "../api/agendamentoAdmin";
-import { HorarioService } from "../api/agendamentoHorarioAdmin";
+import { ProfissionalService } from "../api/frontend/profissionaisAdmin";
+import { AppointmentService } from "../api/frontend/agendamentoAdmin";
+import { HorarioService } from "../api/frontend/agendamentoHorarioAdmin";
 
 const appointmentService = new AppointmentService();
 const profissionalService = new ProfissionalService();

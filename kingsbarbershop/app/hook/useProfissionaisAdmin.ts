@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Profissional } from "../interfaces/profissionaisInterface";
-import { ProfissionalService } from "../api/profissionaisAdmin";
+import { ProfissionalService } from "../api/frontend/profissionaisAdmin";
 
 const service = new ProfissionalService();
 

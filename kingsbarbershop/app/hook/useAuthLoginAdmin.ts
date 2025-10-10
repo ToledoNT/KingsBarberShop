@@ -1,6 +1,8 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { LoginData, UseAuthReturn } from "../interfaces/loginInterface";
-import { AuthService } from "../api/authAdmin";
+import { AuthService } from "../api/frontend/authAdmin";
 
 const authService = new AuthService();
 
@@ -12,11 +14,13 @@ export function useAuth(): UseAuthReturn {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
       setToken(storedToken);
       setIsAuthenticated(true);
-      authService.verifyToken(storedToken).then(valid => {
+
+      authService.verifyToken(storedToken).then((valid) => {
         if (!valid) {
           localStorage.removeItem("token");
           setToken(null);
@@ -29,12 +33,15 @@ export function useAuth(): UseAuthReturn {
   const login = async (data: LoginData) => {
     setLoading(true);
     setError(null);
+
     try {
-      const res = await authService.login(data.username, data.password);
+      console.log("Login attempt:", data.username, data.password);
+      const res = await authService.login(data); // envia objeto inteiro
       setToken(res.token);
-      if (typeof window !== "undefined") localStorage.setItem("token", res.token);
+      localStorage.setItem("token", res.token);
       setIsAuthenticated(true);
     } catch (err: any) {
+      console.error("Login error:", err);
       setError(err.message || "Erro ao logar");
       setIsAuthenticated(false);
     } finally {
@@ -44,7 +51,7 @@ export function useAuth(): UseAuthReturn {
 
   const logout = () => {
     setToken(null);
-    if (typeof window !== "undefined") localStorage.removeItem("token");
+    localStorage.removeItem("token");
     setIsAuthenticated(false);
   };
 

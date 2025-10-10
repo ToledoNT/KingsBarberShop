@@ -11,7 +11,13 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form enviado:", form); // Garantir que os valores estão corretos
     await login(form);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -30,18 +36,20 @@ export default function LoginPage() {
 
         <input
           type="text"
+          name="username"
           placeholder="Usuário"
           value={form.username}
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
+          onChange={handleChange}
           className="p-3 sm:p-4 rounded-xl bg-[#2A2A2A] border border-gray-700 text-base sm:text-lg w-full focus:outline-none focus:ring-2 focus:ring-[#FFA500]"
           required
         />
 
         <input
           type="password"
+          name="password"
           placeholder="Senha"
           value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          onChange={handleChange}
           className="p-3 sm:p-4 rounded-xl bg-[#2A2A2A] border border-gray-700 text-base sm:text-lg w-full focus:outline-none focus:ring-2 focus:ring-[#FFA500]"
           required
         />

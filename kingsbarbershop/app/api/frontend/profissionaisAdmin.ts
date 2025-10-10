@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Profissional } from "../interfaces/profissionaisInterface";
+import { Profissional } from "../../interfaces/profissionaisInterface";
 
 const api = axios.create({
   baseURL: "http://localhost:4001/api",

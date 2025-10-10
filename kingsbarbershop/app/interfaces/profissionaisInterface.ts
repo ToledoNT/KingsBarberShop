@@ -21,7 +21,6 @@ export interface Procedimento {
   valor: number;
 }
 
-
 export interface ProfissionalFormProps {
   profissional?: Profissional | null;
   onSave: (prof: Partial<Profissional>) => void;

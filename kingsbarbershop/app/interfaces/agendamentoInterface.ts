@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction, ReactNode } from "react";
+
 export interface AgendamentoFormData {
   nome: string;
   telefone: string;
@@ -46,21 +48,23 @@ export interface AgendamentoPrivadoFormProps {
   onSave: (a: Agendamento) => Promise<void>;
   onCancel?: () => void;
 }
-// export interface AgendamentoModalProps {
+
+export interface HorariosProps {
+  horarios: HorarioDisponivel[];
+  novoHorario: Omit<HorarioDisponivel, "id">;
+  setNovoHorario: Dispatch<SetStateAction<Omit<HorarioDisponivel, "id">>>;
+  addHorario: (novo: HorarioDisponivel) => void;
+  updateHorario: (id: string, atualizado: Omit<HorarioDisponivel, "id">) => void;
+  removeHorario: (id: string) => void;
+}
+
 //   agendamento: Agendamento | null;
 //   onClose: () => void;
 //   onSave: (updated: Agendamento) => void;
 //   horariosDisponiveis?: HorarioDisponivel[];
 // }
 
-// export interface HorariosProps {
-//   horarios: HorarioDisponivel[];
-//   novoHorario: Omit<HorarioDisponivel, "id">;
-//   setNovoHorario: Dispatch<SetStateAction<Omit<HorarioDisponivel, "id">>>;
-//   addHorario: (novo: HorarioDisponivel) => void;
-//   updateHorario: (id: string, atualizado: Omit<HorarioDisponivel, "id">) => void;
-//   removeHorario: (id: string) => void;
-// }
+
 
 // export interface AgendamentosSectionProps {
 //   agendamentos: Agendamento[];

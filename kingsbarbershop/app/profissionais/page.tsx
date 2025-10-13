@@ -8,168 +8,143 @@ import ProfissionalCard from "../components/profissional/ProfissionalCard";
 import { ProcedimentosProfissionais } from "../components/profissional/ProcedimentosForm";
 import { ProfissionalForm } from "../components/profissional/ProfissionalForm";
 import { useProfissionaisAdmin } from "../hook/useProfissionaisAdmin";
+import { useProcedimentosAdmin } from "../hook/useProcedimentosAdmin";
+import ProcedimentoCard from "../components/profissional/ProcedimentoCard";
+
+interface ProcedimentoInput {
+  nome: string;
+  valor: number;
+  profissionalId: string;
+}
 
 export default function ProfissionaisProcedimentosPage() {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedProfissional, setSelectedProfissional] = useState<Profissional | null>(null);
   const [activeProfissionalTab, setActiveProfissionalTab] = useState<"ver" | "criar">("ver");
   const [activeProcedimentoTab, setActiveProcedimentoTab] = useState<"ver" | "criar">("ver");
-
-  const [novoProcedimento, setNovoProcedimento] = useState<Omit<Procedimento, "id">>({
+  const [novoProcedimento, setNovoProcedimento] = useState<ProcedimentoInput>({
     nome: "",
     valor: 0,
+    profissionalId: "",
   });
-
   const [editandoProcedimentoId, setEditandoProcedimentoId] = useState<string | null>(null);
 
   const {
     profissionais,
     addProfissional,
+    updateProfissional, 
     removeProfissional,
-    updateProfissional,
-    fetchProfissionais,
-    loading,
-    error
+    fetchProfissionais
   } = useProfissionaisAdmin();
+
+  const { procedimentos, addProcedimento, updateProcedimento, removeProcedimento } = useProcedimentosAdmin();
 
   useEffect(() => {
     fetchProfissionais();
-  }, []);
+  }, [fetchProfissionais]);
 
+  // -------------------- Profissional --------------------
   const handleSaveProfissional = async (prof: Partial<Profissional>) => {
     if (!prof.nome || !prof.email || !prof.telefone) {
       alert("Nome, email e telefone são obrigatórios.");
       return;
     }
 
-    const newProfissional: Profissional = {
-      id: String(Date.now()),
-      nome: prof.nome as string,
-      email: prof.email as string,
-      telefone: prof.telefone as string,
-      procedimentos: prof.procedimentos || [],
-    };
-
     try {
-      await addProfissional(newProfissional);
-      setSelectedProfissional(newProfissional);
-      setActiveProfissionalTab("ver");
-    } catch (error) {
-      console.error("Erro ao criar profissional:", error);
-    }
-  };
+      if (prof.id) {
+        const atualizado = await updateProfissional(prof.id, {
+          nome: prof.nome,
+          email: prof.email,
+          telefone: prof.telefone,
+        });
 
-  const handleDeleteProfissional = (id?: string) => {
-    if (!id) return;
-    removeProfissional(id);
-    if (selectedProfissional?.id === id) {
-      setSelectedProfissional(null);
+        if (atualizado) {
+          setSelectedProfissional(atualizado);
+          setActiveProfissionalTab("ver");
+        }
+      } else {
+        const { id, ...dadosSemId } = prof;
+        const novoProfissional = await addProfissional({
+          ...dadosSemId,
+          procedimentos: prof.procedimentos || [],
+        } as Omit<Profissional, "id">);
+
+        setSelectedProfissional(novoProfissional);
+        setActiveProfissionalTab("ver");
+      }
+    } catch (err) {
+      console.error("Erro ao salvar profissional:", err);
     }
   };
 
   const handleSelectProfissional = (p: Profissional) => {
     setSelectedProfissional(p);
     setActiveProcedimentoTab("ver");
-    setNovoProcedimento({ nome: "", valor: 0 });
+    setNovoProcedimento({ nome: "", valor: 0, profissionalId: p.id });
     setEditandoProcedimentoId(null);
   };
 
-  // CORREÇÃO: Função separada para adicionar procedimento
-  const handleAddProcedimento = (proc: Omit<Procedimento, "id">) => {
-    if (!selectedProfissional) return;
+  // -------------------- Procedimento --------------------
+  const handleSubmitProcedimento = async () => {
+    if (!novoProcedimento.nome || novoProcedimento.valor <= 0 || !selectedProfissional) return;
 
-    const procedimentoComId: Procedimento = {
-      ...proc,
-      id: String(Date.now())
-    };
-
-    const updatedProfissionais = profissionais.map(p => {
-      if (p.id === selectedProfissional.id) {
-        return { 
-          ...p, 
-          procedimentos: [...p.procedimentos, procedimentoComId] 
-        };
+    try {
+      if (editandoProcedimentoId) {
+        await updateProcedimento(editandoProcedimentoId, novoProcedimento);
+      } else {
+        await addProcedimento(novoProcedimento);
       }
-      return p;
-    });
 
-    setSelectedProfissional({
-      ...selectedProfissional,
-      procedimentos: [...selectedProfissional.procedimentos, procedimentoComId],
-    });
-
-    setNovoProcedimento({ nome: "", valor: 0 });
-  };
-
-  // CORREÇÃO: Função separada para atualizar procedimento
-  const handleUpdateProcedimento = (id: string, proc: Omit<Procedimento, "id">) => {
-    if (!selectedProfissional) return;
-
-    const procedimentoComId: Procedimento = {
-      ...proc,
-      id: id
-    };
-
-    const updatedProfissionais = profissionais.map(p => {
-      if (p.id === selectedProfissional.id) {
-        const procedimentosAtualizados = p.procedimentos.map(pr => 
-          pr.id === id ? procedimentoComId : pr
-        );
-        return { ...p, procedimentos: procedimentosAtualizados };
-      }
-      return p;
-    });
-
-    setSelectedProfissional({
-      ...selectedProfissional,
-      procedimentos: selectedProfissional.procedimentos.map(pr => 
-        pr.id === id ? procedimentoComId : pr
-      ),
-    });
-
-    setNovoProcedimento({ nome: "", valor: 0 });
-    setEditandoProcedimentoId(null);
+      setNovoProcedimento({ nome: "", valor: 0, profissionalId: selectedProfissional.id });
+      setEditandoProcedimentoId(null);
+      setActiveProcedimentoTab("ver");
+    } catch (err) {
+      console.error("Erro ao salvar procedimento:", err);
+    }
   };
 
   const handleEditProcedimento = (proc: Procedimento) => {
-    const { id, ...dadosProcedimento } = proc;
-    setNovoProcedimento(dadosProcedimento);
-    setEditandoProcedimentoId(proc.id || null);
+    setNovoProcedimento({ nome: proc.nome, valor: proc.valor, profissionalId: proc.profissionalId });
+    setEditandoProcedimentoId(proc.id);
     setActiveProcedimentoTab("criar");
   };
 
-  const handleDeleteProcedimento = (id?: string) => {
-    if (!id || !selectedProfissional) return;
-
-    const updatedProfissionais = profissionais.map(p => {
-      if (p.id === selectedProfissional.id) {
-        const procedimentosAtualizados = p.procedimentos.filter(pr => pr.id !== id);
-        return { ...p, procedimentos: procedimentosAtualizados };
-      }
-      return p;
-    });
-
-    removeProfissional(id);
-    setNovoProcedimento({ nome: "", valor: 0 });
-    setEditandoProcedimentoId(null);
+  const handleDeleteProcedimento = async (id?: string) => {
+    if (!id) return;
+    await removeProcedimento(id);
   };
 
+  const procedimentosFiltrados = procedimentos.filter(
+    (p) => selectedProfissional?.procedimentos?.some((proc) => proc.id === p.id)
+  );
+
+  // -------------------- Render --------------------
   return (
-    <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5] overflow-hidden">
+    <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5] overflow-x-hidden">
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
-      <main className={`flex-1 h-screen overflow-y-auto p-4 md:p-6 transition-all ${collapsed ? "md:ml-12" : "md:ml-24"}`}>
-        <h1 className="text-3xl font-bold text-[#FFA500] mb-6">Profissionais e Procedimentos</h1>
+      <main
+        className={`flex-1 min-h-screen overflow-y-auto p-4 md:p-6 transition-all ${
+          collapsed ? "md:ml-12" : "md:ml-24"
+        } max-w-[1600px] mx-auto`}
+      >
+        <h1 className="text-3xl font-bold text-[#FFA500] mb-6 text-center md:text-left">
+          Profissionais e Procedimentos
+        </h1>
 
-        {/* Box Profissionais */}
+        {/* -------------------- Box Profissionais -------------------- */}
         <section className="bg-[#1B1B1B] rounded-2xl shadow p-4 flex flex-col gap-4 mb-6">
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap justify-center md:justify-start">
             <Button
               variant={activeProfissionalTab === "criar" ? "primary" : "secondary"}
-              onClick={() => { setActiveProfissionalTab("criar"); setSelectedProfissional(null); }}
+              onClick={() => {
+                setActiveProfissionalTab("criar");
+                setSelectedProfissional(null);
+              }}
             >
               Criar Profissional
             </Button>
+
             <Button
               variant={activeProfissionalTab === "ver" ? "primary" : "secondary"}
               onClick={() => setActiveProfissionalTab("ver")}
@@ -187,44 +162,46 @@ export default function ProfissionaisProcedimentosPage() {
           )}
 
           {activeProfissionalTab === "ver" && (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-  {profissionais.length === 0 && (
-    <p className="text-gray-400">Nenhum profissional cadastrado.</p>
-  )}
-  {profissionais.map((p: Profissional) => (
-    <ProfissionalCard
-      key={p.id}
-      profissional={p}
-      onSelect={handleSelectProfissional}
-      onEdit={(prof: Profissional) => {
-        setSelectedProfissional(prof);
-        setActiveProfissionalTab("criar");
-      }}
-      onDelete={handleDeleteProfissional}
-    />
-  
-
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+              {profissionais.length === 0 ? (
+                <p className="text-gray-400 text-center">Nenhum profissional cadastrado.</p>
+              ) : (
+                profissionais.map((p) => (
+                  <ProfissionalCard
+                    key={p.id}
+                    profissional={p}
+                    onSelect={handleSelectProfissional}
+                    onEdit={(prof) => {
+                      setSelectedProfissional(prof);
+                      setActiveProfissionalTab("criar");
+                    }}
+                    onDelete={(id) => removeProfissional(id ?? "")}
+                  />
+                ))
+              )}
             </div>
           )}
         </section>
 
-        {/* Box Procedimentos */}
+        {/* -------------------- Box Procedimentos -------------------- */}
         {selectedProfissional && (
-          <section className="bg-[#1B1B1B] rounded-2xl shadow p-4 flex flex-col gap-4">
-            <h2 className="text-lg font-semibold text-[#FFA500]">Procedimentos de {selectedProfissional.nome}</h2>
+          <section className="bg-[#1B1B1B] rounded-2xl shadow p-4 flex flex-col gap-4 mb-20">
+            <h2 className="text-lg font-semibold text-[#FFA500] text-center md:text-left">
+              Procedimentos de {selectedProfissional.nome}
+            </h2>
 
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap justify-center md:justify-start mb-4">
               <Button
                 variant={activeProcedimentoTab === "criar" ? "primary" : "secondary"}
-                onClick={() => { 
-                  setActiveProcedimentoTab("criar"); 
-                  setNovoProcedimento({ nome: "", valor: 0 }); 
-                  setEditandoProcedimentoId(null); 
+                onClick={() => {
+                  setActiveProcedimentoTab("criar");
+                  setNovoProcedimento({ nome: "", valor: 0, profissionalId: selectedProfissional.id });
+                  setEditandoProcedimentoId(null);
                 }}
               >
                 Criar Procedimento
               </Button>
+
               <Button
                 variant={activeProcedimentoTab === "ver" ? "primary" : "secondary"}
                 onClick={() => setActiveProcedimentoTab("ver")}
@@ -234,15 +211,34 @@ export default function ProfissionaisProcedimentosPage() {
             </div>
 
             {activeProcedimentoTab === "criar" && (
-              <ProcedimentosProfissionais
-                profissionais={[selectedProfissional]}
-                procedimentos={selectedProfissional?.procedimentos || []}
-                novoProcedimento={novoProcedimento}
-                setNovoProcedimento={setNovoProcedimento}
-                addProcedimento={handleAddProcedimento}
-                updateProcedimento={handleUpdateProcedimento}
-                removeProcedimento={handleDeleteProcedimento}
-              />
+              <div className="w-full flex justify-center">
+                <ProcedimentosProfissionais
+                  profissionais={[selectedProfissional]}
+                  procedimentos={procedimentosFiltrados}
+                  novoProcedimento={novoProcedimento}
+                  setNovoProcedimento={setNovoProcedimento}
+                  addProcedimento={handleSubmitProcedimento}
+                  updateProcedimento={handleSubmitProcedimento}
+                  removeProcedimento={handleDeleteProcedimento}
+                />
+              </div>
+            )}
+
+            {activeProcedimentoTab === "ver" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {procedimentosFiltrados.length === 0 ? (
+                  <p className="text-gray-400 text-center">Nenhum procedimento cadastrado.</p>
+                ) : (
+                  procedimentosFiltrados.map((proc) => (
+                    <ProcedimentoCard
+                      key={proc.id}
+                      procedimento={proc}
+                      onEdit={handleEditProcedimento}
+                      onDelete={() => handleDeleteProcedimento(proc.id)}
+                    />
+                  ))
+                )}
+              </div>
             )}
           </section>
         )}

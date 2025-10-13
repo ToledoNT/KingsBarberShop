@@ -1,128 +1,96 @@
-import React, { useState } from "react";
-import Input from "../ui/Input";
-import Button from "../ui/Button";
-import Table from "../ui/Table";
-import { Procedimento, ProcedimentosProfissionaisProps } from "@/app/interfaces/profissionaisInterface";
-import { useProcedimentosAdmin } from "@/app/hook/useProcedimentosAdmin";
+"use client";
 
-const ProcedimentosProfissionais: React.FC<ProcedimentosProfissionaisProps> = ({ 
-  profissionais, 
-  procedimentos, 
-  novoProcedimento, 
+import React, { useState } from "react";
+import Button from "../ui/Button";
+import ProcedimentoCard from "./ProcedimentoCard";
+import { Procedimento, ProcedimentosProfissionaisProps } from "@/app/interfaces/profissionaisInterface";
+
+export const ProcedimentosProfissionais: React.FC<ProcedimentosProfissionaisProps> = ({
+  procedimentos,
+  novoProcedimento,
   setNovoProcedimento,
   addProcedimento,
   updateProcedimento,
   removeProcedimento
 }) => {
-  const [editando, setEditando] = useState<string | null>(null);
-  
-  const { 
-    procedimentos: procedimentosDaAPI, 
-    addProcedimento: addProcedimentoAPI, 
-    updateProcedimento: updateProcedimentoAPI, 
-    removeProcedimento: removeProcedimentoAPI, 
-    loading, 
-    error 
-  } = useProcedimentosAdmin();
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleAddOrSave = async () => {
-    if (!novoProcedimento.nome || novoProcedimento.valor <= 0) {
-      alert("Nome e valor do procedimento são obrigatórios.");
-      return;
-    }
+  // Função para adicionar ou atualizar procedimento
+  const handleSubmit = async () => {
+    if (!novoProcedimento.nome || novoProcedimento.valor <= 0 || !novoProcedimento.profissionalId) return;
+
+    setLoading(true);
 
     try {
-      if (editando) {
-        await updateProcedimentoAPI(editando, novoProcedimento);
-        setEditando(null);
+      if (editandoId) {
+        await updateProcedimento(editandoId, novoProcedimento);
+        setEditandoId(null);
       } else {
-        await addProcedimentoAPI(novoProcedimento);
+        await addProcedimento(novoProcedimento);
       }
 
-      setNovoProcedimento({ nome: "", valor: 0 });
-    } catch (error) {
-      console.error("Erro ao salvar procedimento:", error);
-      alert("Ocorreu um erro ao salvar o procedimento.");
+      setNovoProcedimento({ nome: "", valor: 0, profissionalId: novoProcedimento.profissionalId });
+    } catch (err) {
+      console.error("Erro ao salvar procedimento:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEdit = (p: Procedimento) => {
-    if (p.id) {
-      setEditando(p.id);
-      setNovoProcedimento({ nome: p.nome, valor: p.valor });
-    }
+  // Preparar o formulário para edição
+  const handleEdit = (proc: Procedimento) => {
+    setNovoProcedimento({ nome: proc.nome, valor: proc.valor, profissionalId: proc.profissionalId });
+    setEditandoId(proc.id);
   };
-
-  const handleRemove = async (id: string) => {
-    try {
-      await removeProcedimentoAPI(id);
-    } catch (error) {
-      console.error("Erro ao remover procedimento:", error);
-      alert("Ocorreu um erro ao remover o procedimento.");
-    }
-  };
-
-  const columns = [
-    { header: "Nome", accessor: "nome" },
-    { header: "Valor", accessor: "valor" },
-    { header: "Ações", accessor: "acoes" },
-  ];
-
-  const data = procedimentosDaAPI
-    .filter(p => p.id)
-    .map(p => ({
-      ...p,
-      acoes: (
-        <div className="flex gap-1">
-          <button onClick={() => handleEdit(p)} className="px-3 py-1 bg-blue-600 rounded text-xs">
-            Editar
-          </button>
-          <button onClick={() => handleRemove(p.id!)} className="px-3 py-1 bg-red-600 rounded text-xs">
-            Remover
-          </button>
-        </div>
-      ),
-    }));
 
   return (
-    <section className="bg-[#1B1B1B] p-3 rounded-xl shadow flex flex-col gap-4">
-      <h2 className="text-base font-semibold text-[#FFA500]">Procedimentos</h2>
-
-      {/* Formulário de Procedimento */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-        <Input
-          name="nomeProcedimento"
-          placeholder="Nome do Procedimento"
+    <div className="flex flex-col gap-4 w-full">
+      {/* Formulário */}
+      <div className="flex flex-col sm:flex-row gap-2 w-full">
+        <input
+          type="text"
+          placeholder="Nome do procedimento"
+          className="flex-1 p-2 rounded-lg bg-[#1B1B1B] text-white placeholder-gray-400"
           value={novoProcedimento.nome}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onChange={(e) =>
             setNovoProcedimento({ ...novoProcedimento, nome: e.target.value })
           }
         />
-
-        <Input
-          name="valorProcedimento"
+        <input
           type="number"
           placeholder="Valor"
-          value={novoProcedimento.valor || ""}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const value = e.target.value;
-            setNovoProcedimento({
-              ...novoProcedimento,
-              valor: value === "" ? 0 : parseFloat(value),
-            });
-          }}
+          className="w-full sm:w-24 p-2 rounded-lg bg-[#1B1B1B] text-white placeholder-gray-400"
+          value={novoProcedimento.valor}
+          onChange={(e) =>
+            setNovoProcedimento({ ...novoProcedimento, valor: Number(e.target.value) })
+          }
         />
+        <Button
+          onClick={handleSubmit}
+          variant="primary"
+          className="px-4 py-2 text-sm w-full sm:w-auto"
+          disabled={loading}
+        >
+          {editandoId ? "Atualizar" : "Adicionar"}
+        </Button>
       </div>
 
-      {/* Botão de adicionar ou salvar */}
-      <Button onClick={handleAddOrSave} variant="primary" disabled={loading}>
-        {loading ? "Carregando..." : editando ? "Salvar Alterações" : "Adicionar Procedimento"}
-      </Button>
-     
-      {/* Tabela de Procedimentos */}
-      <Table columns={columns} data={data} />
-    </section>
+      {/* Lista de Procedimentos */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {procedimentos.length === 0 ? (
+          <p className="text-gray-400 text-center">Nenhum procedimento cadastrado.</p>
+        ) : (
+          procedimentos.map((proc) => (
+            <ProcedimentoCard
+              key={proc.id}
+              procedimento={proc}
+              onEdit={handleEdit}
+              onDelete={() => removeProcedimento(proc.id)}
+            />
+          ))
+        )}
+      </div>
+    </div>
   );
 };
-
-export { ProcedimentosProfissionais };

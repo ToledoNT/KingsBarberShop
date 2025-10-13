@@ -7,11 +7,10 @@ import { LoginData } from "../interfaces/loginInterface";
 
 export default function LoginPage() {
   const { login, loading, error } = useAuth();
-  const [form, setForm] = useState<LoginData>({ username: "", password: "" });
+  const [form, setForm] = useState<LoginData>({ email: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form enviado:", form); // Garantir que os valores estão corretos
     await login(form);
   };
 
@@ -35,10 +34,10 @@ export default function LoginPage() {
         )}
 
         <input
-          type="text"
-          name="username"
-          placeholder="Usuário"
-          value={form.username}
+          type="email"
+          name="email" // ⚡ corrigido
+          placeholder="Email"
+          value={form.email}
           onChange={handleChange}
           className="p-3 sm:p-4 rounded-xl bg-[#2A2A2A] border border-gray-700 text-base sm:text-lg w-full focus:outline-none focus:ring-2 focus:ring-[#FFA500]"
           required

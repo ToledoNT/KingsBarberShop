@@ -1,3 +1,4 @@
+// hook/useAuthLoginAdmin.ts
 "use client";
 
 import { useState, useEffect } from "react";
@@ -26,6 +27,10 @@ export function useAuth(): UseAuthReturn {
           setToken(null);
           setIsAuthenticated(false);
         }
+      }).catch(() => {
+        localStorage.removeItem("token");
+        setToken(null);
+        setIsAuthenticated(false);
       });
     }
   }, []);
@@ -35,14 +40,18 @@ export function useAuth(): UseAuthReturn {
     setError(null);
 
     try {
-      console.log("Login attempt:", data.username, data.password);
-      const res = await authService.login(data); // envia objeto inteiro
+      console.log("Login attempt:", data.email, data.password);
+
+      const res = await authService.login(data);
+
+      if (!res?.token) throw new Error("Token não retornou do servidor");
+
       setToken(res.token);
       localStorage.setItem("token", res.token);
       setIsAuthenticated(true);
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(err.message || "Erro ao logar");
+      setError(err?.response?.data?.message || err.message || "Erro ao logar");
       setIsAuthenticated(false);
     } finally {
       setLoading(false);

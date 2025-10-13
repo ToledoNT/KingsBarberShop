@@ -1,5 +1,5 @@
 export interface LoginData {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -22,4 +22,4 @@ export interface UseAuthReturn extends AuthState {
 export interface LoadingProps {
   size?: number;
   text?: string; 
-}
+} 

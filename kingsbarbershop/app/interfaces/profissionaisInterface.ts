@@ -1,9 +1,9 @@
 export interface Profissional {
-  id: string;
-  nome: string;
-  email: string;
-  telefone: string;
-  procedimentos: Procedimento[];
+  id: string;                 // Um identificador único do profissional (geralmente gerado pelo backend ou timestamp)
+  nome: string;               // O nome do profissional
+  email: string;              // O e-mail de contato do profissional
+  telefone: string;           // O telefone de contato do profissional
+  procedimentos: Procedimento[]; // Um array com os procedimentos que o profissional realiza
 }
 
 export interface ProfissionaisProps {
@@ -19,6 +19,7 @@ export interface Procedimento {
   id: string;
   nome: string;
   valor: number;
+  profissionalId: string; // <-- corrigido
 }
 
 export interface ProfissionalFormProps {
@@ -51,12 +52,13 @@ export interface ProfissionaisPageProps extends ProfissionaisProps {
 export interface ProcedimentosProfissionaisProps {
   profissionais: Profissional[];
   procedimentos: Procedimento[];
-  novoProcedimento: Omit<Procedimento, "id">;
+  novoProcedimento: Omit<Procedimento, "id">; // agora Omit<Procedimento, "id"> já inclui profissionalId
   setNovoProcedimento: React.Dispatch<React.SetStateAction<Omit<Procedimento, "id">>>;
-  addProcedimento: (proc: Omit<Procedimento, "id">) => void; // Mudado aqui também
-  updateProcedimento: (id: string, proc: Omit<Procedimento, "id">) => void; // E aqui
-  removeProcedimento: (id: string) => void;
+  addProcedimento: (proc: Omit<Procedimento, "id">) => void;
+  updateProcedimento: (id: string, proc: Omit<Procedimento, "id">) => void;
+  removeProcedimento: (id?: string) => void;
 }
+
 
 export interface ProcedimentoCardProps {
   procedimento: Procedimento;
@@ -67,6 +69,12 @@ export interface ProcedimentoCardProps {
 export interface HorarioInputProps {
   value: string;
   onChange: (value: string) => void;
+}
+export interface Procedimento {
+  id: string;
+  nome: string;
+  valor: number;
+  profissionalId: string; // ⚠ corrigido
 }
 
 // export interface ProcedimentosProps {

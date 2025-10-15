@@ -1,170 +1,178 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { Agendamento, HorarioDisponivel } from "../interfaces/agendamentoInterface";
+import {
+  Agendamento,
+  HorarioDisponivel,
+  Barbeiro,
+  Procedimento,
+} from "../interfaces/agendamentoInterface";
 import { ProfissionalService } from "../api/frontend/profissionaisAdmin";
 import { AppointmentService } from "../api/frontend/agendamentoAdmin";
 import { HorarioService } from "../api/frontend/agendamentoHorarioAdmin";
+import { Profissional } from "../../app/interfaces/profissionaisInterface";
 
 const appointmentService = new AppointmentService();
 const profissionalService = new ProfissionalService();
-const horarioService = new HorarioService(); 
+const horarioService = new HorarioService();
+
+type FormState = {
+  barbeiro: string;
+  data: string | null;
+};
 
 export function useAgendamentosAdmin() {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [horarios, setHorarios] = useState<HorarioDisponivel[]>([]);
-  const [barbeiros, setBarbeiros] = useState<{ nome: string }[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({ barbeiro: "", data: "" });
+  const [barbeiros, setBarbeiros] = useState<Barbeiro[]>([]);
+  const [procedimentosBarbeiro, setProcedimentosBarbeiro] = useState<Procedimento[]>([]);
+  const [form, setForm] = useState<FormState>({ barbeiro: "", data: null });
 
   const fetchBarbeiros = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      const data = await profissionalService.fetchProfissionais();
-      setBarbeiros(data);
+      const response = await profissionalService.fetchProfissionais();
+      if (Array.isArray(response)) {
+        setBarbeiros(response.map((b: Profissional) => ({
+          id: b.id,
+          nome: b.nome,
+          horarios: b.horarios || [],
+        })));
+      }
     } catch (err: any) {
-      setError(err.message || "Erro ao buscar barbeiros");
-    } finally {
-      setLoading(false);
+      console.error("Erro ao buscar barbeiros:", err);
     }
   };
 
   const fetchAgendamentos = async () => {
-    setLoading(true);
-    setError(null);
     try {
       const data = await appointmentService.fetchAppointments();
-      setAgendamentos(data);
+      setAgendamentos(data || []);
     } catch (err: any) {
-      setError(err.message || "Erro ao buscar agendamentos");
-    } finally {
-      setLoading(false);
+      console.error("Erro ao buscar agendamentos:", err);
     }
   };
 
-  const fetchHorariosDisponiveis = async (barbeiro: string, data: string) => {
-    setLoading(true);
-    setError(null);
+  const fetchTodosHorarios = async () => {
     try {
-      const horariosData = await horarioService.fetchHorariosDisponiveis(barbeiro, data);
-      setHorarios(horariosData);
+      const data = await horarioService.fetchAllHorarios();
+      setHorarios(data || []);
     } catch (err: any) {
-      setError(err.message || "Erro ao buscar horários");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addAgendamento = async (novo: Agendamento) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const criado = await appointmentService.createAppointment(novo);
-      setAgendamentos((prev) => [...prev, criado]);
-    } catch (err: any) {
-      setError(err.message || "Erro ao adicionar agendamento");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateAgendamento = async (id: string, atualizado: Agendamento) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const atualizadoServidor = await appointmentService.updateAppointment(id, atualizado);
-      if (!atualizadoServidor) throw new Error("Falha ao atualizar agendamento");
-      setAgendamentos((prev) =>
-        prev.map((a) => (a.id === id ? atualizadoServidor : a))
-      );
-    } catch (err: any) {
-      setError(err.message || "Erro ao atualizar agendamento");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const removeAgendamento = async (id: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await appointmentService.deleteAppointment(id);
-      setAgendamentos((prev) => prev.filter((a) => a.id !== id));
-    } catch (err: any) {
-      setError(err.message || "Erro ao remover agendamento");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addHorario = async (novo: HorarioDisponivel) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const criado = await horarioService.createHorarioDisponivel(novo);
-      setHorarios((prev) => [...prev, criado]);
-    } catch (err: any) {
-      setError(err.message || "Erro ao adicionar horário");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateHorario = async (id: string, atualizado: HorarioDisponivel) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const atualizadoServidor = await horarioService.updateHorarioDisponivel(id, atualizado);
-      setHorarios((prev) => prev.map((h) => (h.id === id ? atualizadoServidor : h)));
-    } catch (err: any) {
-      setError(err.message || "Erro ao atualizar horário");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const removeHorario = async (id: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await horarioService.deleteHorarioDisponivel(id);
-      setHorarios((prev) => prev.filter((h) => h.id !== id));
-    } catch (err: any) {
-      setError(err.message || "Erro ao remover horário");
-    } finally {
-      setLoading(false);
+      console.error("Erro ao buscar horários:", err);
+      setHorarios([]);
     }
   };
 
   useEffect(() => {
     fetchAgendamentos();
     fetchBarbeiros();
+    fetchTodosHorarios();
   }, []);
 
-  useEffect(() => {
-    if (form.barbeiro && form.data) {
-      fetchHorariosDisponiveis(form.barbeiro, form.data);
-    } else {
-      setHorarios([]);
+  // --- CRUD Agendamentos ---
+  const addAgendamento = async (a: Agendamento) => {
+    try {
+      const newA = await appointmentService.createAppointment(a);
+      setAgendamentos(prev => [...prev, newA]);
+    } catch (err) {
+      console.error(err);
     }
-  }, [form.barbeiro, form.data]);
+  };
+
+  const updateAgendamento = async (id: string, a: Partial<Agendamento>) => {
+    try {
+      await appointmentService.updateAppointment(id, a);
+      setAgendamentos(prev => prev.map(item => (item.id === id ? { ...item, ...a } : item)));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const removeAgendamento = async (id: string) => {
+    try {
+      await appointmentService.deleteAppointment(id);
+      setAgendamentos(prev => prev.filter(item => item.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // --- CRUD Horários ---
+  const addHorario = async (h: Partial<HorarioDisponivel>) => {
+    try {
+      const response = await horarioService.createHorarioDisponivel(h);
+
+      // Normaliza para sempre ter o profissional completo
+      const normalizeHorario = (horario: HorarioDisponivel) => ({
+        ...horario,
+        profissional: horario.profissional || { id: h.profissional?.id || "", nome: h.profissional?.nome || "Sem profissional" },
+      });
+
+      if (Array.isArray(response)) {
+        setHorarios(prev => [...prev, ...response.map(normalizeHorario)]);
+      } else {
+        setHorarios(prev => [...prev, normalizeHorario(response)]);
+      }
+
+      return response;
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const removeHorario = async (id: string) => {
+    try {
+      await horarioService.deleteHorarioDisponivel(id);
+      setHorarios(prev => prev.filter(h => h.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+const toggleHorarioDisponivel = async (h: HorarioDisponivel) => {
+  if (!h.id) return;
+
+  try {
+    const updated = await horarioService.updateHorario(h.id, {
+      disponivel: !h.disponivel
+    });
+
+    setHorarios(prev =>
+      prev.map(item => (item.id === h.id ? { ...item, disponivel: updated.disponivel } : item))
+    );
+  } catch (err) {
+    console.error("Erro ao atualizar disponibilidade do horário:", err);
+    alert("Erro ao atualizar disponibilidade. Veja o console.");
+  }
+};
+
+  useEffect(() => {
+    if (!form.barbeiro) return setProcedimentosBarbeiro([]);
+    const fetchProcedimentos = async () => {
+      try {
+        const prof = await profissionalService.fetchProfissionalById(form.barbeiro);
+        setProcedimentosBarbeiro(prof?.procedimentos || []);
+      } catch (err: any) {
+        console.error(err);
+      }
+    };
+    fetchProcedimentos();
+  }, [form.barbeiro]);
 
   return {
     agendamentos,
-    barbeiros,
-    horarios,
-    loading,
-    error,
-    form,
-    setForm,
-    fetchAgendamentos,
-    fetchBarbeiros,
-    fetchHorariosDisponiveis,
     addAgendamento,
     updateAgendamento,
     removeAgendamento,
+    horarios,
     addHorario,
-    updateHorario,
     removeHorario,
+    toggleHorarioDisponivel,
+    barbeiros,
+    procedimentosBarbeiro,
+    form,
+    setForm,
+    fetchBarbeiros,
+    fetchAgendamentos,
+    fetchTodosHorarios,
   };
 }

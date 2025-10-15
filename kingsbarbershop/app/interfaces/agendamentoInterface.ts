@@ -1,4 +1,32 @@
-import { Dispatch, SetStateAction, ReactNode } from "react";
+import { Dispatch, SetStateAction } from "react";
+
+// -------------------- Profissionais e Procedimentos --------------------
+export interface Procedimento {
+  id: string;
+  nome: string;
+  valor: number;
+  duracaoMinutos?: number;
+  label?: string; 
+}
+
+export interface Profissional {
+  id: string;
+  nome: string;
+}
+
+export interface Barbeiro {
+  id: string;
+  nome: string;
+  horarios: string[];
+  procedimentos?: Procedimento[];
+}
+
+// -------------------- Agendamentos --------------------
+export enum StatusAgendamento {
+  PENDENTE = "Pendente",
+  CONCLUIDO = "Concluído",
+  CANCELADO = "Cancelado",
+}
 
 export interface AgendamentoFormData {
   nome: string;
@@ -10,17 +38,6 @@ export interface AgendamentoFormData {
   barbeiro: string;
 }
 
-export interface Barbeiro {
-  nome: string;
-  horarios: string[];
-}
-
-export enum StatusAgendamento {
-  PENDENTE = "Pendente",
-  CONCLUIDO = "Concluído",
-  CANCELADO = "Cancelado",
-}
-
 export interface Agendamento {
   id?: string;
   nome: string;
@@ -30,23 +47,37 @@ export interface Agendamento {
   hora: string;
   servico: string;
   barbeiro: string;
+  inicio: string; 
+  fim: string;    
   criadoEm?: string;
   atualizadoEm?: string;
-  status?: StatusAgendamento; 
+  status?: StatusAgendamento;
 }
 
-export interface HorarioDisponivel {
-  id: string;
+export interface AgendamentoForm {
+  nome: string;
+  telefone: string;
+  email: string;
   barbeiro: string;
+  data: Date | null;
+  hora: string;
+  servico: string;
+  status: StatusAgendamento;
+}
+
+// -------------------- Horários --------------------
+export interface HorarioDisponivel {
+  id?: string;
+  profissional: Barbeiro; 
   data: string;
   inicio: string;
   fim: string;
+  disponivel: boolean;
 }
 
-export interface AgendamentoPrivadoFormProps {
-  agendamento?: Agendamento;
-  onSave: (a: Agendamento) => Promise<void>;
-  onCancel?: () => void;
+export type HorarioParaGerar = {
+  barbeiro: string;
+  data: string;
 }
 
 export interface HorariosProps {
@@ -54,45 +85,22 @@ export interface HorariosProps {
   novoHorario: Omit<HorarioDisponivel, "id">;
   setNovoHorario: Dispatch<SetStateAction<Omit<HorarioDisponivel, "id">>>;
   addHorario: (novo: HorarioDisponivel) => void;
-  updateHorario: (id: string, atualizado: Omit<HorarioDisponivel, "id">) => void;
+  updateHorario: (id: string, atualizado: Partial<HorarioDisponivel>) => void;
   removeHorario: (id: string) => void;
 }
 
-//   agendamento: Agendamento | null;
-//   onClose: () => void;
-//   onSave: (updated: Agendamento) => void;
-//   horariosDisponiveis?: HorarioDisponivel[];
-// }
+// -------------------- Formulários --------------------
+export interface AgendamentoPrivadoFormProps {
+  agendamento?: Agendamento | null;
+  onSave: (a: Agendamento) => Promise<void> | void;
+  onCancel: () => void;
+  horarios: HorarioDisponivel[];
+  barbeiros: Barbeiro[];
+  procedimentos?: Procedimento[];
+}
 
-
-
-// export interface AgendamentosSectionProps {
-//   agendamentos: Agendamento[];
-// }
-
-// export interface AgendamentoActionsProps {
-//   onEdit: () => void;
-//   onDelete: () => void;
-// }
-
-// export interface ModalProps {
-//   children: ReactNode;
-//   onClose: () => void;
-// }
-
-// export interface MenuItem {
-//   name: string;
-//   icon: LucideIcon;
-//   path: string;
-// }
-
-// export interface Column {
-//   header: string;
-//   accessor: string;
-// }
-
-// export interface TableProps {
-//   columns: Column[];
-//   data: Record<string, any>[];
-// }
-
+export interface AgendamentoHorarioProps {
+  horarios: HorarioDisponivel[];
+  onToggleDisponivel: (h: HorarioDisponivel) => void;
+  onRemoveHorario: (id?: string) => void;
+}

@@ -1,150 +1,98 @@
 "use client";
 
 import React, { useState } from "react";
+import { AgendamentoHorarioProps, HorarioDisponivel } from "../../interfaces/agendamentoInterface";
 import Button from "../ui/Button";
-import { HorarioDisponivel } from "@/app/interfaces/agendamentoInterface";
-import { useAgendamentosAdmin } from "@/app/hook/useAgendamentoAdmin";
+import { FaTrash } from "react-icons/fa";
 
-export default function Horarios() {
-  const { horarios, addHorario, updateHorario, removeHorario, setForm } = useAgendamentosAdmin();
+export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
+  horarios,
+  onToggleDisponivel,
+  onRemoveHorario,
+}) => {
+  const [openProfissionais, setOpenProfissionais] = useState<{ [nome: string]: boolean }>({});
 
-  const [novoHorario, setNovoHorario] = useState<HorarioDisponivel>({
-    id: "",
-    barbeiro: "",
-    data: "",
-    inicio: "",
-    fim: "",
-  });
-
-  const [editandoHorarioId, setEditandoHorarioId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"exibir" | "criar">("exibir");
-
-  // Função para gerar ID único consistente
-  const gerarIdHorario = (h: HorarioDisponivel) => {
-    return `${h.barbeiro}-${h.data}-${h.inicio}-${h.fim}`.replace(/\s+/g, "");
+  const formatarHora = (hora?: string) => hora?.slice(0, 5) || "";
+  const formatarData = (dataISO: string) => {
+    if (!dataISO) return "";
+    const d = new Date(dataISO);
+    if (isNaN(d.getTime())) return dataISO;
+    const dia = String(d.getUTCDate()).padStart(2, "0");
+    const mes = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const ano = d.getUTCFullYear();
+    return `${dia}/${mes}/${ano}`;
   };
 
-  const handleAddOrUpdateHorario = async () => {
-    if (!novoHorario.barbeiro || !novoHorario.data || !novoHorario.inicio || !novoHorario.fim) return;
+  // Agrupa horários por profissional e por data
+  const agruparHorarios = () => {
+    const grouped: Record<string, Record<string, HorarioDisponivel[]>> = {};
+    horarios.forEach(h => {
+      const nome = h.profissional?.nome || "Sem profissional"; // ✅ fallback
+      const dataFormatada = formatarData(h.data);
 
-    const horarioFormatado: HorarioDisponivel = {
-      ...novoHorario,
-      id: editandoHorarioId || gerarIdHorario(novoHorario),
-    };
-
-    try {
-      if (editandoHorarioId) {
-        await updateHorario(editandoHorarioId, horarioFormatado);
-        setEditandoHorarioId(null);
-      } else {
-        await addHorario(horarioFormatado);
-      }
-
-      setNovoHorario({ id: "", barbeiro: "", data: "", inicio: "", fim: "" });
-      setActiveTab("exibir");
-      setForm({ barbeiro: horarioFormatado.barbeiro, data: horarioFormatado.data });
-    } catch (err) {
-      console.error("Erro ao salvar horário:", err);
-      alert("Não foi possível salvar o horário.");
-    }
+      if (!grouped[nome]) grouped[nome] = {};
+      if (!grouped[nome][dataFormatada]) grouped[nome][dataFormatada] = [];
+      grouped[nome][dataFormatada].push(h);
+    });
+    return grouped;
   };
 
-  const handleEditHorario = (h: HorarioDisponivel) => {
-    setEditandoHorarioId(h.id || null);
-    setNovoHorario(h);
-    setActiveTab("criar");
-  };
-
-  const handleRemoveHorario = async (id: string) => {
-    try {
-      await removeHorario(id);
-    } catch (err) {
-      console.error("Erro ao remover horário:", err);
-      alert("Não foi possível remover o horário.");
-    }
-  };
+  const horariosPorProfissional = agruparHorarios();
 
   return (
-    <section className="bg-[#1B1B1B] rounded-2xl shadow p-4 md:p-6 flex flex-col gap-4">
-      {/* Tabs */}
-      <div className="flex gap-2 flex-wrap">
-        <Button variant={activeTab === "exibir" ? "primary" : "secondary"} onClick={() => setActiveTab("exibir")}>
-          Exibir Horários
-        </Button>
-        <Button variant={activeTab === "criar" ? "primary" : "secondary"} onClick={() => setActiveTab("criar")}>
-          Criar Horário
-        </Button>
-      </div>
+    <div className="flex flex-col gap-4 max-h-[24rem] overflow-y-auto">
+      {Object.entries(horariosPorProfissional).map(([profissional, dias]) => (
+        <div key={profissional} className="bg-[#2A2A2A] rounded-2xl p-4 shadow-md hover:shadow-xl transition">
+          <h2
+            className="text-xl font-semibold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent mb-3 cursor-pointer select-none"
+            onClick={() => setOpenProfissionais(prev => ({ ...prev, [profissional]: !prev[profissional] }))}
+          >
+            {profissional} {openProfissionais[profissional] ? "▲" : "▼"}
+          </h2>
 
-      {/* Exibir horários */}
-      {activeTab === "exibir" && (
-        <div className="flex flex-col gap-2 mt-4">
-          {horarios.length === 0 ? (
-            <p className="text-gray-400">Nenhum horário disponível.</p>
-          ) : (
-            horarios.map((h) => (
-              <div
-                key={h.id}
-                className="bg-[#2A2A2A] rounded-xl p-3 flex flex-col sm:flex-row sm:justify-between sm:items-center shadow hover:shadow-lg transition gap-2"
-              >
-                <div>
-                  <p className="font-semibold">{h.barbeiro}</p>
-                  <p className="text-gray-400">
-                    {h.data} - {h.inicio} às {h.fim}
-                  </p>
-                </div>
-                <div className="flex gap-2 flex-wrap mt-2 sm:mt-0">
-                  <Button onClick={() => handleEditHorario(h)} variant="primary" className="text-sm">
-                    Editar
-                  </Button>
-                  <Button onClick={() => handleRemoveHorario(h.id!)} variant="secondary" className="text-sm">
-                    Deletar
-                  </Button>
+          {openProfissionais[profissional] &&
+            Object.entries(dias).map(([data, horariosDia]) => (
+              <div key={data} className="ml-4 mb-4">
+                <h3 className="font-medium text-yellow-400 mb-2">{data}</h3>
+                <div className="flex flex-wrap gap-3">
+                  {horariosDia.map(h => (
+                    <div
+                      key={h.id}
+                      className={`flex flex-col justify-between p-3 rounded-xl shadow hover:shadow-lg transition ${
+                        h.disponivel ? "bg-green-600/20" : "bg-[#2F2F2F] hover:bg-[#3B3B3B]"
+                      }`}
+                    >
+                      <p className="text-sm text-gray-200 font-medium">
+                        {formatarHora(h.inicio)} - {formatarHora(h.fim)}
+                      </p>
+                      <div className="flex justify-between items-center mt-3">
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={h.disponivel}
+                            // ✅ chama a função de update no hook
+                            onChange={() => onToggleDisponivel(h)}
+                          />
+                          Disponível
+                        </label>
+                        <Button
+                          onClick={() => onRemoveHorario(h.id)}
+                          variant="secondary"
+                          className="text-xs ml-4 flex items-center gap-1"
+                        >
+                          <FaTrash /> Excluir
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))
-          )}
+            ))}
         </div>
+      ))}
+      {Object.keys(horariosPorProfissional).length === 0 && (
+        <p className="text-gray-400">Nenhum horário disponível.</p>
       )}
-
-      {/* Criar / Editar horário */}
-      {activeTab === "criar" && (
-        <div className="bg-[#2A2A2A] rounded-xl p-4 shadow flex flex-col gap-3 mt-4">
-          <h3 className="font-semibold text-lg">{editandoHorarioId ? "Editar Horário" : "Criar Horário"}</h3>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-wrap">
-            <input
-              type="text"
-              placeholder="Barbeiro"
-              value={novoHorario.barbeiro}
-              onChange={(e) => setNovoHorario((prev) => ({ ...prev, barbeiro: e.target.value }))}
-              className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
-            />
-            <input
-              type="date"
-              value={novoHorario.data}
-              onChange={(e) => setNovoHorario((prev) => ({ ...prev, data: e.target.value }))}
-              className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
-            />
-            <input
-              type="time"
-              value={novoHorario.inicio}
-              onChange={(e) => setNovoHorario((prev) => ({ ...prev, inicio: e.target.value }))}
-              className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
-              step={60}
-            />
-            <input
-              type="time"
-              value={novoHorario.fim}
-              onChange={(e) => setNovoHorario((prev) => ({ ...prev, fim: e.target.value }))}
-              className="flex-1 p-2 rounded bg-[#1B1B1B] border border-gray-700"
-              step={60}
-            />
-            <Button onClick={handleAddOrUpdateHorario} variant="primary" fullWidth={false}>
-              {editandoHorarioId ? "Atualizar" : "Adicionar"}
-            </Button>
-          </div>
-        </div>
-      )}
-    </section>
+    </div>
   );
-}
+};

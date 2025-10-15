@@ -1,9 +1,10 @@
 export interface Profissional {
-  id: string;                 // Um identificador único do profissional (geralmente gerado pelo backend ou timestamp)
-  nome: string;               // O nome do profissional
-  email: string;              // O e-mail de contato do profissional
-  telefone: string;           // O telefone de contato do profissional
-  procedimentos: Procedimento[]; // Um array com os procedimentos que o profissional realiza
+  id: string;                 
+  nome: string;              
+  email: string;              
+  telefone: string;           
+  procedimentos: Procedimento[]; 
+  horarios: string[];         
 }
 
 export interface ProfissionaisProps {
@@ -19,7 +20,7 @@ export interface Procedimento {
   id: string;
   nome: string;
   valor: number;
-  profissionalId: string; // <-- corrigido
+  profissionalId: string; 
 }
 
 export interface ProfissionalFormProps {
@@ -70,24 +71,9 @@ export interface HorarioInputProps {
   value: string;
   onChange: (value: string) => void;
 }
-export interface Procedimento {
-  id: string;
+
+export interface ProcedimentoInput {
   nome: string;
   valor: number;
-  profissionalId: string; // ⚠ corrigido
+  profissionalId: string;
 }
-
-// export interface ProcedimentosProps {
-//   procedimentos: Procedimento[];
-//   novoProcedimento: Omit<Procedimento, "id">;
-//   setNovoProcedimento: React.Dispatch<React.SetStateAction<Omit<Procedimento, "id">>>;
-//   addProcedimento: (novo: Omit<Procedimento, "id">) => void;
-//   updateProcedimento: (id: string, atualizado: Omit<Procedimento, "id">) => void;
-//   removeProcedimento: (id: string) => void;
-// }
-
-// export interface ProcedimentoFormProps {
-//   procedimento?: Procedimento | null;
-//   onSave: (proc: Partial<Procedimento>) => void;
-//   onCancel?: () => void;
-// }

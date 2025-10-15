@@ -1,7 +1,5 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { Profissional, Procedimento } from "../interfaces/profissionaisInterface";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Profissional } from "../interfaces/profissionaisInterface";
 import { ProfissionalService } from "../api/frontend/profissionaisAdmin";
 
 const service = new ProfissionalService();
@@ -11,101 +9,102 @@ export function useProfissionaisAdmin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 🔹 Buscar todos profissionais
-  const fetchProfissionais = async (): Promise<void> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await service.fetchProfissionais();
-      setProfissionais(data);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Erro ao carregar profissionais");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const mounted = useRef(true);
+  const controllerRef = useRef<AbortController | null>(null);
 
+  // Cleanup quando desmontar
   useEffect(() => {
+    mounted.current = true;
+
+    // Ao montar, já busca os profissionais
     fetchProfissionais();
+
+    return () => {
+      mounted.current = false;
+      controllerRef.current?.abort();
+    };
   }, []);
 
-  // 🔹 Adicionar profissional
-  const addProfissional = async (
-    p: Omit<Profissional, "id"> & { procedimentos?: Procedimento[] }
-  ): Promise<Profissional> => {
+  const fetchProfissionais = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    // Cancela qualquer requisição anterior
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    try {
+      const response = await service.fetchProfissionais(controller.signal);
+      // ⚠️ garante acesso correto ao axios (res.data.data)
+      const data = response ?? [];
+      if (mounted.current) setProfissionais(data);
+      return data;
+    } catch (err: any) {
+      if (mounted.current) setError(err.message || "Erro ao carregar profissionais");
+      console.error(err);
+      return [];
+    } finally {
+      if (mounted.current) setLoading(false);
+    }
+  }, []);
+
+  const addProfissional = useCallback(async (p: Omit<Profissional, "id">) => {
     setLoading(true);
     setError(null);
     try {
-      const novo: Profissional = await service.createProfissional({
-        ...p,
-        procedimentos: p.procedimentos ?? [],
-      });
-
-      setProfissionais((prev) => [...prev, novo]);
+      const novo = await service.createProfissional(p);
+      if (mounted.current) setProfissionais((prev) => [...prev, novo]);
       return novo;
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Erro ao adicionar profissional");
+      if (mounted.current) setError(err.message || "Erro ao adicionar profissional");
       throw err;
     } finally {
-      setLoading(false);
+      if (mounted.current) setLoading(false);
     }
-  };
+  }, []);
 
-const updateProfissional = async (
-  id: string,
-  p: Omit<Profissional, "id" | "procedimentos">
-): Promise<Profissional | null> => {
-  setLoading(true);
-  setError(null);
-  try {
-    // o service retorna Profissional diretamente
-    const atualizado = await service.updateProfissional(id, { ...p, id }); // Profissional
-
-    if (!atualizado) {
-      setError("Profissional não retornado pelo backend");
+  const updateProfissional = useCallback(async (id: string, p: Partial<Profissional>) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const atualizado = await service.updateProfissional(id, p);
+      if (atualizado && mounted.current) {
+        setProfissionais((prev) =>
+          prev.map((item) => (item.id === id ? atualizado : item))
+        );
+      }
+      return atualizado;
+    } catch (err: any) {
+      if (mounted.current) setError(err.message || "Erro ao atualizar profissional");
       return null;
+    } finally {
+      if (mounted.current) setLoading(false);
     }
+  }, []);
 
-    // Atualiza estado
-    setProfissionais((prev) =>
-      prev.map((item) => (item.id === id ? atualizado : item))
-    );
-
-    return atualizado;
-  } catch (err: any) {
-    console.error("Erro ao atualizar profissional:", err);
-    setError(err.message || "Erro ao atualizar profissional");
-    return null;
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // 🔹 Remover profissional
-  const removeProfissional = async (id: string): Promise<void> => {
+  const removeProfissional = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
     try {
       await service.deleteProfissional(id);
-      setProfissionais((prev) => prev.filter((item) => item.id !== id));
+      if (mounted.current)
+        setProfissionais((prev) => prev.filter((item) => item.id !== id));
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Erro ao remover profissional");
+      if (mounted.current) setError(err.message || "Erro ao remover profissional");
+      throw err;
     } finally {
-      setLoading(false);
+      if (mounted.current) setLoading(false);
     }
-  };
+  }, []);
 
   return {
     profissionais,
+    loading,
+    error,
     fetchProfissionais,
     addProfissional,
     updateProfissional,
     removeProfissional,
-    loading,
-    error,
   };
 }

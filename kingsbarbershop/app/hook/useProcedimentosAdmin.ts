@@ -23,10 +23,6 @@ export function useProcedimentosAdmin() {
     }
   };
 
-  useEffect(() => {
-    fetchProcedimentos();
-  }, []);
-
   const addProcedimento = async (p: Omit<Procedimento, "id">) => {
     setLoading(true);
     setError(null);
@@ -73,6 +69,14 @@ export function useProcedimentosAdmin() {
     }
   };
 
+  useEffect(() => {
+    fetchProcedimentos();
+  }, []);
+
+  const getProcedimentosByProfissional = (profissionalId: string) => {
+    return procedimentos.filter(p => p.profissionalId === profissionalId);
+  };
+
   return {
     procedimentos,
     addProcedimento,
@@ -81,5 +85,6 @@ export function useProcedimentosAdmin() {
     loading,
     error,
     fetchProcedimentos,
+    getProcedimentosByProfissional,
   };
 }

@@ -53,13 +53,12 @@ export interface ProfissionaisPageProps extends ProfissionaisProps {
 export interface ProcedimentosProfissionaisProps {
   profissionais: Profissional[];
   procedimentos: Procedimento[];
-  novoProcedimento: Omit<Procedimento, "id">; // agora Omit<Procedimento, "id"> já inclui profissionalId
+  novoProcedimento: Omit<Procedimento, "id">; 
   setNovoProcedimento: React.Dispatch<React.SetStateAction<Omit<Procedimento, "id">>>;
   addProcedimento: (proc: Omit<Procedimento, "id">) => void;
   updateProcedimento: (id: string, proc: Omit<Procedimento, "id">) => void;
   removeProcedimento: (id?: string) => void;
 }
-
 
 export interface ProcedimentoCardProps {
   procedimento: Procedimento;

@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale/pt-BR";
 import "react-datepicker/dist/react-datepicker.css";
-
 import Select from "../ui/Select";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
@@ -13,30 +12,28 @@ import {
   AgendamentoForm,
   HorarioDisponivel,
   StatusAgendamento,
-  Barbeiro,
   Procedimento,
+  AgendamentoPrivadoFormProps,
 } from "../../interfaces/agendamentoInterface";
+import { useAgendamentosAdmin } from "../../hook/useAgendamentoAdmin";
 
 registerLocale("pt-BR", ptBR);
-
-interface AgendamentoPrivadoFormProps {
-  agendamento?: Agendamento | null;
-  onSave: (a: Agendamento) => Promise<void> | void;
-  onCancel: () => void;
-  barbeiros: Barbeiro[];
-  horarios: HorarioDisponivel[];
-  procedimentos?: Procedimento[];
-}
 
 const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
   agendamento,
   onSave,
   onCancel,
-  barbeiros,
-  horarios,
-  procedimentos = [],
 }) => {
-  const [form, setForm] = useState<AgendamentoForm>({
+  const {
+    barbeiros,
+    form,
+    setForm,
+    fetchBarbeiroDados,
+    horarios,
+    procedimentosBarbeiro,
+  } = useAgendamentosAdmin();
+
+  const [localForm, setLocalForm] = useState<AgendamentoForm>({
     nome: agendamento?.nome ?? "",
     telefone: agendamento?.telefone ?? "",
     email: agendamento?.email ?? "",
@@ -49,7 +46,7 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
 
   useEffect(() => {
     if (agendamento) {
-      setForm({
+      setLocalForm({
         nome: agendamento.nome,
         telefone: agendamento.telefone,
         email: agendamento.email,
@@ -59,44 +56,68 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
         servico: agendamento.servico,
         status: agendamento.status ?? StatusAgendamento.PENDENTE,
       });
-    } else {
+
       setForm({
-        nome: "",
-        telefone: "",
-        email: "",
-        barbeiro: "",
-        data: null,
-        hora: "",
-        servico: "",
-        status: StatusAgendamento.PENDENTE,
+        barbeiro: agendamento.barbeiro ?? "",
+        data: agendamento.data ? new Date(agendamento.data) : null,
       });
     }
-  }, [agendamento]);
+  }, [agendamento, setForm]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const dataString = form.data ? form.data.toISOString().split("T")[0] : "";
-   const payload: Agendamento = {
-  id: agendamento?.id,
-  nome: form.nome,
-  telefone: form.telefone,
-  email: form.email,
-  barbeiro: form.barbeiro,
-  data: dataString,
-  hora: form.hora,
-  servico: form.servico,
-  status: form.status,
-  inicio: form.hora,   
-  fim: form.hora,     
-};
-
-
-    await onSave(payload);
+  const handleBarbeiroChange = async (barbeiroId: string) => {
+    setLocalForm((prev) => ({ ...prev, barbeiro: barbeiroId, hora: "", servico: "" }));
+    setForm((prev) => ({ ...prev, barbeiro: barbeiroId }));
+    if (barbeiroId) await fetchBarbeiroDados(barbeiroId);
   };
 
-  const formatarHorarioLabel = (h: HorarioDisponivel) =>
-    `${h.inicio} - ${h.fim}`;
+  const handleDataChange = (data: Date | null) => {
+    setLocalForm((prev) => ({ ...prev, data, hora: "", servico: "" }));
+    setForm((prev) => ({ ...prev, data }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  // -------------------------------
+  // Validação completa dos campos
+  // -------------------------------
+  const erros: string[] = [];
+  if (!localForm.nome.trim()) erros.push("Nome");
+  if (!localForm.telefone.trim()) erros.push("Telefone");
+  if (!localForm.email.trim()) erros.push("Email");
+  if (!localForm.barbeiro) erros.push("Barbeiro");
+  if (!localForm.data) erros.push("Data");
+  if (!localForm.hora) erros.push("Horário");
+  if (!localForm.servico) erros.push("Serviço");
+
+  if (erros.length > 0) {
+    alert(`Preencha todos os campos obrigatórios: ${erros.join(", ")}`);
+    return;
+  }
+
+  const dataString = localForm.data!.toISOString().split("T")[0];
+
+  const horarioSelecionado = horarios.find((h) => h.id === localForm.hora);
+
+  const payload: Agendamento = {
+    id: agendamento?.id,
+    nome: localForm.nome.trim(),
+    telefone: localForm.telefone.trim(),
+    email: localForm.email.trim(),
+    barbeiro: localForm.barbeiro,
+    data: dataString,
+    hora: localForm.hora,
+    servico: localForm.servico,
+    status: localForm.status,
+    inicio: horarioSelecionado?.inicio ?? "",
+    fim: horarioSelecionado?.fim ?? "",
+  };
+
+  console.log("Payload enviado:", payload); // Depuração
+
+  await onSave(payload);
+};
+
 
   return (
     <div className="w-full flex justify-center mt-6 mb-12">
@@ -108,74 +129,66 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
           <Input
             name="nome"
-            value={form.nome}
+            value={localForm.nome}
             placeholder="Nome"
-            onChange={(e) => setForm({ ...form, nome: e.target.value })}
+            onChange={(e) => setLocalForm({ ...localForm, nome: e.target.value })}
             required
           />
 
           <Input
             name="telefone"
-            value={form.telefone}
+            value={localForm.telefone}
             placeholder="Telefone"
             onChange={(e) =>
-              setForm({ ...form, telefone: e.target.value.replace(/\D/g, "") })
+              setLocalForm({ ...localForm, telefone: e.target.value.replace(/\D/g, "") })
             }
             required
           />
 
           <Input
             name="email"
-            value={form.email}
+            value={localForm.email}
             placeholder="Email"
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            onChange={(e) => setLocalForm({ ...localForm, email: e.target.value })}
             required
           />
 
           <Select
             name="barbeiro"
-            value={form.barbeiro}
-            onChange={(e) =>
-              setForm({ ...form, barbeiro: e.target.value, hora: "", servico: "" })
-            }
+            value={localForm.barbeiro}
+            onChange={(e) => handleBarbeiroChange(e.target.value)}
             options={barbeiros.map((b) => ({ value: b.id, label: b.nome }))}
             placeholder="Selecione o barbeiro"
             required
           />
 
           <DatePicker
-            selected={form.data}
-            onChange={(d: Date | null) => setForm({ ...form, data: d })}
+            selected={localForm.data}
+            onChange={handleDataChange}
             dateFormat="dd/MM/yyyy"
             placeholderText="Selecione a data"
             className="w-full p-2 rounded-md bg-[#2B2B2B] text-white border-none"
             locale="pt-BR"
           />
 
-          {/* Horários */}
           <Select
             name="hora"
-            value={form.hora}
-            onChange={(e) => setForm({ ...form, hora: e.target.value })}
+            value={localForm.hora}
+            onChange={(e) => setLocalForm({ ...localForm, hora: e.target.value })}
             options={horarios
-              .filter((h) => h.disponivel)
-              .map((h) => ({
-                value: `${h.inicio}-${h.fim}`,
-                label: formatarHorarioLabel(h),
-              }))}
+              .filter((h): h is HorarioDisponivel & { id: string } => !!h.disponivel && !!h.id)
+              .map((h) => ({ value: h.id, label: h.label! }))}
             placeholder="Selecione o horário"
             required
           />
 
-          {/* Serviços / Procedimentos */}
           <Select
             name="servico"
-            value={form.servico}
-            onChange={(e) => setForm({ ...form, servico: e.target.value })}
-            options={procedimentos.map((p) => ({
-              value: p.id,
-              label: `${p.nome} - R$${p.valor.toFixed(2)}`,
-            }))}
+            value={localForm.servico}
+            onChange={(e) => setLocalForm({ ...localForm, servico: e.target.value })}
+            options={procedimentosBarbeiro
+              .filter((p): p is Procedimento & { id: string } => !!p.id)
+              .map((p) => ({ value: p.id, label: p.label! }))}
             placeholder="Selecione o serviço"
             required
           />

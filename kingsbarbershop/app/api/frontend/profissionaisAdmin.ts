@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Profissional } from "../../interfaces/profissionaisInterface";
 import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-interface";
+import { HorarioDisponivel, Procedimento } from "@/app/interfaces/agendamentoInterface";
 
 const api = axios.create({
   baseURL: "http://localhost:4001/api",
@@ -50,7 +51,9 @@ export class ProfissionalService {
 
   async deleteProfissional(id: string): Promise<void> {
     try {
-      const res = await api.delete<ResponseTemplateInterface<null>>(`/profissional/delete/${id}`);
+      const res = await api.delete<ResponseTemplateInterface<null>>(
+        `/profissional/delete/${id}`
+      );
       if (!res.data.status) throw new Error(res.data.message);
     } catch (err: any) {
       console.error("Erro ao deletar profissional:", err);
@@ -58,13 +61,37 @@ export class ProfissionalService {
     }
   }
 
-  async fetchProfissionalById(id: string): Promise<Profissional | null> {
+  // ---------------------------
+  // Buscar horários e procedimentos de um barbeiro
+  // ---------------------------
+  async fetchHorariosByProfissional(profissionalId: string): Promise<BarbeiroDadosResponse> {
     try {
-      const res = await api.get<ResponseTemplateInterface<Profissional>>(`/profissional/${id}`);
-      return res.data.data ?? null;
-    } catch (err: any) {
-      console.error("Erro ao buscar profissional por ID:", err);
-      return null;
+      const res = await api.get<ResponseTemplateInterface<BarbeiroDadosResponse>>(
+        `/horario/barbeiro/${profissionalId}`
+      );
+
+      console.log(res);
+
+      // Garante que sempre retorna arrays válidos
+      return {
+        barbeiroId: res.data.data?.barbeiroId ?? profissionalId,
+        horarios: res.data.data?.horarios ?? [],
+        procedimentos: res.data.data?.procedimentos ?? [],
+      };
+    } catch (err) {
+      console.error("Erro ao buscar horários do barbeiro:", err);
+      return {
+        barbeiroId: profissionalId,
+        horarios: [],
+        procedimentos: [],
+      };
     }
   }
+}
+
+// Interface para o retorno do fetchHorariosByProfissional
+export interface BarbeiroDadosResponse {
+  barbeiroId: string;
+  horarios: HorarioDisponivel[];
+  procedimentos: Procedimento[];
 }

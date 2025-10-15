@@ -5,9 +5,14 @@ import Sidebar from "@/app/components/ui/Sidebar";
 import Button from "../components/ui/Button";
 import { FaCheck, FaEdit, FaTrash } from "react-icons/fa";
 import { AgendamentoHorario } from "../components/agendamento/AgendamentoHorario";
-import { useAgendamentosAdmin } from "../hook/useAgendamentoAdmin";
-import { Agendamento, StatusAgendamento, HorarioDisponivel } from "../interfaces/agendamentoInterface";
 import AgendamentoPrivadoForm from "../components/agendamento/AgendamentoPrivadoForm";
+import { useAgendamentosAdmin } from "../hook/useAgendamentoAdmin";
+
+import {
+  Agendamento,
+  StatusAgendamento,
+  HorarioDisponivel,
+} from "../interfaces/agendamentoInterface";
 
 export default function CriarAgendamentoPage() {
   const {
@@ -18,7 +23,7 @@ export default function CriarAgendamentoPage() {
     horarios,
     addHorario,
     removeHorario,
-    toggleHorarioDisponivel, // ✅ agora usamos direto
+    toggleHorarioDisponivel,
     fetchBarbeiros,
     barbeiros,
     procedimentosBarbeiro,
@@ -61,10 +66,14 @@ export default function CriarAgendamentoPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case StatusAgendamento.CONCLUIDO: return "bg-green-600 text-white";
-      case StatusAgendamento.PENDENTE: return "bg-yellow-600 text-white";
-      case StatusAgendamento.CANCELADO: return "bg-red-600 text-white";
-      default: return "bg-gray-600 text-white";
+      case StatusAgendamento.CONCLUIDO:
+        return "bg-green-600 text-white";
+      case StatusAgendamento.PENDENTE:
+        return "bg-yellow-600 text-white";
+      case StatusAgendamento.CANCELADO:
+        return "bg-red-600 text-white";
+      default:
+        return "bg-gray-600 text-white";
     }
   };
 
@@ -74,16 +83,33 @@ export default function CriarAgendamentoPage() {
   const handleGenerateHorarios = async () => {
     if (!form.barbeiro || !form.data) return alert("Preencha barbeiro e data.");
 
-    const regexData = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
-    if (!regexData.test(form.data)) return alert("Data inválida.");
+    // Garantir que form.data é Date
+    const dataObj = form.data instanceof Date ? form.data : new Date(form.data);
 
-    const barbeiroSelecionado = barbeiros.find(b => b.id === form.barbeiro);
+    // Formatar para DD/MM/AAAA
+    const dia = String(dataObj.getDate()).padStart(2, "0");
+    const mes = String(dataObj.getMonth() + 1).padStart(2, "0");
+    const ano = String(dataObj.getFullYear());
+
+    const dataString = `${dia}/${mes}/${ano}`;
+
+    // Regex para validar DD/MM/AAAA
+    const regexData = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+    if (!regexData.test(dataString)) return alert("Data inválida.");
+
+    // ISO string para envio
+    const dataISO = new Date(`${ano}-${mes}-${dia}`).toISOString();
+
+    const barbeiroSelecionado = barbeiros.find((b) => b.id === form.barbeiro);
     if (!barbeiroSelecionado) return alert("Barbeiro não encontrado.");
 
     try {
       await addHorario({
-        profissional: { id: barbeiroSelecionado.id, nome: barbeiroSelecionado.nome },
-        data: converteDataParaISO(form.data),
+        profissional: {
+          id: barbeiroSelecionado.id,
+          nome: barbeiroSelecionado.nome,
+        },
+        data: dataISO,
       } as any);
 
       setActiveHorarioTab("exibir");
@@ -101,9 +127,14 @@ export default function CriarAgendamentoPage() {
   // Agendamentos
   // ---------------------------
   const handleSaveAgendamento = async (a: Agendamento) => {
-    const payload: Agendamento = { ...a, inicio: a.inicio || a.hora, fim: a.fim || a.hora };
+    const payload: Agendamento = {
+      ...a,
+      inicio: a.inicio || a.hora,
+      fim: a.fim || a.hora,
+    };
     if (payload.id) await updateAgendamento(payload.id, payload);
     else await addAgendamento(payload);
+
     setSelectedAgendamento(null);
     setActiveAgendamentoTab("exibir");
   };
@@ -118,7 +149,8 @@ export default function CriarAgendamentoPage() {
   };
 
   const handleConcluirAgendamento = async (a: Agendamento) => {
-    if (a.id) await updateAgendamento(a.id, { ...a, status: StatusAgendamento.CONCLUIDO });
+    if (a.id)
+      await updateAgendamento(a.id, { ...a, status: StatusAgendamento.CONCLUIDO });
   };
 
   useEffect(() => {
@@ -131,43 +163,77 @@ export default function CriarAgendamentoPage() {
   return (
     <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5] overflow-hidden">
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-      <main className={`flex-1 h-screen overflow-y-auto p-4 md:p-6 transition-all ${collapsed ? "md:ml-12" : "md:ml-24"}`}>
-        <h1 className="text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent mb-6">Painel Admin</h1>
+      <main
+        className={`flex-1 h-screen overflow-y-auto p-4 md:p-6 transition-all ${
+          collapsed ? "md:ml-12" : "md:ml-24"
+        }`}
+      >
+        <h1 className="text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent mb-6">
+          Painel Admin
+        </h1>
 
         <div className="flex flex-col gap-8">
-
           {/* Horários */}
           <section className="bg-[#1F1F1F] rounded-3xl shadow-lg p-6 flex flex-col gap-5">
             <div className="flex gap-3 flex-wrap">
-              <Button variant={activeHorarioTab === "exibir" ? "primary" : "secondary"} onClick={() => setActiveHorarioTab("exibir")}>Exibir</Button>
-              <Button variant={activeHorarioTab === "criar" ? "primary" : "secondary"} onClick={() => setActiveHorarioTab("criar")}>Criar</Button>
+              <Button
+                variant={activeHorarioTab === "exibir" ? "primary" : "secondary"}
+                onClick={() => setActiveHorarioTab("exibir")}
+              >
+                Exibir
+              </Button>
+              <Button
+                variant={activeHorarioTab === "criar" ? "primary" : "secondary"}
+                onClick={() => setActiveHorarioTab("criar")}
+              >
+                Criar
+              </Button>
             </div>
 
             {activeHorarioTab === "criar" && (
               <div className="flex gap-3 mt-3 flex-wrap items-center">
                 <select
                   value={form.barbeiro || ""}
-                  onChange={e => setForm(prev => ({ ...prev, barbeiro: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, barbeiro: e.target.value }))
+                  }
                   className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition"
                 >
                   <option value="">Selecione</option>
-                  {barbeiros.map(b => <option key={b.id} value={b.id}>{b.nome}</option>)}
+                  {barbeiros.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.nome}
+                    </option>
+                  ))}
                 </select>
                 <input
                   type="text"
                   placeholder="DD/MM/AAAA"
-                  value={form.data || ""}
-                  onChange={e => setForm(prev => ({ ...prev, data: aplicarMascaraData(e.target.value) }))}
+                  value={form.data ? form.data.toLocaleDateString("pt-BR") : ""}
+                  onChange={(e) => {
+                    const valor = e.target.value;
+                    const partes = valor.split("/");
+                    if (partes.length === 3) {
+                      const [dia, mes, ano] = partes.map(Number);
+                      const novaData = new Date(ano, mes - 1, dia);
+                      setForm((prev) => ({ ...prev, data: novaData }));
+                    } else {
+                      setForm((prev) => ({ ...prev }));
+                    }
+                  }}
                   className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition"
                 />
-                <Button onClick={handleGenerateHorarios} variant="primary">Gerar</Button>
+
+                <Button onClick={handleGenerateHorarios} variant="primary">
+                  Gerar
+                </Button>
               </div>
             )}
 
             {activeHorarioTab === "exibir" && (
               <AgendamentoHorario
                 horarios={horarios}
-                onToggleDisponivel={toggleHorarioDisponivel} // ✅ chama a rota de update direto
+                onToggleDisponivel={toggleHorarioDisponivel}
                 onRemoveHorario={handleRemoveHorario}
               />
             )}
@@ -176,16 +242,37 @@ export default function CriarAgendamentoPage() {
           {/* Agendamentos */}
           <section className="bg-[#1F1F1F] rounded-3xl shadow-lg p-6 flex flex-col gap-5">
             <div className="flex gap-3 flex-wrap">
-              <Button variant={activeAgendamentoTab === "exibir" ? "primary" : "secondary"} onClick={() => { setActiveAgendamentoTab("exibir"); setSelectedAgendamento(null); }}>Exibir</Button>
-              <Button variant={activeAgendamentoTab === "criar" ? "primary" : "secondary"} onClick={() => { setActiveAgendamentoTab("criar"); setSelectedAgendamento(null); }}>Criar</Button>
+              <Button
+                variant={activeAgendamentoTab === "exibir" ? "primary" : "secondary"}
+                onClick={() => {
+                  setActiveAgendamentoTab("exibir");
+                  setSelectedAgendamento(null);
+                }}
+              >
+                Exibir
+              </Button>
+              <Button
+                variant={activeAgendamentoTab === "criar" ? "primary" : "secondary"}
+                onClick={() => {
+                  setActiveAgendamentoTab("criar");
+                  setSelectedAgendamento(null);
+                }}
+              >
+                Criar
+              </Button>
             </div>
 
             {activeAgendamentoTab === "criar" && (
               <AgendamentoPrivadoForm
                 agendamento={selectedAgendamento || undefined}
                 onSave={handleSaveAgendamento}
-                onCancel={() => { setActiveAgendamentoTab("exibir"); setSelectedAgendamento(null); }}
-                horarios={horarios.filter(h => h.disponivel && h.profissional.id === form.barbeiro)}
+                onCancel={() => {
+                  setActiveAgendamentoTab("exibir");
+                  setSelectedAgendamento(null);
+                }}
+                horarios={horarios.filter(
+                  (h) => h.disponivel && h.profissional.id === form.barbeiro
+                )}
                 barbeiros={barbeiros}
                 procedimentos={procedimentosBarbeiro}
               />
@@ -195,28 +282,58 @@ export default function CriarAgendamentoPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-3">
                 {agendamentos.length === 0 ? (
                   <p className="text-gray-400">Nenhum agendamento disponível.</p>
-                ) : agendamentos.map(a => (
-                  <div key={a.id} className="bg-[#2A2A2A] rounded-2xl shadow-md p-5 flex flex-col gap-2 hover:shadow-xl transition">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-semibold text-lg bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">{a.nome}</h3>
-                      <div className={`px-3 py-1 rounded-full text-sm ${getStatusColor(a.status || StatusAgendamento.PENDENTE)}`}>
-                        {a.status || StatusAgendamento.PENDENTE}
+                ) : (
+                  agendamentos.map((a) => (
+                    <div
+                      key={a.id}
+                      className="bg-[#2A2A2A] rounded-2xl shadow-md p-5 flex flex-col gap-2 hover:shadow-xl transition"
+                    >
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-semibold text-lg bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+                          {a.nome}
+                        </h3>
+                        <div
+                          className={`px-3 py-1 rounded-full text-sm ${getStatusColor(
+                            a.status || StatusAgendamento.PENDENTE
+                          )}`}
+                        >
+                          {a.status || StatusAgendamento.PENDENTE}
+                        </div>
+                      </div>
+                      <p className="text-sm">{formatarDataParaDisplay(a.data)}</p>
+                      <p className="text-sm">{formatarHora(a.hora)}</p>
+                      <p className="text-sm text-gray-300">{a.servico}</p>
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          onClick={() => handleEditAgendamento(a)}
+                          variant="primary"
+                          className="text-xs flex items-center gap-1"
+                        >
+                          <FaEdit /> Editar
+                        </Button>
+                        {a.status !== StatusAgendamento.CONCLUIDO && (
+                          <Button
+                            onClick={() => handleConcluirAgendamento(a)}
+                            variant="primary"
+                            className="text-xs flex items-center gap-1"
+                          >
+                            <FaCheck /> Concluir
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => handleDeleteAgendamento(a.id)}
+                          variant="secondary"
+                          className="text-xs flex items-center gap-1"
+                        >
+                          <FaTrash /> Excluir
+                        </Button>
                       </div>
                     </div>
-                    <p className="text-sm">{formatarDataParaDisplay(a.data)}</p>
-                    <p className="text-sm">{formatarHora(a.hora)}</p>
-                    <p className="text-sm text-gray-300">{a.servico}</p>
-                    <div className="flex gap-2 mt-3">
-                      <Button onClick={() => handleEditAgendamento(a)} variant="primary" className="text-xs flex items-center gap-1"><FaEdit /> Editar</Button>
-                      {a.status !== StatusAgendamento.CONCLUIDO && <Button onClick={() => handleConcluirAgendamento(a)} variant="primary" className="text-xs flex items-center gap-1"><FaCheck /> Concluir</Button>}
-                      <Button onClick={() => handleDeleteAgendamento(a.id)} variant="secondary" className="text-xs flex items-center gap-1"><FaTrash /> Excluir</Button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             )}
           </section>
-
         </div>
       </main>
     </div>

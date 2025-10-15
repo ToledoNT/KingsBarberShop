@@ -68,15 +68,5 @@ export class HorarioService {
     }
   }
 
-  async fetchHorariosByProfissional(profissionalId: string): Promise<HorarioDisponivel[]> {
-    try {
-      const res = await api.get<ResponseTemplateInterface<HorarioDisponivel[]>>(
-        `/horario/barbeiro/${profissionalId}`
-      );
-      return res.data.data || [];
-    } catch (err) {
-      console.error(err);
-      return [];
-    }
-  }
+
 }

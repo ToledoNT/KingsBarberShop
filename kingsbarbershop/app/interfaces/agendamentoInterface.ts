@@ -73,6 +73,7 @@ export interface HorarioDisponivel {
   inicio: string;
   fim: string;
   disponivel: boolean;
+  label: string;
 }
 
 export type HorarioParaGerar = {
@@ -94,10 +95,11 @@ export interface AgendamentoPrivadoFormProps {
   agendamento?: Agendamento | null;
   onSave: (a: Agendamento) => Promise<void> | void;
   onCancel: () => void;
-  horarios: HorarioDisponivel[];
   barbeiros: Barbeiro[];
   procedimentos?: Procedimento[];
+  horarios: HorarioDisponivel[]; // ✅ agora existe
 }
+
 
 export interface AgendamentoHorarioProps {
   horarios: HorarioDisponivel[];

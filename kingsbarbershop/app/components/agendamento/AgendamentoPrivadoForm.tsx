@@ -34,18 +34,30 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
   } = useAgendamentosAdmin();
 
   const [localForm, setLocalForm] = useState<AgendamentoForm>({
-    nome: agendamento?.nome ?? "",
-    telefone: agendamento?.telefone ?? "",
-    email: agendamento?.email ?? "",
-    barbeiro: agendamento?.barbeiro ?? "",
-    data: agendamento?.data ? new Date(agendamento.data) : null,
-    hora: agendamento?.hora ?? "",
-    servico: agendamento?.servico ?? "",
-    status: agendamento?.status ?? StatusAgendamento.PENDENTE,
+    nome: "",
+    telefone: "",
+    email: "",
+    barbeiro: "",
+    data: null,
+    hora: "",
+    servico: "",
+    status: StatusAgendamento.PENDENTE,
   });
 
+  // Carrega dados do agendamento quando em modo edit
   useEffect(() => {
-    if (agendamento) {
+    const loadAgendamento = async () => {
+      if (!agendamento) return;
+
+      setForm({
+        barbeiro: agendamento.barbeiro ?? "",
+        data: agendamento.data ? new Date(agendamento.data) : null,
+      });
+
+      if (agendamento.barbeiro) {
+        await fetchBarbeiroDados(agendamento.barbeiro);
+      }
+
       setLocalForm({
         nome: agendamento.nome,
         telefone: agendamento.telefone,
@@ -56,13 +68,10 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
         servico: agendamento.servico,
         status: agendamento.status ?? StatusAgendamento.PENDENTE,
       });
+    };
 
-      setForm({
-        barbeiro: agendamento.barbeiro ?? "",
-        data: agendamento.data ? new Date(agendamento.data) : null,
-      });
-    }
-  }, [agendamento, setForm]);
+    loadAgendamento();
+  }, [agendamento, fetchBarbeiroDados, setForm]);
 
   const handleBarbeiroChange = async (barbeiroId: string) => {
     setLocalForm((prev) => ({ ...prev, barbeiro: barbeiroId, hora: "", servico: "" }));
@@ -76,48 +85,41 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // -------------------------------
-  // Validação completa dos campos
-  // -------------------------------
-  const erros: string[] = [];
-  if (!localForm.nome.trim()) erros.push("Nome");
-  if (!localForm.telefone.trim()) erros.push("Telefone");
-  if (!localForm.email.trim()) erros.push("Email");
-  if (!localForm.barbeiro) erros.push("Barbeiro");
-  if (!localForm.data) erros.push("Data");
-  if (!localForm.hora) erros.push("Horário");
-  if (!localForm.servico) erros.push("Serviço");
+    const erros: string[] = [];
+    if (!localForm.nome.trim()) erros.push("Nome");
+    if (!localForm.telefone.trim()) erros.push("Telefone");
+    if (!localForm.email.trim()) erros.push("Email");
+    if (!localForm.barbeiro) erros.push("Barbeiro");
+    if (!localForm.data) erros.push("Data");
+    if (!localForm.hora) erros.push("Horário");
+    if (!localForm.servico) erros.push("Serviço");
 
-  if (erros.length > 0) {
-    alert(`Preencha todos os campos obrigatórios: ${erros.join(", ")}`);
-    return;
-  }
+    if (erros.length > 0) {
+      alert(`Preencha todos os campos obrigatórios: ${erros.join(", ")}`);
+      return;
+    }
 
-  const dataString = localForm.data!.toISOString().split("T")[0];
+    const dataString = localForm.data!.toISOString().split("T")[0];
+    const horarioSelecionado = horarios.find((h) => h.id === localForm.hora);
 
-  const horarioSelecionado = horarios.find((h) => h.id === localForm.hora);
+    const payload: Agendamento = {
+      id: agendamento?.id,
+      nome: localForm.nome.trim(),
+      telefone: localForm.telefone.trim(),
+      email: localForm.email.trim(),
+      barbeiro: localForm.barbeiro,
+      data: dataString,
+      hora: localForm.hora,
+      servico: localForm.servico,
+      status: localForm.status,
+      inicio: horarioSelecionado?.inicio ?? "",
+      fim: horarioSelecionado?.fim ?? "",
+    };
 
-  const payload: Agendamento = {
-    id: agendamento?.id,
-    nome: localForm.nome.trim(),
-    telefone: localForm.telefone.trim(),
-    email: localForm.email.trim(),
-    barbeiro: localForm.barbeiro,
-    data: dataString,
-    hora: localForm.hora,
-    servico: localForm.servico,
-    status: localForm.status,
-    inicio: horarioSelecionado?.inicio ?? "",
-    fim: horarioSelecionado?.fim ?? "",
+    await onSave(payload);
   };
-
-  console.log("Payload enviado:", payload); // Depuração
-
-  await onSave(payload);
-};
-
 
   return (
     <div className="w-full flex justify-center mt-6 mb-12">
@@ -171,16 +173,39 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
             locale="pt-BR"
           />
 
-          <Select
-            name="hora"
-            value={localForm.hora}
-            onChange={(e) => setLocalForm({ ...localForm, hora: e.target.value })}
-            options={horarios
-              .filter((h): h is HorarioDisponivel & { id: string } => !!h.disponivel && !!h.id)
-              .map((h) => ({ value: h.id, label: h.label! }))}
-            placeholder="Selecione o horário"
-            required
-          />
+<Select
+  name="hora"
+  value={localForm.hora || ""}
+  onChange={(e) => setLocalForm({ ...localForm, hora: e.target.value })}
+  options={(() => {
+    if (!localForm.data) return [];
+
+    const dataString = localForm.data.toISOString().split("T")[0];
+
+    // Filtra apenas horários disponíveis para a data selecionada
+    const horariosFiltrados = horarios.filter(
+      (h) => h.disponivel && h.data === dataString
+    );
+
+    const mapHorarios = new Map<string, { value: string; label: string }>();
+    horariosFiltrados.forEach((h) => {
+      if (h.id) mapHorarios.set(h.id, { value: h.id, label: h.label ?? `${h.inicio} - ${h.fim}` });
+    });
+
+    // Inclui o horário atual do agendamento mesmo que indisponível
+    if (localForm.hora && !mapHorarios.has(localForm.hora)) {
+      const h = horarios.find((h) => h.id === localForm.hora);
+      if (h && h.id) {
+        mapHorarios.set(h.id, { value: h.id, label: h.label ?? `${h.inicio} - ${h.fim}` });
+      }
+    }
+
+    return Array.from(mapHorarios.values());
+  })()}
+  placeholder="Selecione o horário"
+  required
+/>
+
 
           <Select
             name="servico"
@@ -192,6 +217,19 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
             placeholder="Selecione o serviço"
             required
           />
+
+{agendamento && (
+  <Select
+    name="status"
+    value={localForm.status}
+    onChange={(e) =>
+      setLocalForm({ ...localForm, status: e.target.value as StatusAgendamento })
+    }
+    options={Object.values(StatusAgendamento).map((s) => ({ value: s, label: s }))}
+  />
+)}
+
+
 
           <div className="flex justify-end gap-3 mt-4">
             <Button variant="secondary" type="button" onClick={onCancel}>

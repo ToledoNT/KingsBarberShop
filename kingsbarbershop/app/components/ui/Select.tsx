@@ -7,7 +7,7 @@ export default function Select({
   value,
   onChange,
   options,
-  placeholder = "Selecione",
+  placeholder, 
   required = false,
   disabled = false,
 }: SelectProps) {
@@ -26,7 +26,7 @@ export default function Select({
           disabled:opacity-60 disabled:cursor-not-allowed
         `}
       >
-        <option value="">{placeholder}</option>
+        {placeholder && <option value="">{placeholder}</option>}
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
@@ -34,7 +34,6 @@ export default function Select({
         ))}
       </select>
 
-      {/* Ícone da seta customizada */}
       <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
         <svg
           xmlns="http://www.w3.org/2000/svg"

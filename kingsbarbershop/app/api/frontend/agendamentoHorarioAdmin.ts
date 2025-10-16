@@ -7,6 +7,7 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+
 export class HorarioService {
   async fetchAllHorarios(): Promise<HorarioDisponivel[]> {
     try {
@@ -67,6 +68,4 @@ export class HorarioService {
       return null;
     }
   }
-
-
 }

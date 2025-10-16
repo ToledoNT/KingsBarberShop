@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { Home, Calendar, DollarSign, Users } from "lucide-react";
-import { MenuItem } from "@/app/interfaces/agendamentoInterface";
+
+type MenuItem = {
+  name: string;
+  icon: React.ComponentType<{ size?: number }>;
+  path: string;
+};
 
 const menuItems: MenuItem[] = [
   { name: "Dashboard", icon: Home, path: "/admin" },

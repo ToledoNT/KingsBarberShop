@@ -3,7 +3,7 @@ import { Agendamento } from "../../interfaces/agendamentoInterface";
 import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-interface";
 
 const api = axios.create({
-  baseURL: "http://localhost:4001/api", 
+  baseURL: "http://localhost:4001/api",
   headers: { "Content-Type": "application/json" },
 });
 

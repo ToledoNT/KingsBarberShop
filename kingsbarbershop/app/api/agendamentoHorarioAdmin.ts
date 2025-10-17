@@ -1,5 +1,5 @@
 import axios from "axios";
-import { HorarioDisponivel } from "../../interfaces/agendamentoInterface";
+import { HorarioDisponivel } from "../interfaces/agendamentoInterface";
 import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-interface";
 
 const api = axios.create({

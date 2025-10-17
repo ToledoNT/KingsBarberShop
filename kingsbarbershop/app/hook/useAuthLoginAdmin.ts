@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { LoginData, UseAuthReturn } from "../interfaces/loginInterface";
-import { AuthService } from "../api/frontend/authAdmin";
+import { AuthService } from "../api/authAdmin";
 
 const authService = new AuthService();
 

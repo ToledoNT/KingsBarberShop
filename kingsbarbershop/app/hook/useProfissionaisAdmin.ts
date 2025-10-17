@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Profissional } from "../interfaces/profissionaisInterface";
-import { ProfissionalService } from "../api/frontend/profissionaisAdmin";
+import { ProfissionalService } from "../api/profissionaisAdmin";
 
 const service = new ProfissionalService();
 

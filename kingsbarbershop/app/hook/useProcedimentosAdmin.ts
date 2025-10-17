@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Procedimento } from "../interfaces/profissionaisInterface";
-import { ProcedimentoService } from "../api/frontend/procedimentoAdmin";
+import { ProcedimentoService } from "../api/procedimentoAdmin";
 
 const procedimentoService = new ProcedimentoService();
 

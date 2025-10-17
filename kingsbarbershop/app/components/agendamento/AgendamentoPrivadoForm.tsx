@@ -44,7 +44,6 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
     status: StatusAgendamento.PENDENTE,
   });
 
-  // Carrega dados do agendamento quando em modo edit
   useEffect(() => {
     const loadAgendamento = async () => {
       if (!agendamento) return;
@@ -122,13 +121,17 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
   };
 
   return (
-    <div className="w-full flex justify-center mt-6 mb-12">
-      <div className="w-full max-w-md p-6 sm:p-8 bg-[#1B1B1B] rounded-2xl shadow-xl">
-        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6">
+    <div className="w-full flex justify-center mt-6 mb-12 px-2 sm:px-4">
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-4 sm:p-6 md:p-8 bg-[#1B1B1B] rounded-2xl shadow-xl">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-6">
           {agendamento ? "Editar Agendamento" : "Novo Agendamento"}
         </h2>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-3 sm:gap-4"
+          noValidate
+        >
           <Input
             name="nome"
             value={localForm.nome}
@@ -164,48 +167,53 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
             required
           />
 
-          <DatePicker
-            selected={localForm.data}
-            onChange={handleDataChange}
-            dateFormat="dd/MM/yyyy"
-            placeholderText="Selecione a data"
-            className="w-full p-2 rounded-md bg-[#2B2B2B] text-white border-none"
-            locale="pt-BR"
+          <div className="w-full">
+            <DatePicker
+              selected={localForm.data}
+              onChange={handleDataChange}
+              dateFormat="dd/MM/yyyy"
+              placeholderText="Selecione a data"
+              className="w-full p-2 rounded-md bg-[#2B2B2B] text-white border-none"
+              locale="pt-BR"
+            />
+          </div>
+
+          <Select
+            name="hora"
+            value={localForm.hora || ""}
+            onChange={(e) => setLocalForm({ ...localForm, hora: e.target.value })}
+            options={(() => {
+              if (!localForm.data) return [];
+
+              const dataString = localForm.data.toISOString().split("T")[0];
+              const horariosFiltrados = horarios.filter(
+                (h) => h.disponivel && h.data === dataString
+              );
+
+              const mapHorarios = new Map<string, { value: string; label: string }>();
+              horariosFiltrados.forEach((h) => {
+                if (h.id)
+                  mapHorarios.set(h.id, {
+                    value: h.id,
+                    label: h.label ?? `${h.inicio} - ${h.fim}`,
+                  });
+              });
+
+              if (localForm.hora && !mapHorarios.has(localForm.hora)) {
+                const h = horarios.find((h) => h.id === localForm.hora);
+                if (h && h.id) {
+                  mapHorarios.set(h.id, {
+                    value: h.id,
+                    label: h.label ?? `${h.inicio} - ${h.fim}`,
+                  });
+                }
+              }
+
+              return Array.from(mapHorarios.values());
+            })()}
+            placeholder="Selecione o horário"
+            required
           />
-
-<Select
-  name="hora"
-  value={localForm.hora || ""}
-  onChange={(e) => setLocalForm({ ...localForm, hora: e.target.value })}
-  options={(() => {
-    if (!localForm.data) return [];
-
-    const dataString = localForm.data.toISOString().split("T")[0];
-
-    // Filtra apenas horários disponíveis para a data selecionada
-    const horariosFiltrados = horarios.filter(
-      (h) => h.disponivel && h.data === dataString
-    );
-
-    const mapHorarios = new Map<string, { value: string; label: string }>();
-    horariosFiltrados.forEach((h) => {
-      if (h.id) mapHorarios.set(h.id, { value: h.id, label: h.label ?? `${h.inicio} - ${h.fim}` });
-    });
-
-    // Inclui o horário atual do agendamento mesmo que indisponível
-    if (localForm.hora && !mapHorarios.has(localForm.hora)) {
-      const h = horarios.find((h) => h.id === localForm.hora);
-      if (h && h.id) {
-        mapHorarios.set(h.id, { value: h.id, label: h.label ?? `${h.inicio} - ${h.fim}` });
-      }
-    }
-
-    return Array.from(mapHorarios.values());
-  })()}
-  placeholder="Selecione o horário"
-  required
-/>
-
 
           <Select
             name="servico"
@@ -218,24 +226,32 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
             required
           />
 
-{agendamento && (
-  <Select
-    name="status"
-    value={localForm.status}
-    onChange={(e) =>
-      setLocalForm({ ...localForm, status: e.target.value as StatusAgendamento })
-    }
-    options={Object.values(StatusAgendamento).map((s) => ({ value: s, label: s }))}
-  />
-)}
+          {agendamento && (
+            <Select
+              name="status"
+              value={localForm.status}
+              onChange={(e) =>
+                setLocalForm({ ...localForm, status: e.target.value as StatusAgendamento })
+              }
+              options={Object.values(StatusAgendamento).map((s) => ({
+                value: s,
+                label: s,
+              }))}
+            />
+          )}
 
-
-
-          <div className="flex justify-end gap-3 mt-4">
-            <Button variant="secondary" type="button" onClick={onCancel}>
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-4">
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={onCancel}
+              className="w-full sm:w-auto"
+            >
               Cancelar
             </Button>
-            <Button type="submit">Confirmar</Button>
+            <Button type="submit" className="w-full sm:w-auto">
+              Confirmar
+            </Button>
           </div>
         </form>
       </div>

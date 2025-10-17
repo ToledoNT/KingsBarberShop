@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Profissional } from "../../interfaces/profissionaisInterface";
+import { Profissional } from "../interfaces/profissionaisInterface";
 import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-interface";
 import { HorarioDisponivel, Procedimento } from "@/app/interfaces/agendamentoInterface";
 

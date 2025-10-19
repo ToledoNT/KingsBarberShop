@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Sidebar from "@/app/components/ui/Sidebar";
 import Button from "../components/ui/Button";
 import { useAgendamentosAdmin } from "../hook/useAgendamentoAdmin";
@@ -59,17 +59,58 @@ export default function CriarAgendamentoPage() {
     horario: "exibir" as "exibir" | "criar",
   });
   const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null);
+  
+  // FILTROS SIMPLES - única adição
+  const [filtros, setFiltros] = useState({
+    status: "todos" as "todos" | StatusAgendamento,
+    data: "",
+    barbeiro: "todos",
+  });
+
   const notify = (msg: string) => alert(msg);
+
+  // FILTRAGEM - única adição
+  const agendamentosFiltrados = useMemo(() => {
+    let filtrados = agendamentos.map(mapToAgendamento);
+
+    // Filtro por status
+    if (filtros.status !== "todos") {
+      filtrados = filtrados.filter(ag => ag.status === filtros.status);
+    }
+
+    // Filtro por data
+    if (filtros.data) {
+      const dataFiltro = new Date(filtros.data).toISOString().split('T')[0];
+      filtrados = filtrados.filter(ag => {
+        const dataAgendamento = ag.data ? new Date(ag.data).toISOString().split('T')[0] : '';
+        return dataAgendamento === dataFiltro;
+      });
+    }
+
+    // Filtro por barbeiro
+    if (filtros.barbeiro !== "todos") {
+      filtrados = filtrados.filter(ag => ag.profissionalId === filtros.barbeiro);
+    }
+
+    return filtrados;
+  }, [agendamentos, filtros]);
 
   // ------------------- HORÁRIOS -------------------
   const handleGenerateHorarios = async () => {
     if (!form.barbeiro || !form.data) return notify("Preencha barbeiro e data.");
     const barbeiro = barbeiros.find((b) => b.id === form.barbeiro);
     if (!barbeiro) return notify("Barbeiro não encontrado.");
-    const dataISO = new Date(new Date(form.data).setHours(0, 0, 0, 0)).toISOString();
+    
+    // CORREÇÃO: Envia a data como string YYYY-MM-DD sem conversão para UTC
+    const dataParaBackend = new Date(form.data).toISOString().split('T')[0];
+
+    console.log('📅 Data sendo enviada para o backend:', dataParaBackend);
 
     try {
-      await addHorario({ profissional: barbeiro, data: dataISO } as HorarioDisponivel);
+      await addHorario({ 
+        profissional: barbeiro, 
+        data: dataParaBackend 
+      } as HorarioDisponivel);
       setTabs({ ...tabs, horario: "exibir" });
     } catch (err) {
       console.error("Erro ao gerar horários:", err);
@@ -201,6 +242,48 @@ export default function CriarAgendamentoPage() {
               ))}
             </div>
 
+            {/* FILTROS - única adição */}
+            {tabs.agendamento === "gerenciar" && (
+              <div className="flex flex-col sm:flex-row gap-3 mt-3 flex-wrap items-center bg-[#2A2A2A] p-4 rounded-lg">
+                <select
+                  value={filtros.status}
+                  onChange={(e) => setFiltros(prev => ({ ...prev, status: e.target.value as any }))}
+                  className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition w-full sm:w-auto"
+                >
+                  <option value="todos">Todos os status</option>
+                  <option value={StatusAgendamento.AGENDADO}>Agendado</option>
+                  <option value={StatusAgendamento.EM_ANDAMENTO}>Em Andamento</option>
+                  <option value={StatusAgendamento.CONCLUIDO}>Concluído</option>
+                  <option value={StatusAgendamento.CANCELADO}>Cancelado</option>
+                  <option value={StatusAgendamento.NAO_COMPARECEU}>Não Compareceu</option>
+                </select>
+                
+                <input
+                  type="date"
+                  value={filtros.data}
+                  onChange={(e) => setFiltros(prev => ({ ...prev, data: e.target.value }))}
+                  className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition w-full sm:w-auto"
+                />
+                
+                <select
+                  value={filtros.barbeiro}
+                  onChange={(e) => setFiltros(prev => ({ ...prev, barbeiro: e.target.value }))}
+                  className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition w-full sm:w-auto"
+                >
+                  <option value="todos">Todos os barbeiros</option>
+                  {barbeiros.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.nome}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="text-sm text-gray-400">
+                  {agendamentosFiltrados.length} de {agendamentos.length} agendamentos
+                </div>
+              </div>
+            )}
+
             <div className="overflow-x-auto">
               {tabs.agendamento === "criar" && (
                 <AgendamentoPrivadoForm
@@ -214,7 +297,7 @@ export default function CriarAgendamentoPage() {
 
               {tabs.agendamento === "gerenciar" && (
                 <AgendamentosGrid
-                  agendamentos={agendamentos.map(mapToAgendamento)}
+                  agendamentos={agendamentosFiltrados}
                   onStatusChange={handleUpdateStatusAgendamento}
                 />
               )}

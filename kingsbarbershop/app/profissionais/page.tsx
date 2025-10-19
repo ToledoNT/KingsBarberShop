@@ -120,128 +120,195 @@ export default function ProfissionaisProcedimentosPage() {
 
   // -------------------- Render --------------------
   return (
-    <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5] overflow-x-hidden">
+    <div className="flex min-h-screen bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A] text-[#E5E5E5] overflow-x-hidden">
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       <main
-        className={`flex-1 min-h-screen overflow-y-auto p-4 md:p-6 transition-all ${
+        className={`flex-1 min-h-screen overflow-y-auto p-4 md:p-8 transition-all duration-300 ${
           collapsed ? "md:ml-12" : "md:ml-24"
         } max-w-[1600px] mx-auto`}
       >
-        <h1 className="text-3xl font-bold text-[#FFA500] mb-6 text-center md:text-left">
-          Profissionais e Procedimentos
-        </h1>
+        {/* Header */}
+        <div className="mb-8 text-center md:text-left">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-[#FFA500] to-[#FFD700] bg-clip-text text-transparent mb-2">
+            Profissionais e Procedimentos
+          </h1>
+          <p className="text-gray-400 text-lg">
+            Gerencie profissionais e seus procedimentos de forma simples e organizada
+          </p>
+        </div>
 
-        {/* -------------------- Box Profissionais -------------------- */}
-        <section className="bg-[#1B1B1B] rounded-2xl shadow p-4 flex flex-col gap-4 mb-6">
-          <div className="flex gap-2 flex-wrap justify-center md:justify-start">
-            <Button
-              variant={activeProfissionalTab === "criar" ? "primary" : "secondary"}
-              onClick={() => {
-                setActiveProfissionalTab("criar");
-                setSelectedProfissional(null);
-              }}
-            >
-              Criar Profissional
-            </Button>
+        {/* Container Principal */}
+        <div className="space-y-8">
+          {/* -------------------- Seção Profissionais -------------------- */}
+          <section className="bg-gradient-to-br from-[#1B1B1B] to-[#2A2A2A] rounded-2xl shadow-2xl border border-[#333333] p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">Profissionais</h2>
+                <p className="text-gray-400">Cadastre e gerencie os profissionais do sistema</p>
+              </div>
+              
+              <div className="flex gap-3 mt-4 lg:mt-0">
+                <Button
+                  variant={activeProfissionalTab === "ver" ? "primary" : "secondary"}
+                  onClick={() => setActiveProfissionalTab("ver")}
+                  className="min-w-[140px]"
+                >
+                  👥 Ver Profissionais
+                </Button>
+                <Button
+                  variant={activeProfissionalTab === "criar" ? "primary" : "secondary"}
+                  onClick={() => {
+                    setActiveProfissionalTab("criar");
+                    setSelectedProfissional(null);
+                  }}
+                  className="min-w-[140px]"
+                >
+                  ➕ Criar Profissional
+                </Button>
+              </div>
+            </div>
 
-            <Button
-              variant={activeProfissionalTab === "ver" ? "primary" : "secondary"}
-              onClick={() => setActiveProfissionalTab("ver")}
-            >
-              Ver Profissionais
-            </Button>
-          </div>
-
-          {activeProfissionalTab === "criar" && (
-            <ProfissionalForm
-              profissional={selectedProfissional}
-              onSave={handleSaveProfissional}
-              onCancel={() => setActiveProfissionalTab("ver")}
-            />
-          )}
-
-          {activeProfissionalTab === "ver" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-              {profissionais.length === 0 ? (
-                <p className="text-gray-400 text-center">Nenhum profissional cadastrado.</p>
-              ) : (
-                profissionais.map((p) => (
-                  <ProfissionalCard
-                    key={p.id}
-                    profissional={p}
-                    onSelect={handleSelectProfissional}
-                    onEdit={(prof) => {
-                      setSelectedProfissional(prof);
-                      setActiveProfissionalTab("criar");
-                    }}
-                    onDelete={(id) => removeProfissional(id ?? "")}
+            {/* Conteúdo da Aba */}
+            <div className="mt-6">
+              {activeProfissionalTab === "criar" && (
+                <div className="bg-[#252525] rounded-xl p-6 border border-[#333333]">
+                  <h3 className="text-xl font-semibold text-[#FFA500] mb-4">
+                    {selectedProfissional ? "Editar Profissional" : "Novo Profissional"}
+                  </h3>
+                  <ProfissionalForm
+                    profissional={selectedProfissional}
+                    onSave={handleSaveProfissional}
+                    onCancel={() => setActiveProfissionalTab("ver")}
                   />
-                ))
+                </div>
+              )}
+
+              {activeProfissionalTab === "ver" && (
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-white">
+                      Total: {profissionais.length} profissional{profissionais.length !== 1 ? 'es' : ''}
+                    </h3>
+                  </div>
+                  
+                  {profissionais.length === 0 ? (
+                    <div className="text-center py-12 bg-[#252525] rounded-xl border-2 border-dashed border-[#333333]">
+                      <div className="text-6xl mb-4">👥</div>
+                      <p className="text-gray-400 text-lg mb-2">Nenhum profissional cadastrado</p>
+                      <p className="text-gray-500">Clique em "Criar Profissional" para adicionar o primeiro</p>
+                    </div>
+                  ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+  {profissionais.map((p) => (
+    <ProfissionalCard
+      key={p.id}
+      profissional={p}
+      onSelect={handleSelectProfissional}
+      onEdit={(prof: Profissional) => {
+        setSelectedProfissional(prof);
+        setActiveProfissionalTab("criar");
+      }}
+      onDelete={(id: string | undefined) => removeProfissional(id ?? "")}
+      isSelected={selectedProfissional?.id === p.id}
+    />
+  ))}
+</div>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </section>
+          </section>
 
-        {/* -------------------- Box Procedimentos -------------------- */}
-        {selectedProfissional && (
-          <section className="bg-[#1B1B1B] rounded-2xl shadow p-4 flex flex-col gap-4 mb-20">
-            <h2 className="text-lg font-semibold text-[#FFA500] text-center md:text-left">
-              Procedimentos de {selectedProfissional.nome}
-            </h2>
-
-            <div className="flex gap-2 flex-wrap justify-center md:justify-start mb-4">
-              <Button
-                variant={activeProcedimentoTab === "criar" ? "primary" : "secondary"}
-                onClick={() => {
-                  setActiveProcedimentoTab("criar");
-                  setNovoProcedimento({ nome: "", valor: 0, profissionalId: selectedProfissional.id });
-                  setEditandoProcedimentoId(null);
-                }}
-              >
-                Criar Procedimento
-              </Button>
-
-              <Button
-                variant={activeProcedimentoTab === "ver" ? "primary" : "secondary"}
-                onClick={() => setActiveProcedimentoTab("ver")}
-              >
-                Ver Procedimentos
-              </Button>
-            </div>
-
-            {activeProcedimentoTab === "criar" && (
-              <div className="w-full flex justify-center">
-                <ProcedimentosProfissionais
-                  profissionais={[selectedProfissional]}
-                  procedimentos={procedimentosFiltrados}
-                  novoProcedimento={novoProcedimento}
-                  setNovoProcedimento={setNovoProcedimento}
-                  addProcedimento={handleSubmitProcedimento}
-                  updateProcedimento={handleSubmitProcedimento}
-                  removeProcedimento={handleDeleteProcedimento}
-                />
+          {/* -------------------- Seção Procedimentos -------------------- */}
+          {selectedProfissional && (
+            <section className="bg-gradient-to-br from-[#1B1B1B] to-[#2A2A2A] rounded-2xl shadow-2xl border border-[#333333] p-6">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    Procedimentos de <span className="text-[#FFA500]">{selectedProfissional.nome}</span>
+                  </h2>
+                  <p className="text-gray-400">
+                    Gerencie os procedimentos associados a este profissional
+                  </p>
+                </div>
+                
+                <div className="flex gap-3 mt-4 lg:mt-0">
+                  <Button
+                    variant={activeProcedimentoTab === "ver" ? "primary" : "secondary"}
+                    onClick={() => setActiveProcedimentoTab("ver")}
+                    className="min-w-[140px]"
+                  >
+                    📋 Ver Procedimentos
+                  </Button>
+                  <Button
+                    variant={activeProcedimentoTab === "criar" ? "primary" : "secondary"}
+                    onClick={() => {
+                      setActiveProcedimentoTab("criar");
+                      setNovoProcedimento({ nome: "", valor: 0, profissionalId: selectedProfissional.id });
+                      setEditandoProcedimentoId(null);
+                    }}
+                    className="min-w-[140px]"
+                  >
+                    ➕ Criar Procedimento
+                  </Button>
+                </div>
               </div>
-            )}
 
-            {activeProcedimentoTab === "ver" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {procedimentosFiltrados.length === 0 ? (
-                  <p className="text-gray-400 text-center">Nenhum procedimento cadastrado.</p>
-                ) : (
-                  procedimentosFiltrados.map((proc) => (
-                    <ProcedimentoCard
-                      key={proc.id}
-                      procedimento={proc}
-                      onEdit={handleEditProcedimento}
-                      onDelete={() => handleDeleteProcedimento(proc.id)}
+              {/* Conteúdo da Aba */}
+              <div className="mt-6">
+                {activeProcedimentoTab === "criar" && (
+                  <div className="bg-[#252525] rounded-xl p-6 border border-[#333333] max-w-2xl mx-auto">
+                    <h3 className="text-xl font-semibold text-[#FFA500] mb-4">
+                      {editandoProcedimentoId ? "Editar Procedimento" : "Novo Procedimento"}
+                    </h3>
+                    <ProcedimentosProfissionais
+                      profissionais={[selectedProfissional]}
+                      procedimentos={procedimentosFiltrados}
+                      novoProcedimento={novoProcedimento}
+                      setNovoProcedimento={setNovoProcedimento}
+                      addProcedimento={handleSubmitProcedimento}
+                      updateProcedimento={handleSubmitProcedimento}
+                      removeProcedimento={handleDeleteProcedimento}
                     />
-                  ))
+                  </div>
+                )}
+
+                {activeProcedimentoTab === "ver" && (
+                  <div>
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold text-white">
+                        Total: {procedimentosFiltrados.length} procedimento{procedimentosFiltrados.length !== 1 ? 's' : ''}
+                      </h3>
+                    </div>
+                    
+                    {procedimentosFiltrados.length === 0 ? (
+                      <div className="text-center py-12 bg-[#252525] rounded-xl border-2 border-dashed border-[#333333]">
+                        <div className="text-6xl mb-4">📋</div>
+                        <p className="text-gray-400 text-lg mb-2">Nenhum procedimento cadastrado</p>
+                        <p className="text-gray-500">Clique em "Criar Procedimento" para adicionar o primeiro</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {procedimentosFiltrados.map((proc) => (
+                          <ProcedimentoCard
+                            key={proc.id}
+                            procedimento={proc}
+                            onEdit={handleEditProcedimento}
+                            onDelete={() => handleDeleteProcedimento(proc.id)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </section>
-        )}
+            </section>
+          )}
+        </div>
+
+        {/* Espaço no final para mobile */}
+        <div className="h-8 md:h-4"></div>
       </main>
     </div>
   );

@@ -157,3 +157,19 @@ export interface AgendamentoFrontend {
   fim?: string;
   status?: StatusAgendamento;
 }
+
+export interface Column {
+  header: string;
+  accessor: string; 
+}
+
+export interface TableProps {
+  columns: Column[];
+  data: Record<string, any>[];
+}
+
+// // -------------------- Modal --------------------
+// export interface ModalProps {
+//   children: React.ReactNode;
+//   onClose: () => void;
+// }

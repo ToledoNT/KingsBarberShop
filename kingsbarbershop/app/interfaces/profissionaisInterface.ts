@@ -1,3 +1,5 @@
+import { HorarioDisponivel } from "./agendamentoInterface";
+
 export interface Profissional {
   id: string;                 
   nome: string;              
@@ -28,12 +30,13 @@ export interface ProfissionalFormProps {
   onSave: (prof: Partial<Profissional>) => void;
   onCancel?: () => void;
 }
-
-export interface ProfissionalCardProps {
+// No seu arquivo ProfissionalCard.tsx, adicione a propriedade isSelected
+interface ProfissionalCardProps {
   profissional: Profissional;
-  onSelect: (p: Profissional) => void;
-  onEdit: (p: Profissional) => void;
-  onDelete: (id?: string) => void;
+  onSelect: (profissional: Profissional) => void;
+  onEdit: (profissional: Profissional) => void;
+  onDelete: (id: string | undefined) => void;
+  isSelected?: boolean; // Adicione esta linha
 }
 
 export interface Props extends ProfissionaisProps {
@@ -75,4 +78,11 @@ export interface ProcedimentoInput {
   nome: string;
   valor: number;
   profissionalId: string;
+}
+
+// Interface para o retorno do fetchHorariosByProfissional
+export interface BarbeiroDadosResponse {
+  barbeiroId: string;
+  horarios: HorarioDisponivel[];
+  procedimentos: Procedimento[];
 }

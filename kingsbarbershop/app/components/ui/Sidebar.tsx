@@ -10,7 +10,7 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { name: "Dashboard", icon: Home, path: "/admin" },
+  { name: "Dashboard", icon: Home, path: "/dashboard" },
   { name: "Agendamentos", icon: Calendar, path: "/agendamentos" },
   { name: "Financeiro", icon: DollarSign, path: "/financeiro" },
   { name: "Profissionais", icon: Users, path: "/profissionais" },

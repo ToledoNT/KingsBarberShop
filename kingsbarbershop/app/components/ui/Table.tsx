@@ -1,5 +1,6 @@
 "use client";
-import { TableProps } from "@/app/interfaces/agendamentoInterface";
+
+import { TableProps, Column } from "@/app/interfaces/agendamentoInterface";
 
 export default function Table({ columns, data }: TableProps) {
   return (
@@ -7,7 +8,7 @@ export default function Table({ columns, data }: TableProps) {
       <table className="min-w-full text-left text-sm">
         <thead>
           <tr className="bg-[#141414]">
-            {columns.map((col) => (
+            {columns.map((col: Column) => (
               <th
                 key={col.accessor}
                 className="p-3 border-b border-[#333] text-gray-300 font-semibold"
@@ -18,17 +19,17 @@ export default function Table({ columns, data }: TableProps) {
           </tr>
         </thead>
         <tbody>
-          {data.map((row, idx) => (
+          {data.map((row, idx: number) => (
             <tr
               key={idx}
               className="hover:bg-[#1F1F1F] transition-colors duration-200"
             >
-              {columns.map((col) => (
+              {columns.map((col: Column) => (
                 <td
                   key={col.accessor}
                   className="p-3 border-b border-[#333] text-gray-200"
                 >
-                  {row[col.accessor]}
+                  {row[col.accessor as keyof typeof row]}
                 </td>
               ))}
             </tr>

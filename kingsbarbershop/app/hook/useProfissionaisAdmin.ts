@@ -12,11 +12,9 @@ export function useProfissionaisAdmin() {
   const mounted = useRef(true);
   const controllerRef = useRef<AbortController | null>(null);
 
-  // Cleanup quando desmontar
   useEffect(() => {
     mounted.current = true;
 
-    // Ao montar, já busca os profissionais
     fetchProfissionais();
 
     return () => {
@@ -29,14 +27,12 @@ export function useProfissionaisAdmin() {
     setLoading(true);
     setError(null);
 
-    // Cancela qualquer requisição anterior
     controllerRef.current?.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
 
     try {
       const response = await service.fetchProfissionais(controller.signal);
-      // ⚠️ garante acesso correto ao axios (res.data.data)
       const data = response ?? [];
       if (mounted.current) setProfissionais(data);
       return data;
@@ -83,20 +79,30 @@ export function useProfissionaisAdmin() {
     }
   }, []);
 
-  const removeProfissional = useCallback(async (id: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await service.deleteProfissional(id);
-      if (mounted.current)
-        setProfissionais((prev) => prev.filter((item) => item.id !== id));
-    } catch (err: any) {
-      if (mounted.current) setError(err.message || "Erro ao remover profissional");
-      throw err;
-    } finally {
-      if (mounted.current) setLoading(false);
+const removeProfissional = useCallback(async (id: string) => {
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await service.deleteProfissional(id);
+
+    if (!response.status) {
+      alert(response.message);
+      if (mounted.current) setError(response.message);
+      return;
     }
-  }, []);
+
+    if (mounted.current)
+      setProfissionais((prev) => prev.filter((item) => item.id !== id));
+
+    alert("Profissional deletado com sucesso!");
+  } catch (err: any) {
+    if (mounted.current) setError(err.message || "Erro ao remover profissional");
+    throw err;
+  } finally {
+    if (mounted.current) setLoading(false);
+  }
+}, []);
+
 
   return {
     profissionais,

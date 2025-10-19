@@ -4,14 +4,13 @@ export interface FinanceiroCardProps {
   onDelete: (id?: string) => void;
 }
 
-// src/interfaces/financeiroInterface.ts
 export interface IFinanceiro {
   id?: string;
   agendamentoId: string;
   clienteNome: string;        
-  procedimento?: string; // opcional se quiser preencher depois
+  procedimento?: string;
   valor: number;
-  status?: "Pago";        // igual ao backend
+  status?: "Pago" | "pendente"; 
   criadoEm?: Date;
   atualizadoEm?: Date;
 }

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Profissional } from "../interfaces/profissionaisInterface";
+import { BarbeiroDadosResponse, Profissional } from "../interfaces/profissionaisInterface";
 import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-interface";
 import { HorarioDisponivel, Procedimento } from "@/app/interfaces/agendamentoInterface";
 
@@ -49,17 +49,21 @@ export class ProfissionalService {
     }
   }
 
-  async deleteProfissional(id: string): Promise<void> {
-    try {
-      const res = await api.delete<ResponseTemplateInterface<null>>(
-        `/profissional/delete/${id}`
-      );
-      if (!res.data.status) throw new Error(res.data.message);
-    } catch (err: any) {
-      console.error("Erro ao deletar profissional:", err);
-      throw new Error(err.message || "Erro ao deletar profissional");
-    }
+async deleteProfissional(id: string): Promise<ResponseTemplateInterface<any>> {
+  try {
+    const res = await api.delete<ResponseTemplateInterface<any>>(
+      `/profissional/delete/${id}`,
+      {
+        validateStatus: () => true, 
+      }
+    );
+
+    return res.data;
+  } catch (err: any) {
+    console.error("Erro ao deletar profissional:", err);
+    throw new Error(err.message || "Erro ao deletar profissional");
   }
+}
 
   // ---------------------------
   // Buscar horários e procedimentos de um barbeiro
@@ -87,11 +91,4 @@ export class ProfissionalService {
       };
     }
   }
-}
-
-// Interface para o retorno do fetchHorariosByProfissional
-export interface BarbeiroDadosResponse {
-  barbeiroId: string;
-  horarios: HorarioDisponivel[];
-  procedimentos: Procedimento[];
 }

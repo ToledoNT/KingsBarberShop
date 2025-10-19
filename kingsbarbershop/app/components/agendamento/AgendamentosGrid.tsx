@@ -3,14 +3,20 @@
 import { Agendamento, AgendamentosGridProps, StatusAgendamento } from "../../interfaces/agendamentoInterface";
 import { Toaster, toast } from "react-hot-toast";
 
-
-
 export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosGridProps) {
   const formatarData = (dataISO?: string | null) => {
     if (!dataISO) return "—";
+    
     const d = new Date(dataISO);
     if (isNaN(d.getTime())) return dataISO;
-    return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+    
+    const dataLocal = new Date(d.getTime() + d.getTimezoneOffset() * 60000);
+    
+    const dia = String(dataLocal.getDate()).padStart(2, "0");
+    const mes = String(dataLocal.getMonth() + 1).padStart(2, "0");
+    const ano = dataLocal.getFullYear();
+    
+    return `${dia}/${mes}/${ano}`;
   };
 
   const formatarHorario = (inicio?: string | null, fim?: string | null) => {
@@ -34,9 +40,24 @@ export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosG
     .filter((s) => s !== StatusAgendamento.PENDENTE)
     .map((s) => ({ value: s, label: s }));
 
+  // Status que quando atingidos, bloqueiam alterações
+  const statusFinais = [
+    StatusAgendamento.CONCLUIDO,
+    StatusAgendamento.CANCELADO,
+    StatusAgendamento.NAO_COMPARECEU
+  ];
+
   const handleStatusChange = (agendamento: Agendamento, novoStatus: StatusAgendamento) => {
-    if (novoStatus === StatusAgendamento.CONCLUIDO || novoStatus === StatusAgendamento.CANCELADO) {
-      const acao = novoStatus === StatusAgendamento.CONCLUIDO ? "concluir" : "cancelar";
+    // Se o status atual já é final, não permite mudança
+    if (agendamento.status && statusFinais.includes(agendamento.status)) {
+      return;
+    }
+
+    if (novoStatus === StatusAgendamento.CONCLUIDO || novoStatus === StatusAgendamento.CANCELADO || novoStatus === StatusAgendamento.NAO_COMPARECEU) {
+      const acao = 
+        novoStatus === StatusAgendamento.CONCLUIDO ? "concluir" :
+        novoStatus === StatusAgendamento.CANCELADO ? "cancelar" :
+        "marcar como não compareceu";
       
       toast.custom((t) => (
         <div className="fixed inset-0 z-50 flex items-center justify-center min-h-screen bg-black/50">
@@ -56,7 +77,9 @@ export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosG
                 className={`px-4 py-2 rounded-md transition ${
                   novoStatus === StatusAgendamento.CONCLUIDO
                     ? "bg-green-600 hover:bg-green-700 text-white"
-                    : "bg-red-600 hover:bg-red-700 text-white"
+                    : novoStatus === StatusAgendamento.CANCELADO
+                    ? "bg-red-600 hover:bg-red-700 text-white"
+                    : "bg-gray-600 hover:bg-gray-700 text-white"
                 }`}
                 onClick={() => {
                   onStatusChange?.(agendamento.id!, novoStatus);
@@ -85,6 +108,9 @@ export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosG
         {agendamentos.map((a) => {
           if (!a.id) return null;
           const statusAtual = a.status || StatusAgendamento.AGENDADO;
+          
+          // Verifica se o status atual é final (bloqueado)
+          const isStatusFinal = statusFinais.includes(statusAtual);
 
           return (
             <div
@@ -95,16 +121,21 @@ export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosG
                 <h3 className="font-semibold text-lg bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
                   {a.nome || "—"}
                 </h3>
+                {isStatusFinal && (
+                  <span className="text-xs bg-gray-600 text-gray-300 px-2 py-1 rounded-md">
+                    🔒 Finalizado
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-col gap-1 text-sm text-gray-300">
                 <p><strong>Telefone:</strong> {a.telefone || "—"}</p>
                 <p><strong>Email:</strong> {a.email || "—"}</p>
-                <p><strong>Profissional:</strong> {a.profissionalNome || "—"}</p>
+                <p><strong>Profissional:</strong> {a.profissionalNome || a.barbeiro || "—"}</p>
                 <p><strong>Data:</strong> {formatarData(a.data)}</p>
                 <p><strong>Horário:</strong> {formatarHorario(a.inicio, a.fim)}</p>
                 <p>
-                  <strong>Serviço:</strong> {a.servicoNome || "—"} —{" "}
+                  <strong>Serviço:</strong> {a.servicoNome || a.servico || "—"} —{" "}
                   <span className="text-green-400">R$ {(a.servicoPreco ?? 0).toFixed(2)}</span>
                 </p>
               </div>
@@ -115,7 +146,14 @@ export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosG
                     name={`status-${a.id}`}
                     value={statusAtual}
                     onChange={(e) => handleStatusChange(a, e.target.value as StatusAgendamento)}
-                    className={`w-36 px-3 py-2 rounded-lg font-medium border text-sm text-center transition-colors duration-200 ${getStatusColor(statusAtual)}`}
+                    disabled={isStatusFinal}
+                    className={`w-36 px-3 py-2 rounded-lg font-medium border text-sm text-center transition-colors duration-200 ${
+                      getStatusColor(statusAtual)
+                    } ${
+                      isStatusFinal 
+                        ? 'opacity-50 cursor-not-allowed' 
+                        : 'cursor-pointer hover:opacity-90'
+                    }`}
                   >
                     {statusOptions.map((opt) => (
                       <option

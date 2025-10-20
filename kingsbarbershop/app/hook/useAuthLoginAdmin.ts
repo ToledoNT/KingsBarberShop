@@ -1,68 +1,107 @@
-// hook/useAuthLoginAdmin.ts
 "use client";
 
 import { useState, useEffect } from "react";
-import { LoginData, UseAuthReturn } from "../interfaces/loginInterface";
+import { useRouter } from "next/navigation";
+import { LoginData, UseAuthReturn, LoginResponse } from "../interfaces/loginInterface";
 import { AuthService } from "../api/authAdmin";
 
 const authService = new AuthService();
 
 export function useAuth(): UseAuthReturn {
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  // ------------------- LOGIN -------------------
+const login = async (data: LoginData) => {
+  setLoading(true);
+  setError(null);
 
-    const storedToken = localStorage.getItem("token");
-    if (storedToken) {
-      setToken(storedToken);
-      setIsAuthenticated(true);
+  try {
+    // 🔹 Aqui recebe o objeto direto
+    const res = await authService.login(data);
+    
+    // 🔹 Salva token do objeto
+    const token = res.token;
+    if (!token) throw new Error("Token não recebido");
 
-      authService.verifyToken(storedToken).then((valid) => {
-        if (!valid) {
-          localStorage.removeItem("token");
-          setToken(null);
-          setIsAuthenticated(false);
-        }
-      }).catch(() => {
-        localStorage.removeItem("token");
-        setToken(null);
-        setIsAuthenticated(false);
-      });
-    }
-  }, []);
+    localStorage.setItem("token", token);
+    setIsAuthenticated(true);
+    router.push("/dashboard");
+  } catch (err: any) {
+    const message = err?.response?.data?.message || err.message || "Erro ao logar";
+    setError(message);
+    setIsAuthenticated(false);
+    throw new Error(message);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const login = async (data: LoginData) => {
+
+
+  // ------------------- LOGOUT -------------------
+  const logout = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log("Login attempt:", data.email, data.password);
-
-      const res = await authService.login(data);
-
-      if (!res?.token) throw new Error("Token não retornou do servidor");
-
-      setToken(res.token);
-      localStorage.setItem("token", res.token);
-      setIsAuthenticated(true);
-    } catch (err: any) {
-      console.error("Login error:", err);
-      setError(err?.response?.data?.message || err.message || "Erro ao logar");
+      await authService.logout();
+      localStorage.removeItem("token");
       setIsAuthenticated(false);
+      router.push("/login");
+    } catch (err) {
+      console.error("Logout error:", err);
+      setIsAuthenticated(false);
+      localStorage.removeItem("token");
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    setToken(null);
-    localStorage.removeItem("token");
-    setIsAuthenticated(false);
+  // ------------------- VERIFY -------------------
+  const verify = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setIsAuthenticated(false);
+        router.push("/login");
+        return;
+      }
+
+      const valid: boolean = await authService.verifyToken(); 
+      setIsAuthenticated(valid);
+
+      if (!valid) {
+        localStorage.removeItem("token");
+        router.push("/login");
+      }
+    } catch (err) {
+      console.error("Verify token error:", err);
+      setIsAuthenticated(false);
+      localStorage.removeItem("token");
+      router.push("/login");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return { login, logout, token, loading, error, isAuthenticated };
+  // ------------------- AO MONTAR -------------------
+  useEffect(() => {
+    verify();
+  }, []);
+
+  return {
+    login,
+    logout,
+    verify,
+    loading,
+    error,
+    isAuthenticated,
+  };
 }

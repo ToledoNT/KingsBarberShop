@@ -4,7 +4,7 @@ import { IFinanceiro } from "../interfaces/financeiroInterface";
 import { ResponseTemplateInterface } from "../interfaces/response-templete-interface";
 
 const api = axios.create({
-  baseURL: "http://localhost:4001/api", // ajuste conforme seu backend
+baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: { "Content-Type": "application/json" },
 });
 

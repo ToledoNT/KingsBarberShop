@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/app/components/ui/Sidebar";
 import Button from "../components/ui/Button";
+import Loader from "@/app/components/ui/Loader"; // Loader importado
 import { useAgendamentosAdmin } from "../hook/useAgendamentoAdmin";
 import {
   Agendamento,
@@ -12,6 +14,11 @@ import {
 import { AgendamentoHorario } from "../components/agendamento/AgendamentoHorario";
 import AgendamentoPrivadoForm from "../components/agendamento/AgendamentoPrivadoForm";
 import { AgendamentosGrid } from "../components/agendamento/AgendamentosGrid";
+import { FaUser, FaCalendarAlt } from "react-icons/fa";
+import { AuthService } from "../api/authAdmin";
+
+// ------------------- INSTÂNCIA AUTH -------------------
+const authService = new AuthService();
 
 // ------------------- HELPERS -------------------
 export const mapToAgendamento = (a: Agendamento): Agendamento => ({
@@ -38,6 +45,11 @@ export const formatDate = (dataISO?: string | null) => {
 
 // ------------------- COMPONENT -------------------
 export default function CriarAgendamentoPage() {
+  const router = useRouter();
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   const {
     agendamentos,
     addAgendamento,
@@ -58,9 +70,8 @@ export default function CriarAgendamentoPage() {
     agendamento: "gerenciar" as "criar" | "gerenciar",
     horario: "exibir" as "exibir" | "criar",
   });
-  const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null);
-  
-  // FILTROS SIMPLES - única adição
+  const [selectedAgendamento, setSelectedAgendamento] =
+    useState<Agendamento | null>(null);
   const [filtros, setFiltros] = useState({
     status: "todos" as "todos" | StatusAgendamento,
     data: "",
@@ -69,28 +80,46 @@ export default function CriarAgendamentoPage() {
 
   const notify = (msg: string) => alert(msg);
 
-  // FILTRAGEM - única adição
+  // ------------------- VERIFICAÇÃO DE TOKEN -------------------
+  useEffect(() => {
+    const verifyAuth = async () => {
+      setLoading(true);
+      try {
+        const valid = await authService.verifyToken();
+        if (!valid) {
+          router.replace("/login");
+        } else {
+          setIsAuthenticated(true);
+        }
+      } catch (err) {
+        console.error("Erro na verificação de token:", err);
+        router.replace("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyAuth();
+    fetchBarbeiros();
+  }, [router]);
+
+  // ------------------- FILTRAGEM -------------------
   const agendamentosFiltrados = useMemo(() => {
     let filtrados = agendamentos.map(mapToAgendamento);
 
-    // Filtro por status
-    if (filtros.status !== "todos") {
-      filtrados = filtrados.filter(ag => ag.status === filtros.status);
-    }
-
-    // Filtro por data
+    if (filtros.status !== "todos")
+      filtrados = filtrados.filter((ag) => ag.status === filtros.status);
     if (filtros.data) {
-      const dataFiltro = new Date(filtros.data).toISOString().split('T')[0];
-      filtrados = filtrados.filter(ag => {
-        const dataAgendamento = ag.data ? new Date(ag.data).toISOString().split('T')[0] : '';
-        return dataAgendamento === dataFiltro;
-      });
+      const dataFiltro = new Date(filtros.data).toISOString().split("T")[0];
+      filtrados = filtrados.filter(
+        (ag) =>
+          ag.data
+            ? new Date(ag.data).toISOString().split("T")[0] === dataFiltro
+            : false
+      );
     }
-
-    // Filtro por barbeiro
-    if (filtros.barbeiro !== "todos") {
-      filtrados = filtrados.filter(ag => ag.profissionalId === filtros.barbeiro);
-    }
+    if (filtros.barbeiro !== "todos")
+      filtrados = filtrados.filter((ag) => ag.profissionalId === filtros.barbeiro);
 
     return filtrados;
   }, [agendamentos, filtros]);
@@ -100,16 +129,12 @@ export default function CriarAgendamentoPage() {
     if (!form.barbeiro || !form.data) return notify("Preencha barbeiro e data.");
     const barbeiro = barbeiros.find((b) => b.id === form.barbeiro);
     if (!barbeiro) return notify("Barbeiro não encontrado.");
-    
-    // CORREÇÃO: Envia a data como string YYYY-MM-DD sem conversão para UTC
-    const dataParaBackend = new Date(form.data).toISOString().split('T')[0];
-
-    console.log('📅 Data sendo enviada para o backend:', dataParaBackend);
+    const dataParaBackend = new Date(form.data).toISOString().split("T")[0];
 
     try {
-      await addHorario({ 
-        profissional: barbeiro, 
-        data: dataParaBackend 
+      await addHorario({
+        profissional: barbeiro,
+        data: dataParaBackend,
       } as HorarioDisponivel);
       setTabs({ ...tabs, horario: "exibir" });
     } catch (err) {
@@ -117,7 +142,6 @@ export default function CriarAgendamentoPage() {
       notify("Erro ao gerar horários. Veja o console.");
     }
   };
-
   const handleRemoveHorario = async (id?: string) => {
     if (id) await removeHorario(id);
   };
@@ -130,180 +154,206 @@ export default function CriarAgendamentoPage() {
     setSelectedAgendamento(null);
     setTabs({ ...tabs, agendamento: "gerenciar" });
   };
-
-  const handleDeleteAgendamento = async (id: string) => {
-    await removeAgendamento(id);
-  };
-
-  const handleUpdateStatusAgendamento = async (id: string, status: StatusAgendamento) => {
+  const handleDeleteAgendamento = async (id: string) => await removeAgendamento(id);
+  const handleUpdateStatusAgendamento = async (
+    id: string,
+    status: StatusAgendamento
+  ) => {
     try {
       await updateAgendamento(id, { status });
     } catch (err) {
-      console.error("Erro ao atualizar status:", err);
+      console.error(err);
     }
   };
 
-  // ------------------- EFFECTS -------------------
-  useEffect(() => {
-    fetchBarbeiros();
-  }, []);
+  // ------------------- BLOQUEIO DE RENDER -------------------
+  if (loading) return <Loader fullScreen={true} />;
+  if (!isAuthenticated) return null;
 
   // ------------------- JSX -------------------
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[#0D0D0D] text-[#E5E5E5] overflow-hidden">
-      {/* Sidebar responsiva */}
-      <div className="w-full md:w-auto">
-        <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-      </div>
+    <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5]">
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
-      <main
-        className={`flex-1 h-screen overflow-y-auto p-4 md:p-6 transition-all ${
-          collapsed ? "md:ml-12" : "md:ml-24"
-        }`}
-      >
-        <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent mb-6 text-center md:text-left">
-          Painel Admin
+      <main className="flex-1 flex flex-col gap-6 md:gap-8 p-4 md:p-6 overflow-y-auto h-screen">
+        <h1 className="text-2xl md:text-3xl font-bold text-[#FFA500] mb-4">
+          Agendamentos
         </h1>
 
-        <div className="flex flex-col gap-8">
-          {/* ---------------- HORÁRIOS ---------------- */}
-          <section className="bg-[#1F1F1F] rounded-3xl shadow-lg p-4 md:p-6 flex flex-col gap-5">
-            <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-              {(["exibir", "criar"] as const).map((tab) => (
-                <Button
-                  key={tab}
-                  variant={tabs.horario === tab ? "primary" : "secondary"}
-                  onClick={() => setTabs({ ...tabs, horario: tab })}
-                  className="w-full sm:w-auto"
-                >
-                  {tab === "exibir" ? "Exibir Horários" : "Criar Horário"}
-                </Button>
-              ))}
+        {/* ---------------- HORÁRIOS ---------------- */}
+        <section className="bg-[#1F1F1F] rounded-3xl shadow-lg p-4 md:p-6 flex flex-col gap-5">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#FFA500]">Horários</h2>
+
+          <div className="flex flex-wrap gap-3 mt-3">
+            {(["exibir", "criar"] as const).map((tab) => (
+              <Button
+                key={tab}
+                variant={tabs.horario === tab ? "primary" : "secondary"}
+                onClick={() => setTabs({ ...tabs, horario: tab })}
+                className="w-full sm:w-auto"
+              >
+                {tab === "exibir" ? "Exibir Horários" : "Criar Horário"}
+              </Button>
+            ))}
+          </div>
+
+          {tabs.horario === "criar" && (
+            <div className="flex flex-col sm:flex-row gap-3 mt-3 flex-wrap items-center">
+              <select
+                value={form.barbeiro || ""}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, barbeiro: e.target.value }))
+                }
+                className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition w-full sm:w-auto"
+              >
+                <option value="">Selecione Barbeiro</option>
+                {barbeiros.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.nome}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="date"
+                value={
+                  form.data ? new Date(form.data).toISOString().split("T")[0] : ""
+                }
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, data: new Date(e.target.value) }))
+                }
+                className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition w-full sm:w-auto"
+              />
+              <Button
+                onClick={handleGenerateHorarios}
+                variant="primary"
+                className="w-full sm:w-auto"
+              >
+                Gerar Horários
+              </Button>
             </div>
+          )}
 
-            {tabs.horario === "criar" && (
-              <div className="flex flex-col sm:flex-row gap-3 mt-3 flex-wrap items-center">
-                <select
-                  value={form.barbeiro || ""}
-                  onChange={(e) => setForm((prev) => ({ ...prev, barbeiro: e.target.value }))}
-                  className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition w-full sm:w-auto"
-                >
-                  <option value="">Selecione Barbeiro</option>
-                  {barbeiros.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.nome}
-                    </option>
-                  ))}
-                </select>
+          {tabs.horario === "exibir" && (
+            <div className="overflow-x-auto mt-3">
+              <AgendamentoHorario
+                horarios={horarios}
+                onToggleDisponivel={toggleHorarioDisponivel}
+                onRemoveHorario={handleRemoveHorario}
+              />
+            </div>
+          )}
+        </section>
 
-                <input
-                  type="date"
-                  value={form.data ? new Date(form.data).toISOString().split("T")[0] : ""}
-                  onChange={(e) => setForm((prev) => ({ ...prev, data: new Date(e.target.value) }))}
-                  className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition w-full sm:w-auto"
-                />
+        {/* ---------------- AGENDAMENTOS ---------------- */}
+        <section className="bg-[#1F1F1F] rounded-3xl shadow-lg p-4 md:p-6 flex flex-col gap-5">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#FFA500]">Agendamentos</h2>
 
+          <div className="flex flex-wrap gap-3 mt-3">
+            {(["gerenciar", "criar"] as const).map((tab) => (
+              <Button
+                key={tab}
+                variant={tabs.agendamento === tab ? "primary" : "secondary"}
+                onClick={() => {
+                  setTabs({ ...tabs, agendamento: tab });
+                  if (tab === "criar") setSelectedAgendamento(null);
+                }}
+                className="w-full sm:w-auto"
+              >
+                {tab === "gerenciar" ? "Gerenciar Agendamentos" : "Criar Agendamento"}
+              </Button>
+            ))}
+          </div>
+
+          {tabs.agendamento === "gerenciar" && (
+            <div className="bg-[#2A2A2A] rounded-xl p-4 border border-gray-700 mt-3">
+              <div className="flex justify-end mb-2">
                 <Button
-                  onClick={handleGenerateHorarios}
-                  variant="primary"
-                  className="w-full sm:w-auto"
+                  variant="secondary"
+                  onClick={() =>
+                    setFiltros({ status: "todos", data: "", barbeiro: "todos" })
+                  }
+                  className="text-sm"
                 >
-                  Gerar Horários
+                  Limpar Filtros
                 </Button>
               </div>
-            )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-gray-400">Status</label>
+                  <select
+                    value={filtros.status}
+                    onChange={(e) =>
+                      setFiltros((prev) => ({
+                        ...prev,
+                        status: e.target.value as any,
+                      }))
+                    }
+                    className="p-2 rounded-lg bg-[#1F1F1F] border border-gray-600 text-sm hover:border-orange-400 transition-colors"
+                  >
+                    <option value="todos">Todos os status</option>
+                    <option value={StatusAgendamento.AGENDADO}>Agendado</option>
+                    <option value={StatusAgendamento.EM_ANDAMENTO}>Em Andamento</option>
+                    <option value={StatusAgendamento.CONCLUIDO}>Concluído</option>
+                    <option value={StatusAgendamento.CANCELADO}>Cancelado</option>
+                    <option value={StatusAgendamento.NAO_COMPARECEU}>Não Compareceu</option>
+                  </select>
+                </div>
 
-            <div className="overflow-x-auto">
-              {tabs.horario === "exibir" && (
-                <AgendamentoHorario
-                  horarios={horarios}
-                  onToggleDisponivel={toggleHorarioDisponivel}
-                  onRemoveHorario={handleRemoveHorario}
-                />
-              )}
-            </div>
-          </section>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-gray-400 flex items-center gap-1">
+                    <FaUser className="text-orange-400" /> Barbeiro
+                  </label>
+                  <select
+                    value={filtros.barbeiro}
+                    onChange={(e) =>
+                      setFiltros((prev) => ({ ...prev, barbeiro: e.target.value }))
+                    }
+                    className="p-2 rounded-lg bg-[#1F1F1F] border border-gray-600 text-sm hover:border-orange-400 transition-colors"
+                  >
+                    <option value="todos">Todos os barbeiros</option>
+                    {barbeiros.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* ---------------- AGENDAMENTOS ---------------- */}
-          <section className="bg-[#1F1F1F] rounded-3xl shadow-lg p-4 md:p-6 flex flex-col gap-5">
-            <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-              {(["gerenciar", "criar"] as const).map((tab) => (
-                <Button
-                  key={tab}
-                  variant={tabs.agendamento === tab ? "primary" : "secondary"}
-                  onClick={() => {
-                    setTabs({ ...tabs, agendamento: tab });
-                    if (tab === "criar") setSelectedAgendamento(null);
-                  }}
-                  className="w-full sm:w-auto"
-                >
-                  {tab === "gerenciar" ? "Gerenciar Agendamentos" : "Criar Agendamento"}
-                </Button>
-              ))}
-            </div>
-
-            {/* FILTROS - única adição */}
-            {tabs.agendamento === "gerenciar" && (
-              <div className="flex flex-col sm:flex-row gap-3 mt-3 flex-wrap items-center bg-[#2A2A2A] p-4 rounded-lg">
-                <select
-                  value={filtros.status}
-                  onChange={(e) => setFiltros(prev => ({ ...prev, status: e.target.value as any }))}
-                  className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition w-full sm:w-auto"
-                >
-                  <option value="todos">Todos os status</option>
-                  <option value={StatusAgendamento.AGENDADO}>Agendado</option>
-                  <option value={StatusAgendamento.EM_ANDAMENTO}>Em Andamento</option>
-                  <option value={StatusAgendamento.CONCLUIDO}>Concluído</option>
-                  <option value={StatusAgendamento.CANCELADO}>Cancelado</option>
-                  <option value={StatusAgendamento.NAO_COMPARECEU}>Não Compareceu</option>
-                </select>
-                
-                <input
-                  type="date"
-                  value={filtros.data}
-                  onChange={(e) => setFiltros(prev => ({ ...prev, data: e.target.value }))}
-                  className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition w-full sm:w-auto"
-                />
-                
-                <select
-                  value={filtros.barbeiro}
-                  onChange={(e) => setFiltros(prev => ({ ...prev, barbeiro: e.target.value }))}
-                  className="p-2 rounded-lg bg-[#2F2F2F] border border-gray-600 hover:border-orange-400 transition w-full sm:w-auto"
-                >
-                  <option value="todos">Todos os barbeiros</option>
-                  {barbeiros.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.nome}
-                    </option>
-                  ))}
-                </select>
-
-                <div className="text-sm text-gray-400">
-                  {agendamentosFiltrados.length} de {agendamentos.length} agendamentos
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-gray-400 flex items-center gap-1">
+                    <FaCalendarAlt className="text-orange-400" /> Data
+                  </label>
+                  <input
+                    type="date"
+                    value={filtros.data}
+                    onChange={(e) =>
+                      setFiltros((prev) => ({ ...prev, data: e.target.value }))
+                    }
+                    className="p-2 rounded-lg bg-[#1F1F1F] border border-gray-600 text-sm hover:border-orange-400 transition-colors"
+                  />
                 </div>
               </div>
-            )}
-
-            <div className="overflow-x-auto">
-              {tabs.agendamento === "criar" && (
-                <AgendamentoPrivadoForm
-                  agendamento={selectedAgendamento || undefined}
-                  onSave={handleSaveAgendamento}
-                  onCancel={() => setTabs({ ...tabs, agendamento: "gerenciar" })}
-                  barbeiros={barbeiros}
-                  horarios={horarios}
-                />
-              )}
-
-              {tabs.agendamento === "gerenciar" && (
-                <AgendamentosGrid
-                  agendamentos={agendamentosFiltrados}
-                  onStatusChange={handleUpdateStatusAgendamento}
-                />
-              )}
             </div>
-          </section>
-        </div>
+          )}
+
+          <div className="overflow-x-auto mt-3">
+            {tabs.agendamento === "criar" && (
+              <AgendamentoPrivadoForm
+                agendamento={selectedAgendamento || undefined}
+                onSave={handleSaveAgendamento}
+                onCancel={() => setTabs({ ...tabs, agendamento: "gerenciar" })}
+                barbeiros={barbeiros}
+                horarios={horarios}
+              />
+            )}
+            {tabs.agendamento === "gerenciar" && (
+              <AgendamentosGrid
+                agendamentos={agendamentosFiltrados}
+                onStatusChange={handleUpdateStatusAgendamento}
+              />
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );

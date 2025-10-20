@@ -1,7 +1,7 @@
 export interface FinanceiroCardProps {
   mov: IFinanceiro;
-  onEdit: (mov: IFinanceiro) => void;
-  onDelete: (id?: string) => void;
+  onEdit?: (mov: IFinanceiro) => void;
+  onDelete?: (id: string) => void;
 }
 
 export interface IFinanceiro {
@@ -13,4 +13,8 @@ export interface IFinanceiro {
   status?: "Pago" | "pendente"; 
   criadoEm?: Date;
   atualizadoEm?: Date;
+}
+
+export interface FinanceiroCardProps {
+  mov: IFinanceiro;
 }

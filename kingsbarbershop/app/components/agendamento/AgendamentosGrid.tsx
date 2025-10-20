@@ -40,7 +40,6 @@ export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosG
     .filter((s) => s !== StatusAgendamento.PENDENTE)
     .map((s) => ({ value: s, label: s }));
 
-  // Status que quando atingidos, bloqueiam alterações
   const statusFinais = [
     StatusAgendamento.CONCLUIDO,
     StatusAgendamento.CANCELADO,
@@ -109,7 +108,6 @@ export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosG
           if (!a.id) return null;
           const statusAtual = a.status || StatusAgendamento.AGENDADO;
           
-          // Verifica se o status atual é final (bloqueado)
           const isStatusFinal = statusFinais.includes(statusAtual);
 
           return (

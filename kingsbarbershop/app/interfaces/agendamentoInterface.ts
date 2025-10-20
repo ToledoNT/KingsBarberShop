@@ -19,7 +19,7 @@ export interface Barbeiro {
   nome: string;
   horarios: string[];
   procedimentos?: Procedimento[];
-  diasDisponiveis?: string[]; // ex: ["2025-10-17", "2025-10-18"]
+  diasDisponiveis?: string[]; 
 }
 
 // -------------------- Agendamentos --------------------
@@ -167,9 +167,3 @@ export interface TableProps {
   columns: Column[];
   data: Record<string, any>[];
 }
-
-// // -------------------- Modal --------------------
-// export interface ModalProps {
-//   children: React.ReactNode;
-//   onClose: () => void;
-// }

@@ -1,4 +1,3 @@
-// app/components/dashboard/DashBoardCard.tsx
 interface DashboardCardProps {
   title: string;
   value: string | number;

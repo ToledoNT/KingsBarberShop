@@ -3,10 +3,9 @@ import { HorarioDisponivel } from "../interfaces/agendamentoInterface";
 import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-interface";
 
 const api = axios.create({
-  baseURL: "http://localhost:4001/api",
+baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: { "Content-Type": "application/json" },
 });
-
 
 export class HorarioService {
   async fetchAllHorarios(): Promise<HorarioDisponivel[]> {
@@ -33,7 +32,6 @@ export class HorarioService {
     throw new Error(msg);
   }
 }
-
 
   async updateHorario(id: string, horario: Partial<HorarioDisponivel>): Promise<HorarioDisponivel> {
     try {

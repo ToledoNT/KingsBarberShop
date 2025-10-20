@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Home, Calendar, DollarSign, Users } from "lucide-react";
+import { Home, Calendar, DollarSign, Users, LogOut } from "lucide-react";
+import { useAuth } from "@/app/hook/useAuthLoginAdmin";
 
 type MenuItem = {
   name: string;
@@ -24,10 +25,20 @@ export default function Sidebar({
   setCollapsed: any;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { logout } = useAuth(); // pega função de logout do hook
+
+  const handleLogout = async () => {
+    try {
+      await logout(); // chama a função do hook
+      // Redirecionamento já é feito dentro do hook
+    } catch (err) {
+      console.error("Erro ao fazer logout:", err);
+    }
+  };
 
   return (
     <>
-      {/* Overlay para mobile */}
+      {/* Overlay mobile */}
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
@@ -43,6 +54,7 @@ export default function Sidebar({
           md:static fixed h-screen z-50
           overflow-y-auto
           ${mobileOpen ? "left-0" : "-left-full"} md:left-0
+          flex flex-col
         `}
       >
         <div className="flex items-center justify-between p-4 border-b border-[#2A2A2A] flex-shrink-0">
@@ -58,7 +70,7 @@ export default function Sidebar({
           </button>
         </div>
 
-        <nav className="flex flex-col mt-4 gap-2 flex-grow overflow-y-auto px-2 pb-6">
+        <nav className="flex flex-col mt-4 gap-2 flex-grow overflow-y-auto px-2">
           {menuItems.map((item) => (
             <a
               key={item.name}
@@ -70,9 +82,20 @@ export default function Sidebar({
             </a>
           ))}
         </nav>
+
+        {/* Botão de Logout */}
+        <div className="p-2 border-t border-[#2A2A2A] mt-auto">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 p-3 hover:bg-[#2A2A2A] rounded transition text-red-400 hover:text-red-300 w-full"
+          >
+            <LogOut size={20} />
+            {!collapsed && <span>Sair</span>}
+          </button>
+        </div>
       </aside>
 
-      {/* Botão para abrir sidebar no mobile */}
+      {/* Botão mobile */}
       {!mobileOpen && (
         <button
           className="fixed top-4 left-4 z-50 md:hidden bg-[#FFA500] text-black p-2 rounded"

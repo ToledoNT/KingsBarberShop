@@ -3,12 +3,7 @@ export interface LoginData {
   password: string;
 }
 
-export interface LoginResponse {
-  token: string;
-}
-
 export interface AuthState {
-  token: string | null;
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
@@ -16,10 +11,36 @@ export interface AuthState {
 
 export interface UseAuthReturn extends AuthState {
   login: (data: LoginData) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  verify: () => Promise<void>;
 }
 
 export interface LoadingProps {
   size?: number;
-  text?: string; 
-} 
+  text?: string;
+}
+
+export interface LoginResponseData {
+  id: string;
+  email: string;
+  name: string;
+  token: string;
+}
+
+export interface LoginResponse {
+  status: boolean;
+  code: number;
+  message: string;
+  data?: LoginResponseData;
+}
+
+export interface LoginResult {
+  id: string;
+  email: string;
+  name: string;
+  token: string;
+}
+
+export interface VerifyTokenResponse {
+  status: boolean;
+}

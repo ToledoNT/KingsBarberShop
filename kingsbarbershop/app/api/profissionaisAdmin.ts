@@ -4,7 +4,7 @@ import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-in
 import { HorarioDisponivel, Procedimento } from "@/app/interfaces/agendamentoInterface";
 
 const api = axios.create({
-  baseURL: "http://localhost:4001/api",
+baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 10000,
 });

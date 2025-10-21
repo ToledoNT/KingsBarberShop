@@ -26,10 +26,12 @@ export default function LoginPage() {
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
+  // Redireciona se já estiver autenticado
   useEffect(() => {
     if (isAuthenticated) router.push("/dashboard");
   }, [isAuthenticated, router]);
 
+  // Recupera estado de lockout e tentativas do localStorage
   useEffect(() => {
     const savedLockout = localStorage.getItem("loginLockout");
     if (savedLockout) {
@@ -44,6 +46,7 @@ export default function LoginPage() {
     if (savedAttempts) setAttempts(parseInt(savedAttempts, 10));
   }, []);
 
+  // Validação de email e senha
   const isValidForm = (email: string, password: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email) && password.length >= 8;
@@ -84,13 +87,20 @@ export default function LoginPage() {
     localStorage.removeItem("loginLockout");
   };
 
+  // Submissão do formulário
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit || isLocked) return;
 
     setIsSubmitting(true);
     try {
-      await login(form);
+      // Trim nos campos antes de enviar
+      const trimmedForm: LoginData = {
+        email: form.email.trim(),
+        password: form.password.trim(),
+      };
+      console.log("Enviando login:", trimmedForm); // debug
+      await login(trimmedForm);
       handleSuccessfulAttempt();
     } catch {
       handleFailedAttempt();
@@ -99,11 +109,15 @@ export default function LoginPage() {
     }
   };
 
+  // Atualiza estado do formulário
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     let sanitizedValue = value;
-    if (name === "email") sanitizedValue = value.replace(/[<>]/g, "");
+
+    if (name === "email") sanitizedValue = value.replace(/[<>]/g, "").trim();
+    if (name === "password") sanitizedValue = value.trim();
     if (name === "password" && value.length > 100) return;
+
     setForm((prev) => ({ ...prev, [name]: sanitizedValue }));
   };
 
@@ -123,7 +137,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#1A1A2E] to-[#16213E] flex items-center justify-center p-4 relative">
-      {/* Loader centralizado */}
       {loading && <FullScreenLoader />}
 
       <div className="relative w-full max-w-md z-10">
@@ -190,6 +203,7 @@ export default function LoginPage() {
                 required
                 disabled={loading || isLocked}
                 maxLength={100}
+                autoComplete="current-password"
               />
             </div>
           </div>

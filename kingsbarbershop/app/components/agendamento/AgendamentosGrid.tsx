@@ -58,33 +58,55 @@ export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosG
         novoStatus === StatusAgendamento.CANCELADO ? "cancelar" :
         "marcar como não compareceu";
       
+      const typeIcons = {
+        [StatusAgendamento.CONCLUIDO]: "✅",
+        [StatusAgendamento.CANCELADO]: "❌", 
+        [StatusAgendamento.NAO_COMPARECEU]: "⏰"
+      };
+
+      const typeColors = {
+        [StatusAgendamento.CONCLUIDO]: "border-green-500",
+        [StatusAgendamento.CANCELADO]: "border-red-500",
+        [StatusAgendamento.NAO_COMPARECEU]: "border-gray-500"
+      };
+
       toast.custom((t) => (
-        <div className="fixed inset-0 z-50 flex items-center justify-center min-h-screen bg-black/50">
-          <div className="bg-[#1F1F1F] text-white p-6 rounded-xl shadow-xl flex flex-col gap-4 w-96">
-            <p className="text-center text-lg font-semibold">
-              Deseja {acao} o agendamento do <strong>{agendamento.nome}</strong>?
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className={`bg-gradient-to-br from-[#1A1A1A] to-[#2A2A2A] border-2 ${typeColors[novoStatus]} rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-md w-full mx-auto shadow-2xl backdrop-blur-sm`}>
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="text-2xl">{typeIcons[novoStatus]}</div>
+              <h3 className="text-lg sm:text-xl font-bold text-white">Confirmar Ação</h3>
+            </div>
+
+            {/* Message */}
+            <p className="text-gray-300 text-sm sm:text-base mb-6 leading-relaxed">
+              Deseja <span className="font-semibold text-white">{acao}</span> o agendamento de <span className="font-semibold text-[#FFA500]">{agendamento.nome}</span>?
             </p>
 
-            <div className="flex justify-center gap-4 mt-2">
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
-                className="bg-gray-400 hover:bg-gray-500 text-black px-4 py-2 rounded-md transition"
                 onClick={() => toast.dismiss(t.id)}
+                className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base"
               >
+                <span>↩️</span>
                 Cancelar
               </button>
               <button
-                className={`px-4 py-2 rounded-md transition ${
-                  novoStatus === StatusAgendamento.CONCLUIDO
-                    ? "bg-green-600 hover:bg-green-700 text-white"
-                    : novoStatus === StatusAgendamento.CANCELADO
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : "bg-gray-600 hover:bg-gray-700 text-white"
-                }`}
                 onClick={() => {
                   onStatusChange?.(agendamento.id!, novoStatus);
                   toast.dismiss(t.id);
                 }}
+                className={`flex-1 px-4 py-3 text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
+                  novoStatus === StatusAgendamento.CONCLUIDO
+                    ? "bg-green-600 hover:bg-green-700"
+                    : novoStatus === StatusAgendamento.CANCELADO
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-gray-600 hover:bg-gray-700"
+                }`}
               >
+                <span>✅</span>
                 Confirmar
               </button>
             </div>
@@ -92,18 +114,27 @@ export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosG
         </div>
       ), { duration: Infinity });
     } else {
+      // Status que não precisam de confirmação (AGENDADO, EM_ANDAMENTO)
       onStatusChange?.(agendamento.id!, novoStatus);
     }
   };
 
   if (agendamentos.length === 0) {
-    return <p className="text-gray-400 mt-3">Nenhum agendamento encontrado.</p>;
+    return (
+      <div className="text-center py-12 border-2 border-dashed border-gray-700 rounded-xl bg-gray-900/30 backdrop-blur-sm mt-3">
+        <div className="text-6xl mb-4 opacity-60">📅</div>
+        <p className="text-lg font-semibold text-gray-300 mb-3">Nenhum agendamento encontrado</p>
+        <p className="text-gray-400 text-sm max-w-xs mx-auto">
+          Não há agendamentos para exibir com os filtros atuais
+        </p>
+      </div>
+    );
   }
 
   return (
     <>
       <Toaster />
-      <div className="text-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-3">
         {agendamentos.map((a) => {
           if (!a.id) return null;
           const statusAtual = a.status || StatusAgendamento.AGENDADO;
@@ -113,44 +144,64 @@ export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosG
           return (
             <div
               key={a.id}
-              className="bg-[#2A2A2A] rounded-2xl shadow-md p-5 flex flex-col justify-between gap-4 hover:shadow-xl transition-all"
+              className="bg-gradient-to-br from-[#1A1A1A] to-[#2A2A2A] border border-gray-700 rounded-xl p-4 sm:p-5 backdrop-blur-sm transition-all duration-300 hover:shadow-xl flex flex-col justify-between gap-4"
             >
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-lg bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
-                  {a.nome || "—"}
-                </h3>
+              {/* Header */}
+              <div className="flex justify-between items-start">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-white text-lg sm:text-xl truncate">
+                    {a.nome || "—"}
+                  </h3>
+                  <p className="text-gray-400 text-sm mt-1">
+                    {formatarData(a.data)} • {formatarHorario(a.inicio, a.fim)}
+                  </p>
+                </div>
                 {isStatusFinal && (
-                  <span className="text-xs bg-gray-600 text-gray-300 px-2 py-1 rounded-md">
+                  <span className="text-xs bg-gray-600 text-gray-300 px-2 py-1 rounded-lg flex items-center gap-1 flex-shrink-0 ml-2">
                     🔒 Finalizado
                   </span>
                 )}
               </div>
 
-              <div className="flex flex-col gap-1 text-sm text-gray-300">
-                <p><strong>Telefone:</strong> {a.telefone || "—"}</p>
-                <p><strong>Email:</strong> {a.email || "—"}</p>
-                <p><strong>Profissional:</strong> {a.profissionalNome || a.barbeiro || "—"}</p>
-                <p><strong>Data:</strong> {formatarData(a.data)}</p>
-                <p><strong>Horário:</strong> {formatarHorario(a.inicio, a.fim)}</p>
-                <p>
-                  <strong>Serviço:</strong> {a.servicoNome || a.servico || "—"} —{" "}
-                  <span className="text-green-400">R$ {(a.servicoPreco ?? 0).toFixed(2)}</span>
-                </p>
+              {/* Informações */}
+              <div className="flex flex-col gap-2 text-sm text-gray-300 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#FFA500]">📞</span>
+                  <span>{a.telefone || "—"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#FFA500]">📧</span>
+                  <span className="truncate">{a.email || "—"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#FFA500]">👤</span>
+                  <span>{a.profissionalNome || a.barbeiro || "—"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#FFA500]">💼</span>
+                  <span className="flex-1">
+                    {a.servicoNome || a.servico || "—"}
+                  </span>
+                  <span className="text-green-400 font-semibold text-sm bg-green-500/10 px-2 py-1 rounded-lg">
+                    R$ {(a.servicoPreco ?? 0).toFixed(2)}
+                  </span>
+                </div>
               </div>
 
+              {/* Status Selector */}
               {onStatusChange && (
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-3 border-t border-gray-700">
                   <select
                     name={`status-${a.id}`}
                     value={statusAtual}
                     onChange={(e) => handleStatusChange(a, e.target.value as StatusAgendamento)}
                     disabled={isStatusFinal}
-                    className={`w-36 px-3 py-2 rounded-lg font-medium border text-sm text-center transition-colors duration-200 ${
+                    className={`px-3 py-2 rounded-lg font-medium border text-sm text-center transition-all duration-300 backdrop-blur-sm ${
                       getStatusColor(statusAtual)
                     } ${
                       isStatusFinal 
                         ? 'opacity-50 cursor-not-allowed' 
-                        : 'cursor-pointer hover:opacity-90'
+                        : 'cursor-pointer hover:scale-105 hover:shadow-lg'
                     }`}
                   >
                     {statusOptions.map((opt) => (

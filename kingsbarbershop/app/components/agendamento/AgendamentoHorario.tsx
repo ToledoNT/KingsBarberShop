@@ -86,32 +86,37 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="space-y-6">
       {/* ---------------- FILTROS ---------------- */}
-      <div className="bg-[#2A2A2A] rounded-xl p-4 border border-gray-700">
+      <div className="bg-gradient-to-br from-[#111111] to-[#1A1A1A] border border-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl backdrop-blur-sm">
         {/* Cabeçalho */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
-          <h3 className="text-white font-semibold flex items-center gap-2">
-            <FaFilter className="text-orange-400" />
-            Filtros
-          </h3>
-          <Button variant="secondary" onClick={resetFiltros} className="text-xs">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2">
+            <div className="text-[#FFA500] text-lg">🎯</div>
+            <h3 className="text-white font-semibold text-lg">Filtros</h3>
+          </div>
+          <Button 
+            variant="secondary" 
+            onClick={resetFiltros} 
+            className="px-4 py-2 text-sm"
+          >
+            <span className="mr-2">🔄</span>
             Limpar Filtros
           </Button>
         </div>
 
         {/* Grid de filtros */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Profissional */}
-          <div className="flex flex-col gap-2 w-full">
-            <label className="text-xs text-gray-400 flex items-center gap-1">
-              <FaUser className="text-orange-400" />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
+              <FaUser className="text-[#FFA500]" />
               Profissional
             </label>
             <select
               value={filtros.profissional}
               onChange={e => setFiltros(prev => ({ ...prev, profissional: e.target.value }))}
-              className="w-full p-3 rounded-xl bg-[#1F1F1F] border border-gray-600 text-sm hover:border-orange-400 transition-colors"
+              className="w-full p-3 sm:p-4 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm sm:text-base backdrop-blur-sm"
             >
               <option value="todos">Todos os profissionais</option>
               {profissionaisUnicos.map(prof => (
@@ -121,26 +126,28 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
           </div>
 
           {/* Data */}
-          <div className="flex flex-col gap-2 w-full">
-            <label className="text-xs text-gray-400 flex items-center gap-1">
-              <FaCalendarAlt className="text-orange-400" />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
+              <FaCalendarAlt className="text-[#FFA500]" />
               Data
             </label>
             <input
               type="date"
               value={filtros.data}
               onChange={e => setFiltros(prev => ({ ...prev, data: e.target.value }))}
-              className="w-full p-3 rounded-xl bg-[#1F1F1F] border border-gray-600 text-sm hover:border-orange-400 transition-colors"
+              className="w-full p-3 sm:p-4 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm sm:text-base backdrop-blur-sm"
             />
           </div>
 
           {/* Disponibilidade */}
-          <div className="flex flex-col gap-2 w-full">
-            <label className="text-xs text-gray-400">Disponibilidade</label>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
+              Disponibilidade
+            </label>
             <select
               value={filtros.disponivel}
               onChange={e => setFiltros(prev => ({ ...prev, disponivel: e.target.value as any }))}
-              className="w-full p-3 rounded-xl bg-[#1F1F1F] border border-gray-600 text-sm hover:border-orange-400 transition-colors"
+              className="w-full p-3 sm:p-4 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm sm:text-base backdrop-blur-sm"
             >
               <option value="todos">Todos</option>
               <option value="disponivel">Disponíveis</option>
@@ -150,90 +157,120 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
         </div>
 
         {/* Contador */}
-        <div className="text-xs text-gray-400 mt-3 text-right">
-          {totalHorarios} horário{totalHorarios !== 1 ? "s" : ""} encontrado{totalHorarios !== 1 ? "s" : ""}
+        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-700">
+          <div className="text-sm text-gray-400">
+            Mostrando <span className="text-white font-semibold">{totalHorarios}</span> horário{totalHorarios !== 1 ? "s" : ""}
+          </div>
+          <div className="text-xs text-gray-500 bg-gray-800/50 px-2 py-1 rounded-lg">
+            Total: {horarios.length}
+          </div>
         </div>
       </div>
 
       {/* ---------------- HORÁRIOS ---------------- */}
-      <div className="flex flex-col gap-4 max-h-[24rem] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent p-2">
+      <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar scroll-smooth">
         {Object.keys(horariosFiltradosEAgrupados).length === 0 ? (
-          <div className="text-center py-8 text-gray-400 text-sm">
-            {horarios.length === 0
-              ? "Nenhum horário disponível."
-              : "Nenhum horário encontrado com os filtros atuais."}
+          <div className="text-center py-12 border-2 border-dashed border-gray-700 rounded-xl bg-gray-900/30 backdrop-blur-sm">
+            <div className="text-6xl mb-4 opacity-60">📅</div>
+            <p className="text-lg font-semibold text-gray-300 mb-3">
+              {horarios.length === 0 ? "Nenhum horário disponível" : "Nenhum horário encontrado"}
+            </p>
+            <p className="text-gray-400 text-sm max-w-xs mx-auto">
+              {horarios.length === 0 
+                ? "Comece adicionando horários ao sistema" 
+                : "Tente ajustar os filtros para ver mais resultados"
+              }
+            </p>
           </div>
         ) : (
           Object.entries(horariosFiltradosEAgrupados).map(([profissional, dias]) => (
             <div
               key={profissional}
-              className="bg-[#2A2A2A] rounded-2xl p-4 sm:p-5 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-700"
+              className="bg-gradient-to-br from-[#1A1A1A] to-[#2A2A2A] border border-gray-700 rounded-xl p-4 sm:p-5 backdrop-blur-sm transition-all duration-300 hover:shadow-xl"
             >
-              <h2
-                className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent mb-3 cursor-pointer select-none flex justify-between items-center"
+              {/* Header do Profissional */}
+              <div
+                className="flex justify-between items-center cursor-pointer select-none mb-4"
                 onClick={() =>
                   setOpenProfissionais(prev => ({ ...prev, [profissional]: !prev[profissional] }))
                 }
               >
-                <span className="flex items-center gap-2">
-                  <FaUser className="text-yellow-400" />
-                  {profissional}
-                  <span className="text-sm text-gray-400 font-normal">
-                    ({Object.values(dias).reduce((total, horarios) => total + horarios.length, 0)} horários)
-                  </span>
-                </span>
-                <span className="text-yellow-400 text-sm sm:text-base">
-                  {openProfissionais[profissional] ? "▲" : "▼"}
-                </span>
-              </h2>
-
-              {openProfissionais[profissional] &&
-                Object.entries(dias).map(([data, horariosDia]) => (
-                  <div key={data} className="ml-0 sm:ml-4 mb-4">
-                    <h3 className="font-medium text-yellow-400 mb-2 text-sm sm:text-base flex items-center gap-2">
-                      <FaCalendarAlt />
-                      {data}
-                      <span className="text-xs text-gray-400">({horariosDia.length} horários)</span>
-                    </h3>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-                      {horariosDia.map(h => (
-                        <div
-                          key={h.id}
-                          className={`flex flex-col justify-between p-3 rounded-xl shadow hover:shadow-lg transition-all duration-200 ${
-                            h.disponivel
-                              ? "bg-green-600/20 border border-green-600/30"
-                              : "bg-[#2F2F2F] hover:bg-[#3B3B3B]"
-                          }`}
-                        >
-                          <p className="text-sm text-gray-200 font-medium text-center">
-                            {formatarHora(h.inicio)} - {formatarHora(h.fim)}
-                          </p>
-
-                          <div className="flex flex-col sm:flex-row justify-between items-center mt-2 gap-2 sm:gap-0">
-                            <label className="flex items-center gap-2 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={h.disponivel}
-                                onChange={() => onToggleDisponivel(h)}
-                                className="accent-orange-400 scale-100"
-                              />
-                              Disponível
-                            </label>
-
-                            <Button
-                              onClick={() => onRemoveHorario(h.id)}
-                              variant="secondary"
-                              className="text-xs flex items-center justify-center gap-1 px-3 py-2 hover:bg-red-600/20 hover:text-red-400 transition-colors"
-                            >
-                              <FaTrash className="text-[0.65rem]" /> Excluir
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-[#FFA500] text-xl">👤</div>
+                  <div>
+                    <h2 className="text-lg sm:text-xl font-bold text-white">
+                      {profissional}
+                    </h2>
+                    <p className="text-gray-400 text-sm">
+                      {Object.values(dias).reduce((total, horarios) => total + horarios.length, 0)} horário{Object.values(dias).reduce((total, horarios) => total + horarios.length, 0) !== 1 ? "s" : ""}
+                    </p>
                   </div>
-                ))}
+                </div>
+                <div className="text-[#FFA500] text-lg">
+                  {openProfissionais[profissional] ? "▲" : "▼"}
+                </div>
+              </div>
+
+              {/* Lista de Horários */}
+              {openProfissionais[profissional] && (
+                <div className="space-y-4">
+                  {Object.entries(dias).map(([data, horariosDia]) => (
+                    <div key={data} className="border-l-2 border-[#FFA500] pl-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="text-[#FFA500]">📅</div>
+                        <h3 className="font-semibold text-white text-sm sm:text-base">
+                          {data}
+                        </h3>
+                        <span className="text-xs text-gray-400 bg-gray-800/50 px-2 py-1 rounded-lg">
+                          {horariosDia.length} horário{horariosDia.length !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {horariosDia.map(h => (
+                          <div
+                            key={h.id}
+                            className={`p-3 sm:p-4 rounded-xl border transition-all duration-300 ${
+                              h.disponivel
+                                ? "bg-green-600/10 border-green-500/30 hover:border-green-500/50"
+                                : "bg-gray-800/30 border-gray-600 hover:border-gray-500"
+                            }`}
+                          >
+                            <div className="text-center mb-3">
+                              <p className="text-white font-semibold text-sm sm:text-base">
+                                {formatarHora(h.inicio)} - {formatarHora(h.fim)}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <label className="flex items-center gap-2 text-xs sm:text-sm cursor-pointer flex-1">
+                                <input
+                                  type="checkbox"
+                                  checked={h.disponivel}
+                                  onChange={() => onToggleDisponivel(h)}
+                                  className="accent-[#FFA500] scale-110"
+                                />
+                                <span className={h.disponivel ? "text-green-400" : "text-gray-400"}>
+                                  {h.disponivel ? "Disponível" : "Indisponível"}
+                                </span>
+                              </label>
+
+                              <Button
+                                onClick={() => onRemoveHorario(h.id)}
+                                variant="secondary"
+                                className="px-2 py-1 text-xs hover:bg-red-600/20 hover:text-red-400 transition-colors flex items-center gap-1"
+                              >
+                                <FaTrash className="text-[0.65rem]" />
+                                Excluir
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))
         )}

@@ -269,7 +269,7 @@ export default function FinanceiroPage() {
 
           {/* Container dos registros com scroll fixo */}
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex-1 bg-gradient-to-br from-[#111111] to-[#1A1A1A] border border-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col backdrop-blur-sm">
+            <div className="flex-1 bg-gradient-to-br from-[#111111] to-[#1A1A1A] border border-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col backdrop-blur-sm overflow-hidden">
               {movimentosFiltrados.length === 0 ? (
                 <NenhumMovimento 
                   busca={busca} 
@@ -280,7 +280,7 @@ export default function FinanceiroPage() {
               ) : (
                 <>
                   {/* Header da lista */}
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4 sm:mb-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4 sm:mb-6 flex-shrink-0">
                     <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
                       <span className="text-[#FFA500]">📋</span>
                       Movimentos
@@ -296,8 +296,8 @@ export default function FinanceiroPage() {
                     </div>
                   </div>
 
-                  {/* Lista */}
-                  <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar scroll-smooth">
+                  {/* Lista com scroll */}
+                  <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar scroll-smooth max-h-[calc(100vh-400px)]">
                     <div className="grid gap-3 sm:gap-4 pb-2">
                       {movimentosFiltrados.map((mov: IFinanceiro) => (
                         <FinanceiroCard key={mov.id} mov={mov} />

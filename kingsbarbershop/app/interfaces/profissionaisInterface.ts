@@ -73,11 +73,7 @@ export interface HorarioInputProps {
   onChange: (value: string) => void;
 }
 
-export interface ProcedimentoInput {
-  nome: string;
-  valor: number;
-  profissionalId: string;
-}
+
 
 export interface BarbeiroDadosResponse {
   barbeiroId: string;

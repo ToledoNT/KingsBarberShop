@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { Home, Calendar, DollarSign, Users, LogOut } from "lucide-react";
 import { useAuth } from "@/app/hook/useAuthLoginAdmin";
 
-type MenuItem = {
+export type MenuItem = {
   name: string;
   icon: React.ComponentType<{ size?: number }>;
   path: string;
@@ -24,108 +24,81 @@ export default function Sidebar({
   setCollapsed,
 }: {
   collapsed: boolean;
-  setCollapsed: any;
+  setCollapsed: (value: boolean) => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const { logout } = useAuth();
   const pathname = usePathname();
 
-  // Verifica se o usuário é admin baseado na role - otimizado
-  useEffect(() => {
-    const checkAdminStatus = () => {
-      try {
-        // Verificação mais eficiente
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setIsAdmin(false);
-          return;
-        }
+  // ------------------- Check Admin Status -------------------
+  const checkAdminStatus = useCallback(() => {
+    let admin = false;
 
-        // Tenta pegar do user primeiro (mais rápido)
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          try {
-            const parsedUser = JSON.parse(userData);
-            const userRole = parsedUser.role?.toLowerCase();
-            if (userRole === 'admin' || userRole === 'administrador') {
-              setIsAdmin(true);
-              return;
-            }
-          } catch (error) {
-            console.error('Erro ao parsear user:', error);
-          }
-        }
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return setIsAdmin(false);
 
-        // Fallback: decodificar token
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const tokenRole = payload.role?.toLowerCase();
-          if (tokenRole === 'admin' || tokenRole === 'administrador') {
-            setIsAdmin(true);
-            return;
-          }
-        } catch (error) {
-          console.error('Erro ao decodificar token:', error);
-        }
-
-        setIsAdmin(false);
-      } catch (error) {
-        console.error("Erro ao verificar admin:", error);
-        setIsAdmin(false);
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        const userRole = parsedUser.role?.toLowerCase();
+        if (userRole === "admin" || userRole === "administrador") admin = true;
       }
-    };
 
+      if (!admin) {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const tokenRole = payload.role?.toLowerCase();
+        if (tokenRole === "admin" || tokenRole === "administrador") admin = true;
+      }
+    } catch (err) {
+      console.error("Erro ao verificar admin:", err);
+    }
+
+    setIsAdmin(admin);
+  }, []);
+
+  useEffect(() => {
     checkAdminStatus();
 
-    // Debounce para evitar múltiplas verificações
+    // Atualiza status de admin se localStorage mudar
     let timeoutId: NodeJS.Timeout;
     const handleStorageChange = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(checkAdminStatus, 100);
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    
+    window.addEventListener("storage", handleStorageChange);
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
       clearTimeout(timeoutId);
     };
-  }, []);
+  }, [checkAdminStatus]);
 
-  // UseMemo para otimizar o filtro dos itens
-  const filteredMenuItems = useMemo(() => {
-    return menuItems.filter(item => {
-      if (item.adminOnly && !isAdmin) {
-        return false;
-      }
-      return true;
-    });
-  }, [isAdmin]);
+  // ------------------- Filter Menu -------------------
+  const filteredMenuItems = useMemo(
+    () => menuItems.filter((item) => !item.adminOnly || isAdmin),
+    [isAdmin]
+  );
 
-  const handleLogout = async () => {
+  // ------------------- Handlers -------------------
+  const handleLogout = useCallback(async () => {
     try {
       await logout();
     } catch (err) {
       console.error("Erro ao fazer logout:", err);
     }
-  };
+  }, [logout]);
 
-  // Função para verificar se o item está ativo
-  const isActive = (path: string) => {
-    return pathname === path;
-  };
+  const isActive = useCallback((path: string) => pathname === path, [pathname]);
 
-  // Fechar sidebar mobile ao clicar em um link
-  const handleLinkClick = () => {
-    if (window.innerWidth < 768) {
-      setMobileOpen(false);
-    }
-  };
+  const handleLinkClick = useCallback(() => {
+    if (window.innerWidth < 768) setMobileOpen(false);
+  }, []);
 
+  // ------------------- Render -------------------
   return (
     <>
-      {/* Overlay mobile */}
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
@@ -135,12 +108,9 @@ export default function Sidebar({
 
       <aside
         className={`
-          bg-[#1B1B1B] text-[#E5E5E5]
-          transition-all duration-300
-          ${collapsed ? "w-16" : "w-64"}
-          md:static fixed h-screen z-50
-          overflow-y-auto
-          ${mobileOpen ? "left-0" : "-left-full"} md:left-0
+          bg-[#1B1B1B] text-[#E5E5E5] transition-all duration-300
+          ${collapsed ? "w-16" : "w-64"} md:static fixed h-screen z-50
+          overflow-y-auto ${mobileOpen ? "left-0" : "-left-full"} md:left-0
           flex flex-col
         `}
       >
@@ -148,12 +118,9 @@ export default function Sidebar({
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-bold text-lg">Sistema</span>
-              {!collapsed && isAdmin && (
-                <span className="text-xs text-green-400 mt-1">Administrador</span>
-              )}
-              {!collapsed && !isAdmin && (
-                <span className="text-xs text-blue-400 mt-1">Usuário</span>
-              )}
+              <span className={`text-xs mt-1 ${isAdmin ? "text-green-400" : "text-blue-400"}`}>
+                {isAdmin ? "Administrador" : "Usuário"}
+              </span>
             </div>
           )}
           <button
@@ -170,8 +137,7 @@ export default function Sidebar({
         <nav className="flex flex-col mt-4 gap-2 flex-grow overflow-y-auto px-2">
           {filteredMenuItems.map((item) => {
             const active = isActive(item.path);
-            const IconComponent = item.icon;
-            
+            const Icon = item.icon;
             return (
               <a
                 key={item.name}
@@ -179,24 +145,20 @@ export default function Sidebar({
                 onClick={handleLinkClick}
                 className={`
                   flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group relative
-                  hover:bg-[#2A2A2A] text-[#E5E5E5]
-                  ${active ? 'bg-[#2A2A2A]' : ''}
+                  hover:bg-[#2A2A2A] text-[#E5E5E5] ${active ? "bg-[#2A2A2A]" : ""}
                 `}
               >
-                {/* Ponto indicador para itens ativos */}
                 {active && !collapsed && (
                   <div className="absolute -left-1 w-1 h-6 bg-[#FFA500] rounded-full"></div>
                 )}
-                
-                {/* Ícone - sempre laranja */}
+
                 <div className="text-[#FFA500]">
-                  <IconComponent size={20} />
+                  <Icon size={20} />
                 </div>
-                
+
                 {!collapsed && (
                   <span className="flex items-center gap-2">
                     {item.name}
-                    {/* Indicador de admin (apenas quando está ativo) */}
                     {item.adminOnly && active && (
                       <span className="text-xs text-orange-400" title="Apenas administradores">
                         ●
@@ -204,8 +166,7 @@ export default function Sidebar({
                     )}
                   </span>
                 )}
-                
-                {/* Tooltip para itens admin quando collapsed */}
+
                 {collapsed && item.adminOnly && (
                   <div className="absolute left-12 bg-orange-500 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                     Admin
@@ -216,7 +177,6 @@ export default function Sidebar({
           })}
         </nav>
 
-        {/* Botão de Logout */}
         <div className="p-2 border-t border-[#2A2A2A] mt-auto">
           <button
             onClick={handleLogout}
@@ -228,7 +188,6 @@ export default function Sidebar({
         </div>
       </aside>
 
-      {/* Botão mobile */}
       {!mobileOpen && (
         <button
           className="fixed top-4 left-4 z-50 md:hidden bg-[#FFA500] text-black p-2 rounded-lg"

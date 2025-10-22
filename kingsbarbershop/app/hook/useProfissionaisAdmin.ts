@@ -2,8 +2,6 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Profissional } from "../interfaces/profissionaisInterface";
 import { ProfissionalService } from "../api/profissionaisAdmin";
 
-const service = new ProfissionalService();
-
 export function useProfissionaisAdmin() {
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
   const [loading, setLoading] = useState(false);
@@ -11,10 +9,10 @@ export function useProfissionaisAdmin() {
 
   const mounted = useRef(true);
   const controllerRef = useRef<AbortController | null>(null);
+  const serviceRef = useRef(new ProfissionalService());
 
   useEffect(() => {
     mounted.current = true;
-
     fetchProfissionais();
 
     return () => {
@@ -24,6 +22,7 @@ export function useProfissionaisAdmin() {
   }, []);
 
   const fetchProfissionais = useCallback(async () => {
+    if (!mounted.current) return;
     setLoading(true);
     setError(null);
 
@@ -32,8 +31,7 @@ export function useProfissionaisAdmin() {
     controllerRef.current = controller;
 
     try {
-      const response = await service.fetchProfissionais(controller.signal);
-      const data = response ?? [];
+      const data = await serviceRef.current.fetchProfissionais(controller.signal) ?? [];
       if (mounted.current) setProfissionais(data);
       return data;
     } catch (err: any) {
@@ -49,8 +47,8 @@ export function useProfissionaisAdmin() {
     setLoading(true);
     setError(null);
     try {
-      const novo = await service.createProfissional(p);
-      if (mounted.current) setProfissionais((prev) => [...prev, novo]);
+      const novo = await serviceRef.current.createProfissional(p);
+      if (mounted.current) setProfissionais(prev => [...prev, novo]);
       return novo;
     } catch (err: any) {
       if (mounted.current) setError(err.message || "Erro ao adicionar profissional");
@@ -64,10 +62,10 @@ export function useProfissionaisAdmin() {
     setLoading(true);
     setError(null);
     try {
-      const atualizado = await service.updateProfissional(id, p);
+      const atualizado = await serviceRef.current.updateProfissional(id, p);
       if (atualizado && mounted.current) {
-        setProfissionais((prev) =>
-          prev.map((item) => (item.id === id ? atualizado : item))
+        setProfissionais(prev =>
+          prev.map(item => item.id === id ? atualizado : item)
         );
       }
       return atualizado;
@@ -79,30 +77,27 @@ export function useProfissionaisAdmin() {
     }
   }, []);
 
-const removeProfissional = useCallback(async (id: string) => {
-  setLoading(true);
-  setError(null);
-  try {
-    const response = await service.deleteProfissional(id);
+  const removeProfissional = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await serviceRef.current.deleteProfissional(id);
 
-    if (!response.status) {
-      alert(response.message);
-      if (mounted.current) setError(response.message);
-      return;
+      if (!response.status) {
+        if (mounted.current) setError(response.message);
+        return { success: false, message: response.message };
+      }
+
+      if (mounted.current) setProfissionais(prev => prev.filter(item => item.id !== id));
+
+      return { success: true, message: "Profissional deletado com sucesso!" };
+    } catch (err: any) {
+      if (mounted.current) setError(err.message || "Erro ao remover profissional");
+      return { success: false, message: err.message };
+    } finally {
+      if (mounted.current) setLoading(false);
     }
-
-    if (mounted.current)
-      setProfissionais((prev) => prev.filter((item) => item.id !== id));
-
-    alert("Profissional deletado com sucesso!");
-  } catch (err: any) {
-    if (mounted.current) setError(err.message || "Erro ao remover profissional");
-    throw err;
-  } finally {
-    if (mounted.current) setLoading(false);
-  }
-}, []);
-
+  }, []);
 
   return {
     profissionais,

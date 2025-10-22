@@ -1,15 +1,20 @@
-// app/components/ui/Loader.tsx
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
 
 interface LoaderProps {
-  fullScreen?: boolean; 
+  fullScreen?: boolean;  
   color?: string;       
   size?: number;        
+  thickness?: number;   
 }
 
-const Loader: React.FC<LoaderProps> = ({ fullScreen = false, color = "#FFA500", size = 48 }) => {
+const Loader: React.FC<LoaderProps> = memo(({
+  fullScreen = false,
+  color = "#FFA500",
+  size = 48,
+  thickness = 2,
+}) => {
   const containerClass = fullScreen
     ? "flex items-center justify-center min-h-screen bg-[#0D0D0D] text-[#E5E5E5]"
     : "flex items-center justify-center";
@@ -17,15 +22,16 @@ const Loader: React.FC<LoaderProps> = ({ fullScreen = false, color = "#FFA500", 
   return (
     <div className={containerClass}>
       <div
-        className="animate-spin rounded-full border-t-2 border-b-2 border-solid"
+        className="animate-spin rounded-full border-solid"
         style={{
           width: size,
           height: size,
+          borderWidth: thickness,
           borderColor: `${color} transparent transparent transparent`,
         }}
-      ></div>
+      />
     </div>
   );
-};
+});
 
 export default Loader;

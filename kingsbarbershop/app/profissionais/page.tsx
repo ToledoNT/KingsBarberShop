@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/app/components/ui/Sidebar";
 import Button from "../components/ui/Button";
 import Loader from "@/app/components/ui/Loader";
-import { Profissional, Procedimento } from "../interfaces/profissionaisInterface";
+import { Profissional } from "../interfaces/profissionaisInterface";
 import ProfissionalCard from "../components/profissional/ProfissionalCard";
 import { ProcedimentosProfissionais } from "../components/profissional/ProcedimentosForm";
 import { ProfissionalForm } from "../components/profissional/ProfissionalForm";
@@ -13,17 +13,12 @@ import { useProcedimentosAdmin } from "../hook/useProcedimentosAdmin";
 import ProcedimentoCard from "../components/profissional/ProcedimentoCard";
 import { AuthService } from "../api/authAdmin";
 import { useRouter } from "next/navigation";
+import { ProcedimentoInput } from "../interfaces/inputInterface";
 
-interface ProcedimentoInput {
-  nome: string;
-  valor: number;
-  profissionalId: string;
-}
+const authService = new AuthService();
 
 export default function ProfissionaisProcedimentosPage() {
   const router = useRouter();
-  const authService = new AuthService();
-
   const [collapsed, setCollapsed] = useState(false);
   const [selectedProfissional, setSelectedProfissional] = useState<Profissional | null>(null);
   const [activeProfissionalTab, setActiveProfissionalTab] = useState<"ver" | "criar">("ver");
@@ -33,13 +28,12 @@ export default function ProfissionaisProcedimentosPage() {
     valor: 0,
     profissionalId: "",
   });
-  const [editandoProcedimentoId, setEditandoProcedimentoId] = useState<string | null>(null);
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const { profissionais, addProfissional, updateProfissional, removeProfissional, fetchProfissionais } = useProfissionaisAdmin();
-  const { procedimentos, addProcedimento, updateProcedimento, removeProcedimento } = useProcedimentosAdmin();
+  const { procedimentos, addProcedimento, updateProcedimento, removeProcedimento, fetchProcedimentos } = useProcedimentosAdmin();
 
   // ------------------- VERIFICAÇÃO DE TOKEN -------------------
   useEffect(() => {
@@ -51,7 +45,8 @@ export default function ProfissionaisProcedimentosPage() {
           router.replace("/login");
         } else {
           setIsAuthenticated(true);
-          fetchProfissionais();
+          await fetchProfissionais();
+          await fetchProcedimentos();
         }
       } catch (err) {
         console.error("Erro na verificação de token:", err);
@@ -62,53 +57,117 @@ export default function ProfissionaisProcedimentosPage() {
     };
 
     verifyAuth();
-  }, [router, fetchProfissionais]);
+  }, [router]);
 
   // ------------------- FUNÇÕES -------------------
-  const handleSaveProfissional = async (prof: Partial<Profissional>) => {
-    if (!prof.nome || !prof.email || !prof.telefone) {
+  const handleSaveProfissional = useCallback(async (prof: Partial<Profissional>) => {
+    if (!prof.nome?.trim() || !prof.email?.trim() || !prof.telefone?.trim()) {
       alert("Nome, email e telefone são obrigatórios.");
       return;
     }
     try {
       if (prof.id) {
-        const atualizado = await updateProfissional(prof.id, { nome: prof.nome, email: prof.email, telefone: prof.telefone });
-        if (atualizado) { setSelectedProfissional(atualizado); setActiveProfissionalTab("ver"); }
+        const atualizado = await updateProfissional(prof.id, { 
+          nome: prof.nome.trim(), 
+          email: prof.email.trim(), 
+          telefone: prof.telefone.trim() 
+        });
+        if (atualizado) { 
+          setSelectedProfissional(atualizado); 
+          setActiveProfissionalTab("ver"); 
+        }
       } else {
         const { id, ...dadosSemId } = prof;
-        const novoProfissional = await addProfissional({ ...dadosSemId, procedimentos: prof.procedimentos || [] } as Omit<Profissional, "id">);
-        setSelectedProfissional(novoProfissional); setActiveProfissionalTab("ver");
+        const novoProfissional = await addProfissional({ 
+          ...dadosSemId, 
+          procedimentos: prof.procedimentos || [] 
+        } as Omit<Profissional, "id">);
+        setSelectedProfissional(novoProfissional); 
+        setActiveProfissionalTab("ver");
       }
-    } catch (err) { console.error("Erro ao salvar profissional:", err); }
-  };
+    } catch (err) { 
+      console.error("Erro ao salvar profissional:", err);
+      alert("Erro ao salvar profissional. Tente novamente.");
+    }
+  }, [addProfissional, updateProfissional]);
 
-  const handleSelectProfissional = (p: Profissional) => {
+  const handleSelectProfissional = useCallback((p: Profissional) => {
     setSelectedProfissional(p);
     setActiveProcedimentoTab("ver");
     setNovoProcedimento({ nome: "", valor: 0, profissionalId: p.id });
-    setEditandoProcedimentoId(null);
-  };
+  }, []);
 
-  const handleSubmitProcedimento = async () => {
-    if (!novoProcedimento.nome || novoProcedimento.valor <= 0 || !selectedProfissional) return;
+  const handleSubmitProcedimento = useCallback(async () => {
+    if (!novoProcedimento.nome?.trim() || novoProcedimento.valor <= 0 || !selectedProfissional) {
+      alert("Preencha todos os campos corretamente.");
+      return;
+    }
+      
     try {
-      if (editandoProcedimentoId) await updateProcedimento(editandoProcedimentoId, novoProcedimento);
-      else await addProcedimento(novoProcedimento);
+      const resultado = await addProcedimento({
+        nome: novoProcedimento.nome.trim(),
+        valor: novoProcedimento.valor,
+        profissionalId: novoProcedimento.profissionalId
+      });
+      
+      
+      await fetchProcedimentos();
+      
       setNovoProcedimento({ nome: "", valor: 0, profissionalId: selectedProfissional.id });
-      setEditandoProcedimentoId(null); setActiveProcedimentoTab("ver");
-    } catch (err) { console.error("Erro ao salvar procedimento:", err); }
-  };
+      setActiveProcedimentoTab("ver");
+      
+    } catch (err: any) { 
+      console.error("❌ Erro ao salvar procedimento:", err);
+      alert(`Erro ao criar procedimento: ${err.message || "Tente novamente."}`);
+    }
+  }, [novoProcedimento, selectedProfissional, addProcedimento, fetchProcedimentos]);
 
-  const handleEditProcedimento = (proc: Procedimento) => {
-    setNovoProcedimento({ nome: proc.nome, valor: proc.valor, profissionalId: proc.profissionalId });
-    setEditandoProcedimentoId(proc.id);
-    setActiveProcedimentoTab("criar");
-  };
+  const handleAddProcedimento = useCallback(async (dados: ProcedimentoInput) => {    
+    try {
+      const resultado = await addProcedimento(dados);
+      await fetchProcedimentos();
+      return resultado;
+    } catch (err: any) {
+      console.error("❌ Erro ao criar procedimento:", err);
+      throw err;
+    }
+  }, [addProcedimento, fetchProcedimentos]);
 
-  const handleDeleteProcedimento = async (id?: string) => { if (id) await removeProcedimento(id); };
+  const handleDeleteProcedimento = useCallback(async (id?: string) => { 
+    if (id) {
+      if (confirm("Tem certeza que deseja excluir este procedimento?")) {
+        try {
+          await removeProcedimento(id);
+          await fetchProcedimentos();
+          alert("✅ Procedimento excluído com sucesso!");
+        } catch (err) {
+          console.error("Erro ao excluir procedimento:", err);
+          alert("Erro ao excluir procedimento.");
+        }
+      }
+    }
+  }, [removeProcedimento, fetchProcedimentos]);
+
+  const handleDeleteProfissional = useCallback(async (id?: string) => {
+    if (id) {
+      if (confirm("Tem certeza que deseja excluir este profissional?")) {
+        try {
+          await removeProfissional(id);
+          if (selectedProfissional?.id === id) {
+            setSelectedProfissional(null);
+          }
+          await fetchProfissionais();
+          alert("✅ Profissional excluído com sucesso!");
+        } catch (err) {
+          console.error("Erro ao excluir profissional:", err);
+          alert("Erro ao excluir profissional.");
+        }
+      }
+    }
+  }, [removeProfissional, selectedProfissional, fetchProfissionais]);
 
   const procedimentosFiltrados = procedimentos.filter(
-    (p) => selectedProfissional?.procedimentos?.some((proc) => proc.id === p.id)
+    (p) => p.profissionalId === selectedProfissional?.id
   );
 
   // ------------------- BLOQUEIO DE RENDER -------------------
@@ -148,7 +207,10 @@ export default function ProfissionaisProcedimentosPage() {
                   </Button>
                   <Button
                     variant={activeProfissionalTab === "criar" ? "primary" : "secondary"}
-                    onClick={() => { setActiveProfissionalTab("criar"); setSelectedProfissional(null); }}
+                    onClick={() => { 
+                      setActiveProfissionalTab("criar"); 
+                      setSelectedProfissional(null); 
+                    }}
                     className="px-4 py-3 min-w-[140px] text-sm font-medium flex-1 sm:flex-none justify-center"
                   >
                     <span>➕</span>
@@ -203,7 +265,10 @@ export default function ProfissionaisProcedimentosPage() {
                           Clique em "Criar Profissional" para adicionar o primeiro
                         </p>
                         <Button
-                          onClick={() => setActiveProfissionalTab("criar")}
+                          onClick={() => {
+                            setActiveProfissionalTab("criar");
+                            setSelectedProfissional(null);
+                          }}
                           className="px-6 py-3 bg-gradient-to-r from-[#FFA500] to-[#FF8C00] text-black rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2 mx-auto text-sm"
                         >
                           <span>➕</span>
@@ -221,7 +286,7 @@ export default function ProfissionaisProcedimentosPage() {
                               setSelectedProfissional(prof); 
                               setActiveProfissionalTab("criar"); 
                             }}
-                            onDelete={(id: string | undefined) => removeProfissional(id ?? "")}
+                            onDelete={handleDeleteProfissional}
                             isSelected={selectedProfissional?.id === p.id}
                           />
                         ))}
@@ -260,7 +325,6 @@ export default function ProfissionaisProcedimentosPage() {
                       onClick={() => {
                         setActiveProcedimentoTab("criar");
                         setNovoProcedimento({ nome: "", valor: 0, profissionalId: selectedProfissional.id });
-                        setEditandoProcedimentoId(null);
                       }}
                       className="px-4 py-3 min-w-[140px] text-sm font-medium flex-1 sm:flex-none justify-center"
                     >
@@ -275,16 +339,16 @@ export default function ProfissionaisProcedimentosPage() {
                   {activeProcedimentoTab === "criar" && (
                     <div className="bg-gradient-to-br from-[#1A1A1A] to-[#2A2A2A] border border-gray-700 rounded-xl p-4 sm:p-6 lg:p-8 backdrop-blur-sm w-full">
                       <h3 className="text-lg sm:text-xl font-semibold text-[#FFA500] mb-4 sm:mb-6 flex items-center gap-2">
-                        <span>{editandoProcedimentoId ? "✏️" : "➕"}</span>
-                        {editandoProcedimentoId ? "Editar Procedimento" : "Novo Procedimento"}
+                        <span>➕</span>
+                        Novo Procedimento
                       </h3>
                       <ProcedimentosProfissionais
                         profissionais={[selectedProfissional]}
                         procedimentos={procedimentosFiltrados}
                         novoProcedimento={novoProcedimento}
                         setNovoProcedimento={setNovoProcedimento}
-                        addProcedimento={handleSubmitProcedimento}
-                        updateProcedimento={handleSubmitProcedimento}
+                        addProcedimento={handleAddProcedimento}
+                        updateProcedimento={updateProcedimento}
                         removeProcedimento={handleDeleteProcedimento}
                       />
                     </div>
@@ -313,7 +377,10 @@ export default function ProfissionaisProcedimentosPage() {
                               Clique em "Criar Procedimento" para adicionar o primeiro
                             </p>
                             <Button
-                              onClick={() => setActiveProcedimentoTab("criar")}
+                              onClick={() => {
+                                setActiveProcedimentoTab("criar");
+                                setNovoProcedimento({ nome: "", valor: 0, profissionalId: selectedProfissional.id });
+                              }}
                               className="px-6 py-3 bg-gradient-to-r from-[#FFA500] to-[#FF8C00] text-black rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2 mx-auto text-sm"
                             >
                               <span>➕</span>
@@ -326,7 +393,14 @@ export default function ProfissionaisProcedimentosPage() {
                               <ProcedimentoCard
                                 key={proc.id}
                                 procedimento={proc}
-                                onEdit={handleEditProcedimento}
+                                onEdit={() => {
+                                  setNovoProcedimento({ 
+                                    nome: proc.nome, 
+                                    valor: proc.valor, 
+                                    profissionalId: proc.profissionalId 
+                                  });
+                                  setActiveProcedimentoTab("criar");
+                                }}
                                 onDelete={() => handleDeleteProcedimento(proc.id)}
                               />
                             ))}

@@ -12,3 +12,9 @@ export interface InputProps {
   pattern?: string; 
   className?: string;
 }
+
+export interface ProcedimentoInput {
+  nome: string;
+  valor: number;
+  profissionalId: string;
+}

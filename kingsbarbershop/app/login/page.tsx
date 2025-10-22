@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../hook/useAuthLoginAdmin";
 import Button from "../components/ui/Button";
 import { LoginData } from "../interfaces/loginInterface";
 
-const FullScreenLoader = () => (
+const FullScreenLoader = React.memo(() => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
     <div className="w-16 h-16 border-4 border-t-[#FFA500] border-b-transparent border-l-transparent border-r-transparent rounded-full animate-spin"></div>
   </div>
-);
+));
+
+FullScreenLoader.displayName = 'FullScreenLoader';
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_TIME = 5 * 60 * 1000;
@@ -25,94 +27,105 @@ export default function LoginPage() {
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
+  const checkUserRoleAndRedirect = useCallback(() => {
+    try {
+      const userData = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+      
+      let isAdmin = false;
+
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          const userRole = parsedUser.role?.toLowerCase();
+          isAdmin = userRole === 'admin' || userRole === 'administrador';
+        } catch (error) {
+          console.error('Erro ao verificar role:', error);
+        }
+      }
+
+      if (!isAdmin && token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const tokenRole = payload.role?.toLowerCase();
+          isAdmin = tokenRole === 'admin' || tokenRole === 'administrador';
+        } catch (error) {
+          console.error('Erro ao decodificar token:', error);
+        }
+      }
+
+      router.push(isAdmin ? "/dashboard" : "/agendamentos");
+    } catch (err) {
+      console.error('Erro ao redirecionar:', err);
+      router.push("/agendamentos");
+    }
+  }, [router]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      const checkUserRoleAndRedirect = () => {
-        try {
-          const userData = localStorage.getItem('user');
-          const token = localStorage.getItem('token');
-          
-          let isAdmin = false;
-
-          if (userData) {
-            try {
-              const parsedUser = JSON.parse(userData);
-              const userRole = parsedUser.role?.toLowerCase();
-              isAdmin = userRole === 'admin' || userRole === 'administrador';
-            } catch (error) {
-              console.error('Erro ao verificar role:', error);
-            }
-          }
-
-          if (!isAdmin && token) {
-            try {
-              const payload = JSON.parse(atob(token.split('.')[1]));
-              const tokenRole = payload.role?.toLowerCase();
-              isAdmin = tokenRole === 'admin' || tokenRole === 'administrador';
-            } catch (error) {
-              console.error('Erro ao decodificar token:', error);
-            }
-          }
-
-          if (isAdmin) {
-            router.push("/dashboard");
-          } else {
-            router.push("/agendamentos");
-          }
-        } catch (err) {
-          console.error('Erro ao redirecionar:', err);
-          router.push("/agendamentos");
-        }
-      };
-
       checkUserRoleAndRedirect();
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, checkUserRoleAndRedirect]);
 
   useEffect(() => {
-    const savedLockout = localStorage.getItem("loginLockout");
-    if (savedLockout) {
-      const lockoutTime = parseInt(savedLockout, 10);
-      if (Date.now() < lockoutTime) {
-        setLockoutUntil(lockoutTime);
-      } else {
-        localStorage.removeItem("loginLockout");
-        localStorage.removeItem("loginAttempts");
+    const initializeAuth = () => {
+      const savedLockout = localStorage.getItem("loginLockout");
+      if (savedLockout) {
+        const lockoutTime = parseInt(savedLockout, 10);
+        if (Date.now() < lockoutTime) {
+          setLockoutUntil(lockoutTime);
+        } else {
+          localStorage.removeItem("loginLockout");
+          localStorage.removeItem("loginAttempts");
+        }
       }
-    }
-    
-    const savedAttempts = localStorage.getItem("loginAttempts");
-    if (savedAttempts) setAttempts(parseInt(savedAttempts, 10));
+      
+      const savedAttempts = localStorage.getItem("loginAttempts");
+      if (savedAttempts) setAttempts(parseInt(savedAttempts, 10));
+    };
+
+    initializeAuth();
   }, []);
 
-  const isValidForm = (email: string, password: string) => {
+  const isValidForm = useCallback((email: string, password: string) => {
     const hasValidEmail = email.includes('@') && email.includes('.') && email.length > 5;
     const hasValidPassword = password.length >= 6;
     return hasValidEmail && hasValidPassword;
-  };
+  }, []);
 
   useEffect(() => {
-    if (touched.email && touched.password) {
-      if (!isValidForm(form.email, form.password)) {
-        setValidationError("Verifique se o email é válido e a senha tem pelo menos 6 caracteres");
+    const timeoutId = setTimeout(() => {
+      if (touched.email && touched.password) {
+        if (!isValidForm(form.email, form.password)) {
+          setValidationError("Verifique se o email é válido e a senha tem pelo menos 6 caracteres");
+        } else {
+          setValidationError(null);
+        }
       } else {
         setValidationError(null);
       }
-    } else {
-      setValidationError(null);
-    }
-  }, [form.email, form.password, touched.email, touched.password]);
+    }, 300); 
 
-  const isLocked = lockoutUntil !== null && Date.now() < lockoutUntil;
+    return () => clearTimeout(timeoutId);
+  }, [form.email, form.password, touched.email, touched.password, isValidForm]);
+
+  const isLocked = useMemo(() => 
+    lockoutUntil !== null && Date.now() < lockoutUntil, 
+    [lockoutUntil]
+  );
   
-  const canSubmit = !isLocked &&
+  const canSubmit = useMemo(() => 
+    !isLocked &&
     form.email.length > 0 &&
     form.password.length > 0 &&
     !loading &&
-    !isSubmitting;
+    !isSubmitting,
+    [isLocked, form.email, form.password, loading, isSubmitting]
+  );
 
-  const handleFailedAttempt = () => {
+  const handleFailedAttempt = useCallback(() => {
     const newAttempts = attempts + 1;
     setAttempts(newAttempts);
     localStorage.setItem("loginAttempts", newAttempts.toString());
@@ -122,15 +135,15 @@ export default function LoginPage() {
       setLockoutUntil(lockoutTime);
       localStorage.setItem("loginLockout", lockoutTime.toString());
     }
-  };
+  }, [attempts]);
 
-  const handleSuccessfulAttempt = () => {
+  const handleSuccessfulAttempt = useCallback(() => {
     setAttempts(0);
     localStorage.removeItem("loginAttempts");
     localStorage.removeItem("loginLockout");
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     setTouched({ email: true, password: true });
@@ -161,9 +174,9 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [canSubmit, isLocked, form, isValidForm, login, handleSuccessfulAttempt, handleFailedAttempt, error]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
     setForm(prev => ({ 
@@ -174,21 +187,33 @@ export default function LoginPage() {
     if (validationError) {
       setValidationError(null);
     }
-  };
+  }, [validationError]);
 
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
     const { name } = e.target;
     setTouched(prev => ({ ...prev, [name]: true }));
-  };
+  }, []);
 
   useEffect(() => {
-    if (!isLocked) document.getElementById("email")?.focus();
+    if (!isLocked && emailInputRef.current) {
+      emailInputRef.current.focus();
+    }
   }, [isLocked]);
 
-  const getLockoutTimeLeft = () => {
+  const getLockoutTimeLeft = useCallback(() => {
     if (!lockoutUntil) return 0;
     return Math.ceil((lockoutUntil - Date.now()) / 1000 / 60);
-  };
+  }, [lockoutUntil]);
+
+  const shouldShowEmailError = useMemo(() => 
+    touched.email && form.email && !form.email.includes('@'),
+    [touched.email, form.email]
+  );
+
+  const shouldShowPasswordError = useMemo(() => 
+    touched.password && form.password.length < 6,
+    [touched.password, form.password]
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#1A1A2E] to-[#16213E] flex items-center justify-center p-4 relative">
@@ -228,6 +253,7 @@ export default function LoginPage() {
                 E-mail
               </label>
               <input
+                ref={emailInputRef}
                 id="email"
                 type="email"
                 name="email"
@@ -240,7 +266,7 @@ export default function LoginPage() {
                 disabled={loading || isLocked}
                 autoComplete="email"
               />
-              {touched.email && form.email && !form.email.includes('@') && (
+              {shouldShowEmailError && (
                 <p className="text-red-400 text-xs">Digite um email válido</p>
               )}
             </div>
@@ -263,7 +289,7 @@ export default function LoginPage() {
                 maxLength={100}
                 autoComplete="current-password"
               />
-              {touched.password && form.password.length < 6 && (
+              {shouldShowPasswordError && (
                 <p className="text-red-400 text-xs">Mínimo 6 caracteres</p>
               )}
             </div>

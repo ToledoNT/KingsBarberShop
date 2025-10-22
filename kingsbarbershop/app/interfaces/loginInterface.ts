@@ -31,7 +31,7 @@ export interface LoginResponse {
   status: boolean;
   code: number;
   message: string;
-  data?: LoginResponseData;
+  data?: LoginResponseData; 
 }
 
 export interface LoginResult {
@@ -43,4 +43,10 @@ export interface LoginResult {
 
 export interface VerifyTokenResponse {
   status: boolean;
+}
+
+export interface ProcedimentoInput {
+  nome: string;
+  valor: number;
+  profissionalId: string;
 }

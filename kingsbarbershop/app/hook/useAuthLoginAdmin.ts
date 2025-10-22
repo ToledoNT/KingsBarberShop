@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LoginData, UseAuthReturn, LoginResponse } from "../interfaces/loginInterface";
+import { LoginData, UseAuthReturn, LoginResponse, LoginResult } from "../interfaces/loginInterface";
 import { AuthService } from "../api/authAdmin";
 
 const authService = new AuthService();
@@ -19,14 +19,13 @@ const login = async (data: LoginData) => {
   setError(null);
 
   try {
-    // 🔹 Aqui recebe o objeto direto
-    const res = await authService.login(data);
-    
-    // 🔹 Salva token do objeto
-    const token = res.token;
-    if (!token) throw new Error("Token não recebido");
+    const res: LoginResult = await authService.login(data);
 
-    localStorage.setItem("token", token);
+    if (!res.token) throw new Error("Token não recebido");
+
+    localStorage.setItem("token", res.token);
+    localStorage.setItem("user", JSON.stringify(res));
+
     setIsAuthenticated(true);
     router.push("/dashboard");
   } catch (err: any) {
@@ -39,8 +38,6 @@ const login = async (data: LoginData) => {
   }
 };
 
-
-
   // ------------------- LOGOUT -------------------
   const logout = async () => {
     setLoading(true);
@@ -49,12 +46,14 @@ const login = async (data: LoginData) => {
     try {
       await authService.logout();
       localStorage.removeItem("token");
+      localStorage.removeItem("user"); 
       setIsAuthenticated(false);
       router.push("/login");
     } catch (err) {
       console.error("Logout error:", err);
       setIsAuthenticated(false);
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
     } finally {
       setLoading(false);
     }
@@ -79,19 +78,20 @@ const login = async (data: LoginData) => {
 
       if (!valid) {
         localStorage.removeItem("token");
+        localStorage.removeItem("user"); 
         router.push("/login");
       }
     } catch (err) {
       console.error("Verify token error:", err);
       setIsAuthenticated(false);
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
       router.push("/login");
     } finally {
       setLoading(false);
     }
   };
 
-  // ------------------- AO MONTAR -------------------
   useEffect(() => {
     verify();
   }, []);

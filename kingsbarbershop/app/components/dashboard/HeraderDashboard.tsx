@@ -34,7 +34,7 @@ const HeaderDashboard = ({ onRefresh }: HeaderDashboardProps) => {
               onClick={onRefresh} 
               className="px-4 py-3 bg-[#FFA500] text-black rounded-lg font-semibold hover:bg-[#FF8C00] transition-colors flex items-center gap-2 whitespace-nowrap text-sm"
             >
-              🔄 Atualizar Dados
+              🔄 Atualizar
             </button>
           </div>
         </div>

@@ -1,4 +1,3 @@
-// src/hook/useFinanceiro.ts
 import { useState, useEffect } from "react";
 import { IFinanceiro } from "../interfaces/financeiroInterface";
 import { FinanceiroService } from "../api/financeiro-api-";
@@ -16,9 +15,9 @@ export function useFinanceiro() {
     try {
       const data = await financeiroService.fetchFinanceiros();
       setFinanceiros(data);
-    } catch (err) {
-      console.error(err);
-      setError("Erro ao carregar lançamentos financeiros");
+    } catch (err: any) {
+      console.error("Erro ao buscar lançamentos financeiros:", err);
+      setError(err.message); // Armazena apenas a mensagem do erro
     } finally {
       setLoading(false);
     }

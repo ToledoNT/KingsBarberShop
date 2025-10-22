@@ -139,6 +139,50 @@ export default function FinanceiroPage() {
 
   if (!isAuthenticated) return null;
 
+  // VERIFICAÇÃO ESPECÍFICA PARA ERRO 403 - ACESSO NEGADO
+  if (error && error.includes("Acesso negado: apenas administradores")) {
+    return (
+      <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5]">
+        <aside className="flex-shrink-0 h-screen lg:sticky top-0 z-20">
+          <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+        </aside>
+        
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center max-w-md mx-auto">
+            {/* Cadeado animado */}
+            <div className="relative mb-4">
+              <div className="text-5xl animate-bounce text-yellow-400">
+                🔒
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-12 h-12 border-2 border-yellow-400 rounded-full animate-ping opacity-20"></div>
+              </div>
+            </div>
+            
+            {/* Texto */}
+            <h1 className="text-2xl font-bold text-yellow-400 mb-3">
+              Acesso Restrito
+            </h1>
+            
+            <div className="space-y-2 text-sm text-gray-300 mb-4">
+              <p>Área exclusiva para administradores</p>
+              <p>Permissões insuficientes</p>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 bg-yellow-400/5 blur-lg rounded-full"></div>
+              <div className="relative bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-xl p-4 backdrop-blur-sm">
+                <p className="text-lg text-yellow-300 font-medium">
+                  Financeiro Administrativo
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5] items-center justify-center">
@@ -180,14 +224,7 @@ export default function FinanceiroPage() {
                   </p>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <button 
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="px-4 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-all flex items-center gap-2 text-sm font-medium flex-1 sm:flex-none justify-center"
-                  >
-                    <span>🎯</span>
-                    <span className="sm:hidden">Filtros</span>
-                    <span className="hidden sm:inline">{showFilters ? "Ocultar" : "Filtros"}</span>
-                  </button>
+                  {/* REMOVIDO O BOTÃO DE FILTROS */}
                   <button 
                     onClick={handleAtualizarDados}
                     className="px-4 py-3 bg-gradient-to-r from-[#FFA500] to-[#FF8C00] text-black rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2 text-sm flex-1 sm:flex-none justify-center"
@@ -247,25 +284,23 @@ export default function FinanceiroPage() {
             />
           </div>
 
-          {/* Filtros - Mobile Toggle */}
-          {(showFilters || window.innerWidth >= 640) && (
-            <div className="mb-4 sm:mb-6 flex-shrink-0">
-              <Filtros
-                busca={busca}
-                setBusca={setBusca}
-                dataInicial={dataInicial}
-                setDataInicial={setDataInicial}
-                dataFinal={dataFinal}
-                setDataFinal={setDataFinal}
-                filtroStatus={filtroStatus}
-                setFiltroStatus={setFiltroStatus}
-                ordenacao={ordenacao}
-                setOrdenacao={setOrdenacao}
-                handleLimparFiltros={handleLimparFiltros}
-                isMobile={window.innerWidth < 640}
-              />
-            </div>
-          )}
+          {/* Filtros - Sempre visíveis (removido o toggle) */}
+          <div className="mb-4 sm:mb-6 flex-shrink-0">
+            <Filtros
+              busca={busca}
+              setBusca={setBusca}
+              dataInicial={dataInicial}
+              setDataInicial={setDataInicial}
+              dataFinal={dataFinal}
+              setDataFinal={setDataFinal}
+              filtroStatus={filtroStatus}
+              setFiltroStatus={setFiltroStatus}
+              ordenacao={ordenacao}
+              setOrdenacao={setOrdenacao}
+              handleLimparFiltros={handleLimparFiltros}
+              isMobile={typeof window !== 'undefined' && window.innerWidth < 640}
+            />
+          </div>
 
           {/* Container dos registros com scroll fixo */}
           <div className="flex-1 flex flex-col min-h-0">

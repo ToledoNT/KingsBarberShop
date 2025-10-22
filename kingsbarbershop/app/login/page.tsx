@@ -6,7 +6,6 @@ import { useAuth } from "../hook/useAuthLoginAdmin";
 import Button from "../components/ui/Button";
 import { LoginData } from "../interfaces/loginInterface";
 
-// Loader customizado full-screen
 const FullScreenLoader = () => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
     <div className="w-16 h-16 border-4 border-t-[#FFA500] border-b-transparent border-l-transparent border-r-transparent rounded-full animate-spin"></div>
@@ -14,7 +13,7 @@ const FullScreenLoader = () => (
 );
 
 const MAX_ATTEMPTS = 5;
-const LOCKOUT_TIME = 5 * 60 * 1000; // 5 minutos
+const LOCKOUT_TIME = 5 * 60 * 1000;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,50 +23,94 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Redireciona se já estiver autenticado
   useEffect(() => {
-    if (isAuthenticated) router.push("/dashboard");
+    if (isAuthenticated) {
+      const checkUserRoleAndRedirect = () => {
+        try {
+          const userData = localStorage.getItem('user');
+          const token = localStorage.getItem('token');
+          
+          let isAdmin = false;
+
+          if (userData) {
+            try {
+              const parsedUser = JSON.parse(userData);
+              const userRole = parsedUser.role?.toLowerCase();
+              isAdmin = userRole === 'admin' || userRole === 'administrador';
+            } catch (error) {
+              console.error('Erro ao verificar role:', error);
+            }
+          }
+
+          if (!isAdmin && token) {
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              const tokenRole = payload.role?.toLowerCase();
+              isAdmin = tokenRole === 'admin' || tokenRole === 'administrador';
+            } catch (error) {
+              console.error('Erro ao decodificar token:', error);
+            }
+          }
+
+          if (isAdmin) {
+            router.push("/dashboard");
+          } else {
+            router.push("/agendamentos");
+          }
+        } catch (err) {
+          console.error('Erro ao redirecionar:', err);
+          router.push("/agendamentos");
+        }
+      };
+
+      checkUserRoleAndRedirect();
+    }
   }, [isAuthenticated, router]);
 
-  // Recupera estado de lockout e tentativas do localStorage
   useEffect(() => {
     const savedLockout = localStorage.getItem("loginLockout");
     if (savedLockout) {
       const lockoutTime = parseInt(savedLockout, 10);
-      if (Date.now() < lockoutTime) setLockoutUntil(lockoutTime);
-      else {
+      if (Date.now() < lockoutTime) {
+        setLockoutUntil(lockoutTime);
+      } else {
         localStorage.removeItem("loginLockout");
         localStorage.removeItem("loginAttempts");
       }
     }
+    
     const savedAttempts = localStorage.getItem("loginAttempts");
     if (savedAttempts) setAttempts(parseInt(savedAttempts, 10));
   }, []);
 
-  // Validação de email e senha
   const isValidForm = (email: string, password: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email) && password.length >= 8;
+    const hasValidEmail = email.includes('@') && email.includes('.') && email.length > 5;
+    const hasValidPassword = password.length >= 6;
+    return hasValidEmail && hasValidPassword;
   };
 
-  const errors = {
-    general:
-      touched.email &&
-      touched.password &&
-      !isValidForm(form.email, form.password)
-        ? "Verifique seus dados e tente novamente"
-        : null,
-  };
+  useEffect(() => {
+    if (touched.email && touched.password) {
+      if (!isValidForm(form.email, form.password)) {
+        setValidationError("Verifique se o email é válido e a senha tem pelo menos 6 caracteres");
+      } else {
+        setValidationError(null);
+      }
+    } else {
+      setValidationError(null);
+    }
+  }, [form.email, form.password, touched.email, touched.password]);
 
-  const isLocked: boolean = lockoutUntil !== null && Date.now() < lockoutUntil;
-  const canSubmit =
-    !isLocked &&
+  const isLocked = lockoutUntil !== null && Date.now() < lockoutUntil;
+  
+  const canSubmit = !isLocked &&
     form.email.length > 0 &&
     form.password.length > 0 &&
-    !errors.general &&
-    !loading;
+    !loading &&
+    !isSubmitting;
 
   const handleFailedAttempt = () => {
     const newAttempts = attempts + 1;
@@ -87,43 +130,55 @@ export default function LoginPage() {
     localStorage.removeItem("loginLockout");
   };
 
-  // Submissão do formulário
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    setTouched({ email: true, password: true });
+    
     if (!canSubmit || isLocked) return;
 
+    if (!isValidForm(form.email, form.password)) {
+      setValidationError("Verifique seus dados e tente novamente");
+      return;
+    }
+
     setIsSubmitting(true);
+    setValidationError(null);
+    
     try {
-      // Trim nos campos antes de enviar
       const trimmedForm: LoginData = {
         email: form.email.trim(),
         password: form.password.trim(),
       };
-      console.log("Enviando login:", trimmedForm); // debug
+      
       await login(trimmedForm);
       handleSuccessfulAttempt();
-    } catch {
+    } catch (err: any) {
       handleFailedAttempt();
+      if (!error) {
+        setValidationError("Erro ao fazer login. Tente novamente.");
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Atualiza estado do formulário
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    let sanitizedValue = value;
-
-    if (name === "email") sanitizedValue = value.replace(/[<>]/g, "").trim();
-    if (name === "password") sanitizedValue = value.trim();
-    if (name === "password" && value.length > 100) return;
-
-    setForm((prev) => ({ ...prev, [name]: sanitizedValue }));
+    
+    setForm(prev => ({ 
+      ...prev, 
+      [name]: name === 'email' ? value.replace(/[<>]/g, "") : value 
+    }));
+    
+    if (validationError) {
+      setValidationError(null);
+    }
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name } = e.target;
-    setTouched((prev) => ({ ...prev, [name]: true }));
+    setTouched(prev => ({ ...prev, [name]: true }));
   };
 
   useEffect(() => {
@@ -161,9 +216,9 @@ export default function LoginPage() {
             </div>
           )}
 
-          {(error || errors.general) && (
+          {(error || validationError) && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
-              <p className="text-red-400 text-sm">{error || errors.general}</p>
+              <p className="text-red-400 text-sm">{error || validationError}</p>
             </div>
           )}
 
@@ -185,6 +240,9 @@ export default function LoginPage() {
                 disabled={loading || isLocked}
                 autoComplete="email"
               />
+              {touched.email && form.email && !form.email.includes('@') && (
+                <p className="text-red-400 text-xs">Digite um email válido</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -205,6 +263,9 @@ export default function LoginPage() {
                 maxLength={100}
                 autoComplete="current-password"
               />
+              {touched.password && form.password.length < 6 && (
+                <p className="text-red-400 text-xs">Mínimo 6 caracteres</p>
+              )}
             </div>
           </div>
 
@@ -214,7 +275,12 @@ export default function LoginPage() {
             fullWidth
             disabled={!canSubmit || isSubmitting}
           >
-            {isLocked ? "Acesso Temporariamente Bloqueado" : isSubmitting ? "Verificando..." : "Entrar"}
+            {isLocked 
+              ? "Acesso Temporariamente Bloqueado" 
+              : isSubmitting 
+                ? "Verificando..." 
+                : "Entrar"
+            }
           </Button>
         </form>
       </div>

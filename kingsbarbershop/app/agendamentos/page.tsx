@@ -15,138 +15,10 @@ import { AgendamentoHorario } from "../components/agendamento/AgendamentoHorario
 import AgendamentoPrivadoForm from "../components/agendamento/AgendamentoPrivadoForm";
 import { AgendamentosGrid } from "../components/agendamento/AgendamentosGrid";
 import { AuthService } from "../api/authAdmin";
+import { ConfirmDialog } from "../components/ui/componenteConfirmação";
+import { Notification } from "../components/ui/componenteNotificacao";
 
-// ------------------- INSTÂNCIA AUTH -------------------
 const authService = new AuthService();
-
-// ------------------- COMPONENTE DE CONFIRMAÇÃO -------------------
-interface ConfirmDialogProps {
-  isOpen: boolean;
-  title: string;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  type?: "info" | "warning" | "error";
-}
-
-const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
-  isOpen,
-  title,
-  message,
-  onConfirm,
-  onCancel,
-  type = "info"
-}) => {
-  if (!isOpen) return null;
-
-  const typeStyles = {
-    info: "border-blue-500",
-    warning: "border-yellow-500",
-    error: "border-red-500"
-  };
-
-  const typeIcons = {
-    info: "💡",
-    warning: "⚠️",
-    error: "❌"
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className={`bg-gradient-to-br from-[#1A1A1A] to-[#2A2A2A] border-2 ${typeStyles[type]} rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-md w-full mx-auto shadow-2xl backdrop-blur-sm`}>
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="text-2xl">{typeIcons[type]}</div>
-          <h3 className="text-lg sm:text-xl font-bold text-white">{title}</h3>
-        </div>
-
-        {/* Message */}
-        <p className="text-gray-300 text-sm sm:text-base mb-6 leading-relaxed">
-          {message}
-        </p>
-
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            onClick={onCancel}
-            variant="secondary"
-            className="flex-1 justify-center px-4 py-3 text-sm sm:text-base"
-          >
-            <span className="mr-2">↩️</span>
-            Cancelar
-          </Button>
-          <Button
-            onClick={onConfirm}
-            variant="primary"
-            className={`flex-1 justify-center px-4 py-3 text-sm sm:text-base ${
-              type === 'error' ? 'bg-red-600 hover:bg-red-700' : ''
-            }`}
-          >
-            <span className="mr-2">✅</span>
-            Confirmar
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ------------------- COMPONENTE DE NOTIFICAÇÃO -------------------
-interface NotificationProps {
-  isOpen: boolean;
-  message: string;
-  type?: "info" | "success" | "warning" | "error";
-  onClose: () => void;
-  duration?: number;
-}
-
-const Notification: React.FC<NotificationProps> = ({
-  isOpen,
-  message,
-  type = "info",
-  onClose,
-  duration = 4000
-}) => {
-  useEffect(() => {
-    if (isOpen && duration > 0) {
-      const timer = setTimeout(onClose, duration);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, duration, onClose]);
-
-  if (!isOpen) return null;
-
-  const typeStyles = {
-    info: "border-blue-500 bg-blue-500/10",
-    success: "border-green-500 bg-green-500/10",
-    warning: "border-yellow-500 bg-yellow-500/10",
-    error: "border-red-500 bg-red-500/10"
-  };
-
-  const typeIcons = {
-    info: "💡",
-    success: "✅",
-    warning: "⚠️",
-    error: "❌"
-  };
-
-  return (
-    <div className="fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-sm mx-auto sm:mx-0">
-      <div className={`border rounded-xl p-4 backdrop-blur-sm ${typeStyles[type]} shadow-lg`}>
-        <div className="flex items-center gap-3">
-          <div className="text-lg">{typeIcons[type]}</div>
-          <p className="text-white text-sm flex-1">{message}</p>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors text-lg"
-          >
-            ✕
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // ------------------- HELPERS -------------------
 export const mapToAgendamento = (a: Agendamento): Agendamento => ({
@@ -514,11 +386,13 @@ const handleRemoveHorario = async (id?: string) => {
 
                 {tabs.horario === "exibir" && (
                   <div className="flex-1 flex flex-col min-h-0">
-                    <AgendamentoHorario
-                      horarios={horarios}
-                      onToggleDisponivel={toggleHorarioDisponivel}
-                      onRemoveHorario={handleRemoveHorario}
-                    />
+                    <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 transition-all duration-300 max-h-[600px] rounded-lg">
+                      <AgendamentoHorario
+                        horarios={horarios}
+                        onToggleDisponivel={toggleHorarioDisponivel}
+                        onRemoveHorario={handleRemoveHorario}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -570,13 +444,15 @@ const handleRemoveHorario = async (id?: string) => {
                         <span>{selectedAgendamento ? "✏️" : "🆕"}</span>
                         {selectedAgendamento ? "Editar Agendamento" : "Novo Agendamento"}
                       </h3>
-                      <AgendamentoPrivadoForm
-                        agendamento={selectedAgendamento || undefined}
-                        onSave={handleSaveAgendamento}
-                        onCancel={() => setTabs({ ...tabs, agendamento: "gerenciar" })}
-                        barbeiros={barbeiros}
-                        horarios={horarios}
-                      />
+                      <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 transition-all duration-300 max-h-[600px] rounded-lg">
+                        <AgendamentoPrivadoForm
+                          agendamento={selectedAgendamento || undefined}
+                          onSave={handleSaveAgendamento}
+                          onCancel={() => setTabs({ ...tabs, agendamento: "gerenciar" })}
+                          barbeiros={barbeiros}
+                          horarios={horarios}
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -663,10 +539,12 @@ const handleRemoveHorario = async (id?: string) => {
 
                       {/* Grid de Agendamentos */}
                       <div className="flex-1">
-                        <AgendamentosGrid
-                          agendamentos={agendamentosFiltrados}
-                          onStatusChange={handleUpdateStatusAgendamento}
-                        />
+                        <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 transition-all duration-300 max-h-[700px] rounded-lg">
+                          <AgendamentosGrid
+                            agendamentos={agendamentosFiltrados}
+                            onStatusChange={handleUpdateStatusAgendamento}
+                          />
+                        </div>
                       </div>
                     </>
                   )}
@@ -676,6 +554,30 @@ const handleRemoveHorario = async (id?: string) => {
           </main>
         </div>
       </div>
+
+      {/* Estilos customizados para scrollbar */}
+      <style jsx global>{`
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 6px;
+        }
+        .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+          background-color: #4B5563;
+          border-radius: 10px;
+        }
+        .scrollbar-track-gray-800::-webkit-scrollbar-track {
+          background-color: #1F2937;
+          border-radius: 10px;
+        }
+        .scrollbar-thumb-gray-500::-webkit-scrollbar-thumb:hover {
+          background-color: #6B7280;
+        }
+        
+        /* Scrollbar para Firefox */
+        .scrollbar-thin {
+          scrollbar-width: thin;
+          scrollbar-color: #4B5563 #1F2937;
+        }
+      `}</style>
     </>
   );
 }

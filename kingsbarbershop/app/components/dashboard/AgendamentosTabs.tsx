@@ -1,69 +1,39 @@
-// components/AgendamentosTable.tsx
 import Table from "@/app/components/ui/Table";
+import { AgendamentoItem, AgendamentosTableProps } from "@/app/interfaces/dashboardInterface";
+import { formatarDataBrasileira, formatarHorarioBrasileiro } from "@/app/utils/validators";
 import { useState, useMemo } from "react";
 
-interface Agendamento {
-  nome: string;
-  telefone: string;
-  profissionalNome: string;
-  data: string;
-  inicio: string;
-  fim: string;
-  servicoNome: string;
-  servicoPreco: number;
-  status: string;
-}
-
-interface AgendamentosTableProps {
-  agendamentos: Agendamento[];
-}
-
-// Formata data UTC → DD/MM/YYYY
-const formatarDataBrasileira = (dataString: string) => {
-  if (!dataString) return "Data inválida";
-  const date = new Date(dataString);
-  if (isNaN(date.getTime())) return "Data inválida";
-  date.setHours(date.getHours() - 3); // Ajusta para UTC-3 (Brasília)
-  const dia = String(date.getDate()).padStart(2, "0");
-  const mes = String(date.getMonth() + 1).padStart(2, "0");
-  const ano = date.getFullYear();
-  return `${dia}/${mes}/${ano}`;
-};
-
-// Formata horário brasileiro
-const formatarHorarioBrasileiro = (inicio?: string, fim?: string) => {
-  if (!inicio && !fim) return "Hora indisponível";
-  if (!inicio) return `- ${fim}`;
-  if (!fim) return `${inicio} -`;
-  return `${inicio} - ${fim}`;
+// Mapa de status fora do componente
+const statusMap: Record<string, { bg: string; color: string; border: string }> = {
+  Cancelado: { bg: "bg-red-600/20", color: "text-red-300", border: "border-red-500/30" },
+  "Não Compareceu": { bg: "bg-yellow-600/20", color: "text-yellow-300", border: "border-yellow-500/30" },
+  Agendado: { bg: "bg-blue-600/20", color: "text-blue-300", border: "border-blue-500/30" },
+  Concluído: { bg: "bg-green-600/20", color: "text-green-300", border: "border-green-500/30" },
+  default: { bg: "bg-gray-700/20", color: "text-gray-400", border: "border-gray-500/30" },
 };
 
 const AgendamentosTable = ({ agendamentos }: AgendamentosTableProps) => {
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [busca, setBusca] = useState("");
 
-  // Filtra os agendamentos
+  // Filtragem memoizada
   const agendamentosFiltrados = useMemo(() => {
-    let filtrados = agendamentos;
-
-    if (filtroStatus !== "todos") {
-      filtrados = filtrados.filter(a => a.status === filtroStatus);
-    }
-
-    if (busca) {
-      const termo = busca.toLowerCase();
-      filtrados = filtrados.filter(a =>
-        a.nome.toLowerCase().includes(termo) ||
-        a.telefone.includes(termo) ||
-        a.profissionalNome.toLowerCase().includes(termo) ||
-        a.servicoNome.toLowerCase().includes(termo)
-      );
-    }
-
-    return filtrados;
+    return agendamentos
+      .filter(a => filtroStatus === "todos" || a.status === filtroStatus)
+      .filter(a => {
+        if (!busca) return true;
+        const termo = busca.toLowerCase();
+        return (
+          a.nome.toLowerCase().includes(termo) ||
+          a.telefone.includes(termo) ||
+          a.profissionalNome.toLowerCase().includes(termo) ||
+          a.servicoNome.toLowerCase().includes(termo)
+        );
+      });
   }, [agendamentos, filtroStatus, busca]);
 
-  const columns = [
+  // Colunas memoizadas
+  const columns = useMemo(() => [
     {
       header: "Cliente",
       accessor: "nome",
@@ -88,9 +58,7 @@ const AgendamentosTable = ({ agendamentos }: AgendamentosTableProps) => {
     {
       header: "Profissional",
       accessor: "profissionalNome",
-      cell: (value: string) => (
-        <span className="text-gray-200">{value}</span>
-      ),
+      cell: (value: string) => <span className="text-gray-200">{value}</span>,
     },
     {
       header: "Data",
@@ -104,7 +72,7 @@ const AgendamentosTable = ({ agendamentos }: AgendamentosTableProps) => {
     {
       header: "Horário",
       accessor: "inicio",
-      cell: (_: string, row: Agendamento) => (
+      cell: (_: string, row: AgendamentoItem) => (
         <span className="font-mono text-amber-300 bg-amber-500/10 px-2 py-1 rounded text-sm">
           {formatarHorarioBrasileiro(row.inicio, row.fim)}
         </span>
@@ -132,43 +100,15 @@ const AgendamentosTable = ({ agendamentos }: AgendamentosTableProps) => {
       header: "Status",
       accessor: "status",
       cell: (value: string) => {
-        const map = {
-          Cancelado: {
-            bg: "bg-red-600/20",
-            color: "text-red-300",
-            border: "border-red-500/30",
-          },
-          "Não Compareceu": {
-            bg: "bg-yellow-600/20",
-            color: "text-yellow-300",
-            border: "border-yellow-500/30",
-          },
-          Agendado: {
-            bg: "bg-blue-600/20",
-            color: "text-blue-300",
-            border: "border-blue-500/30",
-          },
-          Concluído: {
-            bg: "bg-green-600/20",
-            color: "text-green-300",
-            border: "border-green-500/30",
-          },
-        }[value] || {
-          bg: "bg-gray-700/20",
-          color: "text-gray-400",
-          border: "border-gray-500/30",
-        };
-
+        const style = statusMap[value as keyof typeof statusMap] || statusMap.default;
         return (
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold border ${map.bg} ${map.color} ${map.border}`}
-          >
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${style.bg} ${style.color} ${style.border}`}>
             {value}
           </span>
         );
       },
     },
-  ];
+  ], []);
 
   return (
     <div className="flex-1 flex flex-col min-h-0">

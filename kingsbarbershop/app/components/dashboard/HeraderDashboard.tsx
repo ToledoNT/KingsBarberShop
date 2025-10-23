@@ -1,9 +1,17 @@
-// components/HeaderDashboard.tsx
-interface HeaderDashboardProps {
-  onRefresh: () => void;
-}
+import { HeaderDashboardProps } from "@/app/interfaces/dashboardInterface";
+import { useMemo } from "react";
 
 const HeaderDashboard = ({ onRefresh }: HeaderDashboardProps) => {
+  const hoje = useMemo(
+    () =>
+      new Date().toLocaleDateString("pt-BR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    []
+  );
+
   return (
     <>
       {/* Header */}
@@ -22,16 +30,10 @@ const HeaderDashboard = ({ onRefresh }: HeaderDashboardProps) => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <p className="text-gray-400 text-sm mb-1">📅 Período Atual</p>
-              <p className="font-bold text-white text-sm lg:text-base">
-                {new Date().toLocaleDateString("pt-BR", { 
-                  day: 'numeric',
-                  month: 'long', 
-                  year: 'numeric' 
-                })}
-              </p>
+              <p className="font-bold text-white text-sm lg:text-base">{hoje}</p>
             </div>
-            <button 
-              onClick={onRefresh} 
+            <button
+              onClick={onRefresh}
               className="px-4 py-3 bg-[#FFA500] text-black rounded-lg font-semibold hover:bg-[#FF8C00] transition-colors flex items-center gap-2 whitespace-nowrap text-sm"
             >
               🔄 Atualizar

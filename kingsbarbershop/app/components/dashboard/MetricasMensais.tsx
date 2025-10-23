@@ -1,19 +1,9 @@
-// components/MetricasMensais.tsx
+"use client";
+
+import { useMemo } from "react";
 import MetricCard from "./MetricaCard";
 import MiniMetricCard from "./MiniMetricCard";
-
-interface MetricasMensaisProps {
-  agendamentosMes: number;
-  faturamentoMensal: number;
-  ticketMedio: string;
-  taxaConclusao: string;
-  taxaCancelamento: string;
-  totalConcluidos: number;
-  totalNaoCompareceu: number;
-  totalCancelados: number;
-  totalAgendados: number;
-  metrics: any;
-}
+import { MetricasMensaisProps } from "@/app/interfaces/dashboardInterface";
 
 const MetricasMensais = ({
   agendamentosMes,
@@ -27,6 +17,26 @@ const MetricasMensais = ({
   totalAgendados,
   metrics
 }: MetricasMensaisProps) => {
+
+  const agendamentosProgress = useMemo(() => ({
+    value: agendamentosMes,
+    max: metrics.agendamentosMensais,
+    color: "bg-gradient-to-r from-purple-400 to-indigo-400"
+  }), [agendamentosMes, metrics.agendamentosMensais]);
+
+  const faturamentoFormatado = useMemo(
+    () => `R$ ${faturamentoMensal.toLocaleString('pt-BR')}`,
+    [faturamentoMensal]
+  );
+
+  const ticketFormatado = useMemo(
+    () => `Ticket: R$ ${ticketMedio}`,
+    [ticketMedio]
+  );
+
+  const taxaConclusaoStr = useMemo(() => `${taxaConclusao}%`, [taxaConclusao]);
+  const taxaCancelamentoStr = useMemo(() => `${taxaCancelamento}%`, [taxaCancelamento]);
+
   return (
     <div className="mb-6 flex-shrink-0">
       <div className="bg-gradient-to-br from-[#1B1B1B] to-[#2A2A2A] border border-[#333] rounded-lg p-6">
@@ -37,7 +47,7 @@ const MetricasMensais = ({
             MENSAL
           </span>
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <MetricCard
             title="📅 AGENDAMENTOS MÊS"
@@ -45,31 +55,31 @@ const MetricasMensais = ({
             subtitle={`${metrics.agendamentosMensais} previstos`}
             icon="📋"
             color="purple"
-            progress={{ value: agendamentosMes, max: metrics.agendamentosMensais, color: "bg-gradient-to-r from-purple-400 to-indigo-400" }}
+            progress={agendamentosProgress}
             period="monthly"
           />
-          
+
           <MetricCard
             title="💰 FATURAMENTO MENSAL"
-            value={`R$ ${faturamentoMensal.toLocaleString('pt-BR')}`}
-            subtitle={`Ticket: R$ ${ticketMedio}`}
+            value={faturamentoFormatado}
+            subtitle={ticketFormatado}
             icon="💎"
             color="orange"
             period="monthly"
           />
-          
+
           <MetricCard
             title="✅ TAXA DE SUCESSO"
-            value={`${taxaConclusao}%`}
+            value={taxaConclusaoStr}
             subtitle={`${totalConcluidos} concluídos`}
             icon="🚀"
             color="green"
             period="monthly"
           />
-          
+
           <MetricCard
             title="📉 TAXA DE CANCEL."
-            value={`${taxaCancelamento}%`}
+            value={taxaCancelamentoStr}
             subtitle={`${totalCancelados} cancelamentos`}
             icon="📊"
             color="red"
@@ -82,30 +92,30 @@ const MetricasMensais = ({
           <MiniMetricCard
             title="Concluídos"
             value={totalConcluidos}
-            subtitle={`${taxaConclusao}% de sucesso`}
+            subtitle={`${taxaConclusaoStr} de sucesso`}
             icon="✅"
             color="green"
             period="monthly"
           />
-          
+
           <MiniMetricCard
             title="Não Compareceram"
             value={totalNaoCompareceu}
-            subtitle={`${taxaCancelamento}% do total`}
+            subtitle={`${taxaCancelamentoStr} do total`}
             icon="⚠️"
             color="yellow"
             period="monthly"
           />
-          
+
           <MiniMetricCard
             title="Cancelamentos"
             value={totalCancelados}
-            subtitle={`${taxaCancelamento}% taxa`}
+            subtitle={`${taxaCancelamentoStr} taxa`}
             icon="❌"
             color="red"
             period="monthly"
           />
-          
+
           <MiniMetricCard
             title="Agendados"
             value={totalAgendados}

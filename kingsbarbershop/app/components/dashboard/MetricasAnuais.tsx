@@ -1,14 +1,20 @@
-// components/MetricasAnuais.tsx
+"use client";
 
+import { useMemo } from "react";
 import MetricCard from "./MetricaCard";
-
-interface MetricasAnuaisProps {
-  agendamentosAnuais: number;
-  faturamentoAnual: number;
-  anoAtual: number;
-}
+import { MetricasAnuaisProps } from "@/app/interfaces/dashboardInterface";
 
 const MetricasAnuais = ({ agendamentosAnuais, faturamentoAnual, anoAtual }: MetricasAnuaisProps) => {
+  const faturamentoFormatado = useMemo(
+    () => `R$ ${faturamentoAnual.toLocaleString('pt-BR')}`,
+    [faturamentoAnual]
+  );
+
+  const mediaMensalFormatada = useMemo(
+    () => `R$ ${Math.round(faturamentoAnual / 12).toLocaleString('pt-BR')}`,
+    [faturamentoAnual]
+  );
+
   return (
     <div className="mb-6 flex-shrink-0">
       <div className="bg-gradient-to-br from-[#1B1B1B] to-[#2A2A2A] border border-[#333] rounded-lg p-6">
@@ -32,7 +38,7 @@ const MetricasAnuais = ({ agendamentosAnuais, faturamentoAnual, anoAtual }: Metr
           
           <MetricCard
             title="💰 FATURAMENTO ANUAL"
-            value={`R$ ${faturamentoAnual.toLocaleString('pt-BR')}`}
+            value={faturamentoFormatado}
             subtitle="Receita anual consolidada"
             icon="💰"
             color="orange"
@@ -41,7 +47,7 @@ const MetricasAnuais = ({ agendamentosAnuais, faturamentoAnual, anoAtual }: Metr
           
           <MetricCard
             title="📊 MÉDIA MENSAL"
-            value={`R$ ${Math.round(faturamentoAnual / 12).toLocaleString('pt-BR')}`}
+            value={mediaMensalFormatada}
             subtitle="Faturamento médio por mês"
             icon="📅"
             color="teal"

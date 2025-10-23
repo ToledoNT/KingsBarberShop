@@ -1,14 +1,18 @@
-// components/MetricasDiarias.tsx
-
+import { useMemo } from "react";
 import MetricCard from "./MetricaCard";
-
-interface MetricasDiariasProps {
-  agendamentosHoje: number;
-  faturamentoHoje: number;
-  concluidosHoje: number;
-}
+import { MetricasDiariasProps } from "@/app/interfaces/dashboardInterface";
 
 const MetricasDiarias = ({ agendamentosHoje, faturamentoHoje, concluidosHoje }: MetricasDiariasProps) => {
+  const performanceHoje = useMemo(
+    () => (agendamentosHoje > 0 ? `${Math.round((concluidosHoje / agendamentosHoje) * 100)}%` : '0%'),
+    [agendamentosHoje, concluidosHoje]
+  );
+
+  const faturamentoFormatado = useMemo(
+    () => `R$ ${faturamentoHoje.toLocaleString('pt-BR')}`,
+    [faturamentoHoje]
+  );
+
   return (
     <div className="mb-6 flex-shrink-0">
       <div className="bg-gradient-to-br from-[#1B1B1B] to-[#2A2A2A] border border-[#333] rounded-lg p-6">
@@ -32,7 +36,7 @@ const MetricasDiarias = ({ agendamentosHoje, faturamentoHoje, concluidosHoje }: 
           
           <MetricCard
             title="💰 FATURAMENTO HOJE"
-            value={`R$ ${faturamentoHoje.toLocaleString('pt-BR')}`}
+            value={faturamentoFormatado}
             subtitle="Receita do dia"
             icon="💸"
             color="green"
@@ -50,7 +54,7 @@ const MetricasDiarias = ({ agendamentosHoje, faturamentoHoje, concluidosHoje }: 
           
           <MetricCard
             title="📊 PERFORMANCE HOJE"
-            value={agendamentosHoje > 0 ? `${Math.round((concluidosHoje / agendamentosHoje) * 100)}%` : '0%'}
+            value={performanceHoje}
             subtitle="Taxa de conclusão diária"
             icon="📈"
             color="purple"

@@ -7,7 +7,6 @@ import { AuthService } from "@/app/api/authAdmin";
 // Serviço de autenticação
 const authService = new AuthService();
 
-// Interface para as props do componente
 interface CadeadoAcessoProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
@@ -48,7 +47,6 @@ function CadeadoAcesso({
     verifyAuth();
   }, [router]);
 
-  // Componente de Loading padrão
   const DefaultLoading = () => (
     <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5] items-center justify-center">
       <div className="text-center">
@@ -58,7 +56,6 @@ function CadeadoAcesso({
     </div>
   );
 
-  // Renderização condicional
   if (authLoading) {
     return loadingComponent || <DefaultLoading />;
   }
@@ -67,7 +64,6 @@ function CadeadoAcesso({
     return fallback || null;
   }
 
-  // Se autenticado, renderiza o conteúdo children
   return <>{children}</>;
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { DashboardResponse, DashboardService } from "../api/dashboardAdmin";
 
 export function useDashboard() {
@@ -6,14 +6,13 @@ export function useDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const dashboardService = new DashboardService();
+  const dashboardService = useMemo(() => new DashboardService(), []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-
-      const result: DashboardResponse = await dashboardService.getDashboardData();
+      const result = await dashboardService.getDashboardData();
       setData(result);
     } catch (err: any) {
       console.error("Erro ao buscar dados do dashboard:", err);
@@ -21,20 +20,15 @@ export function useDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dashboardService]);
 
   useEffect(() => {
+    let mounted = true;
     fetchDashboardData();
-  }, []);
+    return () => { mounted = false; };
+  }, [fetchDashboardData]);
 
-  const refetch = () => {
-    fetchDashboardData();
-  };
+  const refetch = fetchDashboardData;
 
-  return {
-    data,
-    loading,
-    error,
-    refetch,
-  };
+  return useMemo(() => ({ data, loading, error, refetch }), [data, loading, error, refetch]);
 }

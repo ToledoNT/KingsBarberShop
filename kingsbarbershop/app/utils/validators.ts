@@ -22,3 +22,21 @@ export const formatPhoneNumber = (value: string) => {
 
   return value;
 };
+
+export const formatarDataBrasileira = (dataString: string) => {
+  if (!dataString) return "Data inválida";
+  const date = new Date(dataString);
+  if (isNaN(date.getTime())) return "Data inválida";
+  date.setHours(date.getHours() - 3); // Ajusta para UTC-3 (Brasília)
+  const dia = String(date.getDate()).padStart(2, "0");
+  const mes = String(date.getMonth() + 1).padStart(2, "0");
+  const ano = date.getFullYear();
+  return `${dia}/${mes}/${ano}`;
+};
+
+export const formatarHorarioBrasileiro = (inicio?: string, fim?: string) => {
+  if (!inicio && !fim) return "Hora indisponível";
+  if (!inicio) return `- ${fim}`;
+  if (!fim) return `${inicio} -`;
+  return `${inicio} - ${fim}`;
+};

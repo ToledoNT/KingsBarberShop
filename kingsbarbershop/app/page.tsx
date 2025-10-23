@@ -39,6 +39,7 @@ export default function Home() {
   }>({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
 
   const [formKey, setFormKey] = useState(0);
+  const [showForm, setShowForm] = useState(false); // Novo estado para controlar a exibição do formulário
 
   const whatsappNumber = "5511999999999";
   const whatsappMessage = "Olá! Gostaria de mais informações sobre os serviços da barbearia.";
@@ -63,6 +64,17 @@ export default function Home() {
   const handleConfirm = () => {
     confirmDialog.onConfirm?.();
     closeConfirmDialog();
+  };
+
+  // Função para mostrar o formulário
+  const handleShowForm = () => {
+    setShowForm(true);
+  };
+
+  // Função para esconder o formulário
+  const handleHideForm = () => {
+    setShowForm(false);
+    notify("ℹ️ Agendamento cancelado. Clique em 'Agendar Agora' quando quiser marcar seu horário.", "info");
   };
 
   const confirmarAgendamento = (agendamento: Agendamento): Promise<boolean> => {
@@ -225,6 +237,7 @@ export default function Home() {
       await addAgendamento(payload);
       notify("✅ Agendamento realizado com sucesso! Te esperamos na barbearia! 🎉", "success");
       setFormKey(prev => prev + 1);
+      setShowForm(false); // Esconde o formulário após agendamento bem-sucedido
 
     } catch (err) {
       console.error("Erro ao salvar agendamento:", err);
@@ -233,7 +246,7 @@ export default function Home() {
   };
 
   const handleCancel = () => {
-    notify("ℹ️ Preencha os dados para fazer seu agendamento", "info");
+    handleHideForm(); // Usa a função de esconder formulário
   };
 
   return (
@@ -318,56 +331,91 @@ export default function Home() {
               <span className="text-[9px] lg:text-[10px] font-medium">QUALIDADE</span>
             </div>
           </div>
+
+          {/* Botão para mostrar formulário - MAIS ELEGANTE E MODERNO */}
+          {!showForm && (
+            <div className="mt-6 lg:mt-8">
+              <button
+                onClick={handleShowForm}
+                className="group relative bg-gradient-to-r from-[#FFA500] to-[#FF8C00] hover:from-[#FF8C00] hover:to-[#FF6B00] text-white font-bold py-4 px-10 rounded-xl shadow-2xl transition-all duration-500 transform hover:scale-105 hover:shadow-3xl text-lg overflow-hidden"
+              >
+                {/* Efeito de brilho */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                
+                {/* Conteúdo do botão */}
+                <div className="relative flex items-center justify-center gap-3">
+                  <span className="text-xl transition-transform duration-300 group-hover:scale-110">📅</span>
+                  <span className="transition-all duration-300 group-hover:tracking-wider">Agendar Agora</span>
+                </div>
+                
+                {/* Borda animada */}
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FFA500] to-[#FF8C00] opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
+                <div className="absolute inset-[2px] rounded-xl bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A] -z-10"></div>
+              </button>
+              
+              {/* Texto abaixo do botão */}
+              <p className="text-gray-400 text-xs mt-3 animate-pulse">
+                Clique para fazer seu agendamento
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Formulário */}
-        <section className="w-full max-w-md lg:max-w-lg mx-auto">
-          <AgendamentoPrivadoForm
-            key={formKey}
-            agendamento={null}
-            onSave={handleSaveAgendamento}
-            onCancel={handleCancel}
-            barbeiros={barbeiros}
-            horarios={horarios}
-            procedimentos={procedimentosBarbeiro}
-          />
-        </section>
+        {/* Formulário - Só aparece quando showForm é true */}
+        {showForm && (
+          <section className="w-full max-w-md lg:max-w-lg mx-auto">
+            <div className="mb-4 flex justify-between items-center">
+              
+            </div>
+            <AgendamentoPrivadoForm
+              key={formKey}
+              agendamento={null}
+              onSave={handleSaveAgendamento}
+              onCancel={handleCancel}
+              barbeiros={barbeiros}
+              horarios={horarios}
+              procedimentos={procedimentosBarbeiro}
+            />
+          </section>
+        )}
 
         {/* Diferenciais compactos */}
-        <section className="w-full max-w-4xl lg:max-w-6xl mx-auto mt-10 lg:mt-12">
-          <div className="text-center mb-6 lg:mb-8">
-            <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-2 lg:mb-3">
-              Nossa Experiência
-            </h2>
-            <div className="w-12 lg:w-16 h-1 bg-gradient-to-r from-[#FFA500] to-[#FF6B00] mx-auto rounded-full"></div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4">
-            <div className="bg-gradient-to-br from-[#1B1B1B] to-[#2A2A2A] border border-gray-700 rounded-lg p-3 lg:p-4 text-center hover:border-[#FFA500] transition-all duration-300 hover:transform hover:scale-105 group">
-              <div className="text-xl lg:text-2xl mb-2 text-[#FFA500] group-hover:scale-110 transition-transform duration-300">⏰</div>
-              <h3 className="font-bold text-white mb-1 text-sm lg:text-base">Agendamento Simples</h3>
-              <p className="text-gray-400 text-xs lg:text-sm leading-relaxed">
-                Agende em menos de 2 minutos.
-              </p>
+        {!showForm && (
+          <section className="w-full max-w-4xl lg:max-w-6xl mx-auto mt-10 lg:mt-12">
+            <div className="text-center mb-6 lg:mb-8">
+              <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-2 lg:mb-3">
+                Nossa Experiência
+              </h2>
+              <div className="w-12 lg:w-16 h-1 bg-gradient-to-r from-[#FFA500] to-[#FF6B00] mx-auto rounded-full"></div>
             </div>
             
-            <div className="bg-gradient-to-br from-[#1B1B1B] to-[#2A2A2A] border border-gray-700 rounded-lg p-3 lg:p-4 text-center hover:border-[#FFA500] transition-all duration-300 hover:transform hover:scale-105 group">
-              <div className="text-xl lg:text-2xl mb-2 text-[#FFA500] group-hover:scale-110 transition-transform duration-300">👨‍💼</div>
-              <h3 className="font-bold text-white mb-1 text-sm lg:text-base">Mestres da Tesoura</h3>
-              <p className="text-gray-400 text-xs lg:text-sm leading-relaxed">
-                Profissionais especializados.
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4">
+              <div className="bg-gradient-to-br from-[#1B1B1B] to-[#2A2A2A] border border-gray-700 rounded-lg p-3 lg:p-4 text-center hover:border-[#FFA500] transition-all duration-300 hover:transform hover:scale-105 group">
+                <div className="text-xl lg:text-2xl mb-2 text-[#FFA500] group-hover:scale-110 transition-transform duration-300">⏰</div>
+                <h3 className="font-bold text-white mb-1 text-sm lg:text-base">Agendamento Simples</h3>
+                <p className="text-gray-400 text-xs lg:text-sm leading-relaxed">
+                  Agende em menos de 2 minutos.
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-[#1B1B1B] to-[#2A2A2A] border border-gray-700 rounded-lg p-3 lg:p-4 text-center hover:border-[#FFA500] transition-all duration-300 hover:transform hover:scale-105 group">
+                <div className="text-xl lg:text-2xl mb-2 text-[#FFA500] group-hover:scale-110 transition-transform duration-300">👨‍💼</div>
+                <h3 className="font-bold text-white mb-1 text-sm lg:text-base">Mestres da Tesoura</h3>
+                <p className="text-gray-400 text-xs lg:text-sm leading-relaxed">
+                  Profissionais especializados.
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-[#1B1B1B] to-[#2A2A2A] border border-gray-700 rounded-lg p-3 lg:p-4 text-center hover:border-[#FFA500] transition-all duration-300 hover:transform hover:scale-105 group">
+                <div className="text-xl lg:text-2xl mb-2 text-[#FFA500] group-hover:scale-110 transition-transform duration-300">💫</div>
+                <h3 className="font-bold text-white mb-1 text-sm lg:text-base">Ambiente Exclusivo</h3>
+                <p className="text-gray-400 text-xs lg:text-sm leading-relaxed">
+                  Ambiente climatizado e aconchegante.
+                </p>
+              </div>
             </div>
-            
-            <div className="bg-gradient-to-br from-[#1B1B1B] to-[#2A2A2A] border border-gray-700 rounded-lg p-3 lg:p-4 text-center hover:border-[#FFA500] transition-all duration-300 hover:transform hover:scale-105 group">
-              <div className="text-xl lg:text-2xl mb-2 text-[#FFA500] group-hover:scale-110 transition-transform duration-300">💫</div>
-              <h3 className="font-bold text-white mb-1 text-sm lg:text-base">Ambiente Exclusivo</h3>
-              <p className="text-gray-400 text-xs lg:text-sm leading-relaxed">
-                Ambiente climatizado e aconchegante.
-              </p>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
       </div>
 
       {/* Footer compacto */}

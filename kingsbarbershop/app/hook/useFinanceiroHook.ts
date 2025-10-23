@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { IFinanceiro } from "../interfaces/financeiroInterface";
 import { FinanceiroService } from "../api/financeiro-api-";
 
@@ -9,7 +9,7 @@ export function useFinanceiro() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchFinanceiros = async () => {
+  const fetchFinanceiros = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -17,15 +17,15 @@ export function useFinanceiro() {
       setFinanceiros(data);
     } catch (err: any) {
       console.error("Erro ao buscar lançamentos financeiros:", err);
-      setError(err.message); // Armazena apenas a mensagem do erro
+      setError(err?.message || String(err));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchFinanceiros();
-  }, []);
+  }, [fetchFinanceiros]);
 
   return {
     financeiros,

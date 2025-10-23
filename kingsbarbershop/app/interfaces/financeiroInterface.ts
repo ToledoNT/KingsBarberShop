@@ -18,3 +18,17 @@ export interface IFinanceiro {
 export interface FinanceiroCardProps {
   mov: IFinanceiro;
 }
+
+export interface FiltrosProps {
+  busca: string;
+  setBusca: React.Dispatch<React.SetStateAction<string>>;
+  dataInicial: string;
+  setDataInicial: React.Dispatch<React.SetStateAction<string>>;
+  dataFinal: string;
+  setDataFinal: React.Dispatch<React.SetStateAction<string>>;
+  filtroStatus: "todos" | "Pago" | "pendente";
+  setFiltroStatus: React.Dispatch<React.SetStateAction<"todos" | "Pago" | "pendente">>;
+  ordenacao: "data" | "valor" | "cliente";
+  setOrdenacao: React.Dispatch<React.SetStateAction<"data" | "valor" | "cliente">>;
+  handleLimparFiltros: () => void;
+}

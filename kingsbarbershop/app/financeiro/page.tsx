@@ -2,12 +2,13 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FiltrosProps, IFinanceiro } from "@/app/interfaces/financeiroInterface";
+import { FiltrosProps, NenhumMovimentoProps } from "@/app/interfaces/financeiroInterface";
 import { useFinanceiro } from "@/app/hook/useFinanceiroHook";
 import FinanceiroCard from "@/app/components/financeiro/financeiroCard";
 import Sidebar from "@/app/components/ui/Sidebar";
 import { AuthService } from "../api/authAdmin";
 import { ResumoCard } from "../components/financeiro/resumoCard";
+import { Notification } from "../components/ui/componenteNotificacao"; 
 
 const authService = new AuthService();
 
@@ -24,6 +25,20 @@ export default function FinanceiroPage() {
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loadingAuth, setLoadingAuth] = useState(true);
+
+  const [notification, setNotification] = useState({
+    isOpen: false,
+    message: "",
+    type: "success" as "info" | "success" | "warning" | "error"
+  });
+
+  const showNotification = (message: string, type: "info" | "success" | "warning" | "error" = "success") => {
+    setNotification({ isOpen: true, message, type });
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, isOpen: false }));
+  };
 
   // ------------------- AUTENTICAÇÃO -------------------
   useEffect(() => {
@@ -104,7 +119,14 @@ export default function FinanceiroPage() {
     setOrdenacao("data");
   };
 
-  const handleAtualizarDados = () => fetchFinanceiros();
+  const handleAtualizarDados = async () => {
+    try {
+      await fetchFinanceiros();
+      showNotification("Dados financeiros atualizados com sucesso!", "success");
+    } catch (err) {
+      showNotification("Erro ao atualizar dados financeiros", "error");
+    }
+  };
 
   // ------------------- BLOQUEIO DE RENDER -------------------
   if (loadingAuth || loadingFinanceiros) {
@@ -141,35 +163,50 @@ export default function FinanceiroPage() {
   // ------------------- JSX PRINCIPAL -------------------
   return (
     <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5]">
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      {/* SIDEBAR FIXO - CORREÇÃO APLICADA AQUI */}
+      <div className="flex-shrink-0 h-screen sticky top-0 z-50">
+        <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      </div>
 
+      {/* ADICIONE A NOTIFICAÇÃO AQUI */}
+      <Notification
+        isOpen={notification.isOpen}
+        message={notification.message}
+        type={notification.type}
+        onClose={closeNotification}
+        duration={3000}
+      />
+
+      {/* CONTEÚDO PRINCIPAL - CORREÇÃO APLICADA AQUI */}
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
-        <main className="flex-1 flex flex-col p-3 sm:p-4 lg:p-6 overflow-hidden">
+        <main className="flex-1 flex flex-col p-3 sm:p-4 lg:p-6 overflow-y-auto">
           {/* Header */}
-          <div className="mb-6 sm:mb-8 flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#FFA500] mb-1 flex items-center gap-2 sm:gap-3">
-                  <span className="text-3xl sm:text-4xl">💎</span>
-                  <span className="truncate">Financeiro</span>
-                </h1>
-                <p className="text-gray-400 text-sm sm:text-base truncate">
-                  Gerencie seus movimentos financeiros
-                </p>
-              </div>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <button
-                  onClick={handleAtualizarDados}
-                  className="px-4 py-3 bg-gradient-to-r from-[#FFA500] to-[#FF8C00] text-black rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2 text-sm flex-1 sm:flex-none justify-center"
-                >
-                  🔄 Atualizar
-                </button>
+          <div className="flex-shrink-0 mb-6 sm:mb-8">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-[#FFA500] mb-1 flex items-center gap-2 sm:gap-3">
+                    <span className="text-3xl sm:text-4xl">💎</span>
+                    <span className="truncate">Financeiro</span>
+                  </h1>
+                  <p className="text-gray-400 text-sm sm:text-base truncate">
+                    Gerencie seus movimentos financeiros
+                  </p>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={handleAtualizarDados}
+                    className="px-4 py-3 bg-gradient-to-r from-[#FFA500] to-[#FF8C00] text-black rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2 text-sm flex-1 sm:flex-none justify-center"
+                  >
+                    🔄 Atualizar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Cards de resumo */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
             <ResumoCard
               emoji="💰"
               titulo="Receitas"
@@ -194,21 +231,23 @@ export default function FinanceiroPage() {
           </div>
 
           {/* Filtros */}
-          <Filtros
-            busca={busca}
-            setBusca={setBusca}
-            dataInicial={dataInicial}
-            setDataInicial={setDataInicial}
-            dataFinal={dataFinal}
-            setDataFinal={setDataFinal}
-            filtroStatus={filtroStatus}
-            setFiltroStatus={setFiltroStatus}
-            ordenacao={ordenacao}
-            setOrdenacao={setOrdenacao}
-            handleLimparFiltros={handleLimparFiltros}
-          />
+          <div className="flex-shrink-0">
+            <Filtros
+              busca={busca}
+              setBusca={setBusca}
+              dataInicial={dataInicial}
+              setDataInicial={setDataInicial}
+              dataFinal={dataFinal}
+              setDataFinal={setDataFinal}
+              filtroStatus={filtroStatus}
+              setFiltroStatus={setFiltroStatus}
+              ordenacao={ordenacao}
+              setOrdenacao={setOrdenacao}
+              handleLimparFiltros={handleLimparFiltros}
+            />
+          </div>
 
-          {/* Lista de movimentos */}
+          {/* Lista de movimentos - CORREÇÃO APLICADA AQUI */}
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex-1 bg-gradient-to-br from-[#111111] to-[#1A1A1A] border border-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col backdrop-blur-sm overflow-hidden">
               {movimentosFiltrados.length === 0 ? (
@@ -219,7 +258,7 @@ export default function FinanceiroPage() {
                   onLimparFiltros={handleLimparFiltros}
                 />
               ) : (
-                <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar scroll-smooth max-h-[calc(100vh-400px)]">
+                <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 scroll-smooth">
                   <div className="grid gap-3 sm:gap-4 pb-2">
                     {movimentosFiltrados.map((mov) => (
                       <FinanceiroCard key={mov.id} mov={mov} />
@@ -231,6 +270,29 @@ export default function FinanceiroPage() {
           </div>
         </main>
       </div>
+
+      {/* ESTILOS DO SCROLLBAR */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #4B5563;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background-color: #1F2937;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: #6B7280;
+        }
+        
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #4B5563 #1F2937;
+        }
+      `}</style>
     </div>
   );
 }
@@ -253,17 +315,96 @@ const Filtros = ({
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
   return (
     <div className="bg-gradient-to-br from-[#111111] to-[#1A1A1A] border border-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl mb-4 sm:mb-6">
-      {/* ...restante do JSX igual... */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+        <h4 className="text-base font-semibold text-white flex items-center gap-2">
+          <span className="text-[#FFA500]">🎯</span> Filtros
+        </h4>
+        <button
+          onClick={handleLimparFiltros}
+          className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm flex items-center gap-2"
+        >
+          <span>🔄</span>
+          Limpar Filtros
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Busca */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">
+            Buscar
+          </label>
+          <input
+            type="text"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Cliente ou procedimento..."
+            className="w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm backdrop-blur-sm"
+          />
+        </div>
+
+        {/* Data Inicial */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">
+            Data Inicial
+          </label>
+          <input
+            type="date"
+            value={dataInicial}
+            onChange={(e) => setDataInicial(e.target.value)}
+            className="w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm backdrop-blur-sm"
+          />
+        </div>
+
+        {/* Data Final */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">
+            Data Final
+          </label>
+          <input
+            type="date"
+            value={dataFinal}
+            onChange={(e) => setDataFinal(e.target.value)}
+            className="w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm backdrop-blur-sm"
+          />
+        </div>
+
+        {/* Status e Ordenação */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
+              Status
+            </label>
+            <select
+              value={filtroStatus}
+              onChange={(e) => setFiltroStatus(e.target.value as any)}
+              className="w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm backdrop-blur-sm"
+            >
+              <option value="todos">Todos</option>
+              <option value="Pago">Pago</option>
+              <option value="pendente">Pendente</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
+              Ordenar por
+            </label>
+            <select
+              value={ordenacao}
+              onChange={(e) => setOrdenacao(e.target.value as any)}
+              className="w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm backdrop-blur-sm"
+            >
+              <option value="data">Data</option>
+              <option value="valor">Valor</option>
+              <option value="cliente">Cliente</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
-
-interface NenhumMovimentoProps {
-  busca: string;
-  dataInicial: string;
-  dataFinal: string;
-  onLimparFiltros: () => void;
-}
 
 const NenhumMovimento = ({ busca, dataInicial, dataFinal, onLimparFiltros }: NenhumMovimentoProps) => (
   <div className="text-center py-12 sm:py-16 border-2 border-dashed border-gray-700 rounded-xl sm:rounded-2xl max-w-md mx-auto w-full bg-gray-900/30 backdrop-blur-sm px-4">

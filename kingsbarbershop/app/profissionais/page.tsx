@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/app/components/ui/Sidebar";
 import Button from "../components/ui/Button";
-import Loader from "@/app/components/ui/Loader";
+import Loader from "../components/ui/Loader";
 import { Profissional } from "../interfaces/profissionaisInterface";
 import ProfissionalCard from "../components/profissional/ProfissionalCard";
 import { ProcedimentosProfissionais } from "../components/profissional/ProcedimentosForm";
@@ -14,6 +14,7 @@ import ProcedimentoCard from "../components/profissional/ProcedimentoCard";
 import { AuthService } from "../api/authAdmin";
 import { useRouter } from "next/navigation";
 import { ProcedimentoInput } from "../interfaces/inputInterface";
+import { Notification } from "../components/ui/componenteNotificacao";
 
 const authService = new AuthService();
 
@@ -32,8 +33,24 @@ export default function ProfissionaisProcedimentosPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Estado para notificação
+  const [notification, setNotification] = useState({
+    isOpen: false,
+    message: "",
+    type: "info" as "info" | "success" | "warning" | "error"
+  });
+
   const { profissionais, addProfissional, updateProfissional, removeProfissional, fetchProfissionais } = useProfissionaisAdmin();
   const { procedimentos, addProcedimento, updateProcedimento, removeProcedimento, fetchProcedimentos } = useProcedimentosAdmin();
+
+  // Funções de notificação
+  const showNotification = (message: string, type: "info" | "success" | "warning" | "error" = "info") => {
+    setNotification({ isOpen: true, message, type });
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, isOpen: false }));
+  };
 
   // ------------------- VERIFICAÇÃO DE TOKEN -------------------
   useEffect(() => {
@@ -62,7 +79,7 @@ export default function ProfissionaisProcedimentosPage() {
   // ------------------- FUNÇÕES -------------------
   const handleSaveProfissional = useCallback(async (prof: Partial<Profissional>) => {
     if (!prof.nome?.trim() || !prof.email?.trim() || !prof.telefone?.trim()) {
-      alert("Nome, email e telefone são obrigatórios.");
+      showNotification("Nome, email e telefone são obrigatórios.", "warning");
       return;
     }
     try {
@@ -74,7 +91,8 @@ export default function ProfissionaisProcedimentosPage() {
         });
         if (atualizado) { 
           setSelectedProfissional(atualizado); 
-          setActiveProfissionalTab("ver"); 
+          setActiveProfissionalTab("ver");
+          showNotification("Profissional atualizado com sucesso!", "success");
         }
       } else {
         const { id, ...dadosSemId } = prof;
@@ -84,10 +102,11 @@ export default function ProfissionaisProcedimentosPage() {
         } as Omit<Profissional, "id">);
         setSelectedProfissional(novoProfissional); 
         setActiveProfissionalTab("ver");
+        showNotification("Profissional criado com sucesso!", "success");
       }
     } catch (err) { 
       console.error("Erro ao salvar profissional:", err);
-      alert("Erro ao salvar profissional. Tente novamente.");
+      showNotification("Erro ao salvar profissional. Tente novamente.", "error");
     }
   }, [addProfissional, updateProfissional]);
 
@@ -99,7 +118,7 @@ export default function ProfissionaisProcedimentosPage() {
 
   const handleSubmitProcedimento = useCallback(async () => {
     if (!novoProcedimento.nome?.trim() || novoProcedimento.valor <= 0 || !selectedProfissional) {
-      alert("Preencha todos os campos corretamente.");
+      showNotification("Preencha todos os campos corretamente.", "warning");
       return;
     }
       
@@ -110,15 +129,15 @@ export default function ProfissionaisProcedimentosPage() {
         profissionalId: novoProcedimento.profissionalId
       });
       
-      
       await fetchProcedimentos();
       
       setNovoProcedimento({ nome: "", valor: 0, profissionalId: selectedProfissional.id });
       setActiveProcedimentoTab("ver");
+      showNotification("Procedimento criado com sucesso!", "success");
       
     } catch (err: any) { 
       console.error("❌ Erro ao salvar procedimento:", err);
-      alert(`Erro ao criar procedimento: ${err.message || "Tente novamente."}`);
+      showNotification(`Erro ao criar procedimento: ${err.message || "Tente novamente."}`, "error");
     }
   }, [novoProcedimento, selectedProfissional, addProcedimento, fetchProcedimentos]);
 
@@ -126,9 +145,11 @@ export default function ProfissionaisProcedimentosPage() {
     try {
       const resultado = await addProcedimento(dados);
       await fetchProcedimentos();
+      showNotification("Procedimento adicionado com sucesso!", "success");
       return resultado;
     } catch (err: any) {
       console.error("❌ Erro ao criar procedimento:", err);
+      showNotification("Erro ao criar procedimento", "error");
       throw err;
     }
   }, [addProcedimento, fetchProcedimentos]);
@@ -139,10 +160,10 @@ export default function ProfissionaisProcedimentosPage() {
         try {
           await removeProcedimento(id);
           await fetchProcedimentos();
-          alert("✅ Procedimento excluído com sucesso!");
+          showNotification("Procedimento excluído com sucesso!", "success");
         } catch (err) {
           console.error("Erro ao excluir procedimento:", err);
-          alert("Erro ao excluir procedimento.");
+          showNotification("Erro ao excluir procedimento.", "error");
         }
       }
     }
@@ -150,6 +171,16 @@ export default function ProfissionaisProcedimentosPage() {
 
   const handleDeleteProfissional = useCallback(async (id?: string) => {
     if (id) {
+      const procedimentosDoProfissional = procedimentos.filter(p => p.profissionalId === id);
+      
+      if (procedimentosDoProfissional.length > 0) {
+        showNotification(
+          `Não é possível excluir este profissional. Existem ${procedimentosDoProfissional.length} procedimento(s) vinculado(s). Remova os procedimentos primeiro.`,
+          "error"
+        );
+        return;
+      }
+
       if (confirm("Tem certeza que deseja excluir este profissional?")) {
         try {
           await removeProfissional(id);
@@ -157,14 +188,19 @@ export default function ProfissionaisProcedimentosPage() {
             setSelectedProfissional(null);
           }
           await fetchProfissionais();
-          alert("✅ Profissional excluído com sucesso!");
-        } catch (err) {
+          showNotification("Profissional excluído com sucesso!", "success");
+        } catch (err: any) {
           console.error("Erro ao excluir profissional:", err);
-          alert("Erro ao excluir profissional.");
+          // Se o erro for por vínculos com agendamentos
+          if (err.message?.includes('agendamento') || err.message?.includes('vinculado')) {
+            showNotification("Não é possível excluir. Existem agendamentos vinculados a este profissional.", "error");
+          } else {
+            showNotification("Erro ao excluir profissional.", "error");
+          }
         }
       }
     }
-  }, [removeProfissional, selectedProfissional, fetchProfissionais]);
+  }, [removeProfissional, selectedProfissional, fetchProfissionais, procedimentos]);
 
   const procedimentosFiltrados = procedimentos.filter(
     (p) => p.profissionalId === selectedProfissional?.id
@@ -180,6 +216,15 @@ export default function ProfissionaisProcedimentosPage() {
       <aside className="flex-shrink-0 h-screen lg:sticky top-0 z-20">
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       </aside>
+
+      {/* Componente de Notificação */}
+      <Notification
+        isOpen={notification.isOpen}
+        message={notification.message}
+        type={notification.type}
+        onClose={closeNotification}
+        duration={4000}
+      />
 
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
         <main className="flex-1 flex flex-col p-3 sm:p-4 lg:p-6 overflow-hidden">

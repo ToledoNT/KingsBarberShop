@@ -167,3 +167,29 @@ export interface TableProps {
   columns: Column[];
   data: Record<string, any>[];
 }
+
+// types/agendamento.types.ts
+export interface NotificationState {
+  isOpen: boolean;
+  message: string;
+  type: "info" | "success" | "warning" | "error";
+}
+
+export interface ConfirmDialogState {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  type: "info" | "warning" | "error";
+  onConfirm: (() => void) | null;
+}
+
+export interface TabsState {
+  agendamento: "criar" | "gerenciar";
+  horario: "exibir" | "criar";
+}
+
+export interface FiltrosState {
+  status: "todos" | StatusAgendamento;
+  data: string;
+  barbeiro: string;
+}

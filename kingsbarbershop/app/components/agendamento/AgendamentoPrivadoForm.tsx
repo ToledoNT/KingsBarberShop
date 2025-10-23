@@ -123,8 +123,9 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
   return (
     <div className="w-full flex justify-center mt-6 mb-12 px-2 sm:px-4">
       <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-4 sm:p-6 md:p-8 bg-[#1B1B1B] rounded-2xl shadow-xl">
+        {/* TÍTULO AJUSTADO - Agora é mais genérico */}
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-6">
-          {agendamento ? "Editar Agendamento" : "Novo Agendamento"}
+          {agendamento ? "Editar Agendamento" : "Agende seu Horário"}
         </h2>
 
         <form

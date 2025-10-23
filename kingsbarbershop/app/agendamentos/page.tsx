@@ -20,7 +20,6 @@ import { Notification } from "../components/ui/componenteNotificacao";
 
 const authService = new AuthService();
 
-// ------------------- HELPERS -------------------
 export const mapToAgendamento = (a: Agendamento): Agendamento => ({
   ...a,
   id: a.id || "",
@@ -33,15 +32,6 @@ export const mapToAgendamento = (a: Agendamento): Agendamento => ({
   criadoEm: a.criadoEm || new Date().toISOString(),
   atualizadoEm: a.atualizadoEm || new Date().toISOString(),
 });
-
-export const formatDate = (dataISO?: string | null) => {
-  if (!dataISO) return "—";
-  const d = new Date(dataISO);
-  if (isNaN(d.getTime())) return dataISO;
-  return `${String(d.getUTCDate()).padStart(2, "0")}/${String(
-    d.getUTCMonth() + 1
-  ).padStart(2, "0")}/${d.getUTCFullYear()}`;
-};
 
 // ------------------- COMPONENT -------------------
 export default function CriarAgendamentoPage() {

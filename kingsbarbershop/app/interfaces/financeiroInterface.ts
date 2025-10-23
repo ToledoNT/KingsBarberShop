@@ -32,3 +32,10 @@ export interface FiltrosProps {
   setOrdenacao: React.Dispatch<React.SetStateAction<"data" | "valor" | "cliente">>;
   handleLimparFiltros: () => void;
 }
+
+export interface NenhumMovimentoProps {
+  busca: string;
+  dataInicial: string;
+  dataFinal: string;
+  onLimparFiltros: () => void;
+}

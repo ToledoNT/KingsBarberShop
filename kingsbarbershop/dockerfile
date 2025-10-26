@@ -1,0 +1,25 @@
+# ===============================
+# Base Node.js
+# ===============================
+FROM node:20-alpine
+
+# Diretório de trabalho dentro do container
+WORKDIR /app
+
+# Copia package.json e package-lock.json
+COPY package*.json ./
+
+# Instala dependências
+RUN npm install --legacy-peer-deps
+
+# Copia o restante do código
+COPY . .
+
+# Compila TypeScript (se estiver usando)
+RUN npm run build
+
+# Expõe a porta que o backend vai usar
+EXPOSE 4001
+
+# Comando para rodar a aplicação
+CMD ["node", "dist/server.js"]

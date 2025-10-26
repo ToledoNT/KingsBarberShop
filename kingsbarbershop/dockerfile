@@ -15,11 +15,11 @@ RUN npm install --legacy-peer-deps
 # Copia o restante do código
 COPY . .
 
-# Compila TypeScript (se estiver usando)
-RUN npm run build
+# Build do Next.js
+RUN npm run build --if-present
 
-# Expõe a porta que o backend vai usar
-EXPOSE 4001
+# Expõe a porta que o frontend vai usar
+EXPOSE 3000
 
-# Comando para rodar a aplicação
-CMD ["node", "dist/server.js"]
+# Comando para rodar a aplicação em produção
+CMD ["npm", "start"]

@@ -32,19 +32,18 @@ export default function Sidebar({
   const { logout } = useAuth();
   const pathname = usePathname();
 
-  // ------------------- Check User Role -------------------
-  const checkUserRole = useCallback(() => {
-    try {
-      const userData = localStorage.getItem("user");
-      if (userData) {
-        const parsedUser = JSON.parse(userData);
-        const userRole = parsedUser.role?.toUpperCase() || ""; // Garantir que o role seja comparado em maiúsculas
-        setRole(userRole);
-      }
-    } catch (err) {
-      console.error("Erro ao verificar o role do usuário:", err);
+const checkUserRole = useCallback(() => {
+  try {
+    const userData = localStorage.getItem("user"); 
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      const userRole = parsedUser.role?.toUpperCase() || ""; 
+      setRole(userRole); 
     }
-  }, []);
+  } catch (err) {
+    console.error("Erro ao verificar o role do usuário:", err);
+  }
+}, []);
 
   // Atualiza o role sempre que o localStorage mudar
   useEffect(() => {

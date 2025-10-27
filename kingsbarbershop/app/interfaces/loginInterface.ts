@@ -32,15 +32,9 @@ export interface LoginResult {
   id: string;
   name: string;
   email: string;
-  role: string;  
+  role: string;  // Certifique-se de que 'role' está aqui
 }
 
-export interface LoginResult {
-  id: string;    // ID do usuário
-  email: string; // E-mail do usuário
-  name: string;  // Nome do usuário
-  token: string; // Token de autenticação
-}
 
 export interface VerifyTokenResponse {
   status: boolean;

@@ -12,25 +12,26 @@ export function useAuth(): UseAuthReturn {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // ------------------- LOGIN -------------------
-  const login = async (data: LoginData) => {
-    setLoading(true);
-    setError(null);
+const login = async (data: LoginData) => {
+  setLoading(true);
+  setError(null);
 
-    try {
-      // Tentamos logar com o serviço de backend
-      const user: LoginResult = await authService.login(data);
+  try {
+    const user: LoginResult = await authService.login(data);
 
-      // Se o login for bem-sucedido, o token já estará no cookie HttpOnly
-      setIsAuthenticated(true);
-      router.push("/dashboard"); // Redireciona para o painel após o login
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err.message || "Erro ao logar";
-      setError(message);
-      setIsAuthenticated(false);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Armazenando todos os dados do usuário no localStorage
+    localStorage.setItem("user", JSON.stringify(user)); // Armazenando o objeto completo
+
+    setIsAuthenticated(true);
+    router.push("/dashboard");
+  } catch (err: any) {
+    const message = err?.response?.data?.message || err.message || "Erro ao logar";
+    setError(message);
+    setIsAuthenticated(false);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ------------------- LOGOUT -------------------
   const logout = async () => {
@@ -40,6 +41,7 @@ export function useAuth(): UseAuthReturn {
     try {
       await authService.logout();
       // O token HttpOnly será removido automaticamente pelo backend ao limpar o cookie
+      localStorage.removeItem("userRole"); // Remove o role do localStorage
       setIsAuthenticated(false);
       router.push("/login");
     } catch (err) {
@@ -59,9 +61,17 @@ export function useAuth(): UseAuthReturn {
       // Verifica se o token no cookie HttpOnly é válido
       const valid: boolean = await authService.verifyToken();
 
-      setIsAuthenticated(valid);
-
-      if (!valid) {
+      if (valid) {
+        // Se o token for válido, também verificamos o role armazenado
+        const storedRole = localStorage.getItem("userRole");
+        if (!storedRole) {
+          setIsAuthenticated(false);
+          router.push("/login");
+        } else {
+          setIsAuthenticated(true);
+        }
+      } else {
+        setIsAuthenticated(false);
         router.push("/login");
       }
     } catch (err) {
@@ -73,8 +83,9 @@ export function useAuth(): UseAuthReturn {
     }
   };
 
+  // Chama a função de verificação ao carregar a página
   useEffect(() => {
-    verify(); // Verifica o token ao carregar a página
+    verify(); // Verifica o token e o role ao carregar a página
   }, []);
 
   return {

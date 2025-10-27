@@ -40,7 +40,7 @@ export default function LoginPage() {
         try {
           const parsedUser = JSON.parse(userData);
           const userRole = parsedUser.role?.toLowerCase();
-          isAdmin = userRole === 'admin' || userRole === 'administrador';
+          isAdmin = userRole === 'ADMIN' || userRole === 'administrador';
         } catch (error) {
           console.error('Erro ao verificar role:', error);
         }

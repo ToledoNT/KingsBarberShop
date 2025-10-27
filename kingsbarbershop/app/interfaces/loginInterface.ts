@@ -28,17 +28,17 @@ export interface LoginResponseData {
 }
 
 export interface LoginResponse {
-  status: boolean;
-  code: number;
-  message: string;
-  data?: LoginResponseData; 
+  status: boolean;  // Indica se o login foi bem-sucedido ou não
+  code: number;     // Código HTTP da resposta
+  message: string;  // Mensagem associada à resposta (erro ou sucesso)
+  data?: LoginResult;  // Dados do usuário, incluindo o token (opcional)
 }
 
 export interface LoginResult {
-  id: string;
-  email: string;
-  name: string;
-  token: string;
+  id: string;    // ID do usuário
+  email: string; // E-mail do usuário
+  name: string;  // Nome do usuário
+  token: string; // Token de autenticação
 }
 
 export interface VerifyTokenResponse {

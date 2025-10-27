@@ -12,11 +12,12 @@ export class AuthService {
   async login(data: LoginData): Promise<LoginResult> {
     const response = await api.post<{ status: boolean; data?: LoginResult; message?: string }>("/auth/login", data);
 
+    // Verifica a resposta para garantir que o login foi bem-sucedido
     if (!response.data.status || !response.data.data) {
       throw new Error(response.data.message || "Erro ao realizar login");
     }
 
-    // ✅ Não precisa salvar token, o cookie httpOnly já é suficiente
+    // ✅ Retorna apenas os dados do usuário (LoginResult), sem o status
     return response.data.data;
   }
 
@@ -35,7 +36,7 @@ export class AuthService {
   async logout(): Promise<void> {
     try {
       await api.post("/auth/logout");
-      // ✅ Não precisa remover token, cookie será limpo pelo backend
+      // ✅ O token será removido automaticamente pelo backend ao limpar o cookie
     } catch (err: any) {
       console.error("AuthService.logout error:", err);
       throw err;

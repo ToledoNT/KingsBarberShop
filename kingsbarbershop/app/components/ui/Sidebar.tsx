@@ -40,10 +40,10 @@ export default function Sidebar({
       const userData = localStorage.getItem("user");
       if (userData) {
         const parsedUser = JSON.parse(userData);
-        userRole = parsedUser.role?.toLowerCase() || ""; 
+        userRole = parsedUser.role || ""; // Remover toLowerCase(), se não for necessário
       }
 
-      setRole(userRole); 
+      setRole(userRole);
     } catch (err) {
       console.error("Erro ao verificar role:", err);
     }
@@ -64,13 +64,16 @@ export default function Sidebar({
 
   // ------------------- Filter Menu -------------------
   const filteredMenuItems = useMemo(() => {
-    return menuItems.filter((item) => {
+    const filtered = menuItems.filter((item) => {
       // Mostrar itens para ADMIN
       if (item.adminOnly && role !== "admin") return false;
       // Mostrar itens para BARBEIRO
       if (item.barberOnly && role !== "barbeiro") return false;
       return true;
     });
+
+    console.log("Itens filtrados:", filtered); // Verifique os itens filtrados no console
+    return filtered;
   }, [role]);
 
   // ------------------- Handlers -------------------

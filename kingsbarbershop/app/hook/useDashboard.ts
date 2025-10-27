@@ -7,7 +7,6 @@ export function useDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Criar a instância do serviço
   const dashboardService = useMemo(() => new DashboardService(), []);
 
   const fetchDashboardData = useCallback(async () => {

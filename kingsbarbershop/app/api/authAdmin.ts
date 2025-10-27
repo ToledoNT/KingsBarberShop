@@ -11,7 +11,7 @@ export class AuthService {
   // ---------------- LOGIN ----------------
 async login(data: LoginData): Promise<LoginResult> {
   try {
-    console.log("Tentando fazer login com os dados:", data); // Log para ver os dados enviados
+    console.log("Tentando fazer login com os dados:", data);  // Log para ver os dados enviados
 
     // Envia a requisição de login
     const response = await api.post<{ status: boolean; data?: LoginResult; message?: string }>("/auth/login", data);
@@ -22,17 +22,20 @@ async login(data: LoginData): Promise<LoginResult> {
       throw new Error(response.data.message || "Erro ao realizar login");
     }
 
-    // Agora, armazenamos os dados completos do usuário, incluindo o role
-    const user = response.data.data;
-    localStorage.setItem("user", JSON.stringify(user));  // Armazenando o objeto completo com id, email, role, etc.
+    // Salvar o role no localStorage
+    const role = response.data.data.role;
+    console.log("ROLEEEE ++++++++++==" + role)
+    localStorage.setItem("role", role);  
 
-    // Retorna os dados do usuário após login bem-sucedido
-    return user;
+   localStorage.setItem("user", JSON.stringify(response.data.data));  
+
+    return response.data.data;
   } catch (err) {
-    console.error("Erro durante o login:", err);  // Log para ver o erro
+    console.error("Erro durante o login:", err);  
     throw err;
   }
 }
+
 
   // ---------------- VERIFICAR TOKEN ----------------2
   async verifyToken(): Promise<boolean> {
@@ -42,12 +45,12 @@ async login(data: LoginData): Promise<LoginResult> {
       // Envia a requisição para verificar se o token JWT é válido
       const response = await api.get<VerifyTokenResponse>("/auth/verify");
 
-      console.log("Resposta da verificação do token:", response.data);  // Log para ver a resposta
+      console.log("Resposta da verificação do token:", response.data); 
 
-      return response.data.status === true;  // Verifica se o status é verdadeiro
+      return response.data.status === true;  
     } catch (err) {
       console.error("Erro ao verificar o token:", err);
-      return false;  // Retorna false em caso de erro
+      return false;  
     }
   }
 

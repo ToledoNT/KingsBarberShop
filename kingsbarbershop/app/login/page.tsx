@@ -29,39 +29,33 @@ export default function LoginPage() {
   const formRef = useRef<HTMLFormElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
 
-  const checkUserRoleAndRedirect = useCallback(() => {
-    try {
-      const userData = localStorage.getItem('user');
-      const token = localStorage.getItem('token');
-      
-      let isAdmin = false;
+const checkUserRoleAndRedirect = useCallback(() => {
+  try {
+    const userData = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    
+    let isAdminOrBarbeiro = false;
 
-      if (userData) {
-        try {
-          const parsedUser = JSON.parse(userData);
-          const userRole = parsedUser.role?.toLowerCase();
-          isAdmin = userRole === 'ADMIN' || userRole === 'administrador';
-        } catch (error) {
-          console.error('Erro ao verificar role:', error);
-        }
-      }
-
-      if (!isAdmin && token) {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const tokenRole = payload.role?.toLowerCase();
-          isAdmin = tokenRole === 'admin' || tokenRole === 'administrador';
-        } catch (error) {
-          console.error('Erro ao decodificar token:', error);
-        }
-      }
-
-      router.push(isAdmin ? "/dashboard" : "/agendamentos");
-    } catch (err) {
-      console.error('Erro ao redirecionar:', err);
-      router.push("/agendamentos");
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      const userRole = parsedUser.role?.toUpperCase();  // Converte para maiúsculo uma vez
+      isAdminOrBarbeiro = ['ADMIN', 'BARBEIRO'].includes(userRole);
     }
-  }, [router]);
+
+    if (!isAdminOrBarbeiro && token) {
+      const payload = JSON.parse(atob(token.split('.')[1])); 
+      const tokenRole = payload.role?.toUpperCase(); 
+      isAdminOrBarbeiro = ['ADMIN', 'BARBEIRO'].includes(tokenRole);
+    }
+
+    // Redireciona para o dashboard ou agendamentos
+    router.push(isAdminOrBarbeiro ? "/dashboard" : "/agendamentos");
+
+  } catch (err) {
+    console.error('Erro ao verificar role e redirecionar:', err);
+    router.push("/agendamentos");
+  }
+}, [router]);
 
   useEffect(() => {
     if (isAuthenticated) {

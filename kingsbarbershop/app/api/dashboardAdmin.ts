@@ -1,9 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
-import { DashboardResponse } from "@/app/interfaces/dashboardInterface";
 import axios from "axios";
+import { DashboardResponse } from "@/app/interfaces/dashboardInterface";
 
-// Serviço do Dashboard
-class DashboardService {
+export class DashboardService {
   private api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
     withCredentials: true,
@@ -32,30 +30,5 @@ class DashboardService {
   }
 }
 
-const dashboardService = new DashboardService();
-
-// Hook para consumir dados do dashboard
-export function useDashboard() {
-  const [data, setData] = useState<DashboardResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await dashboardService.getDashboardData();
-      setData(result);
-    } catch (err: any) {
-      setError(err.message || "Erro ao carregar dados do dashboard");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return { data, loading, error, refetch: fetchData };
-}
+// Exporte o serviço
+export const dashboardService = new DashboardService();

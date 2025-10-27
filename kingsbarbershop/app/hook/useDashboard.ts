@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { DashboardResponse, DashboardService } from "../api/dashboardAdmin";
+import { DashboardResponse } from "../interfaces/dashboardInterface";
+import { DashboardService } from "../api/dashboardAdmin";
 
 export function useDashboard() {
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Criar a instância do serviço
   const dashboardService = useMemo(() => new DashboardService(), []);
 
   const fetchDashboardData = useCallback(async () => {

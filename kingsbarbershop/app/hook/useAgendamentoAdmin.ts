@@ -105,10 +105,22 @@ export function useAgendamentosAdmin() {
   // ---------------------------
   // CRUD Agendamentos
   // ---------------------------
-  const addAgendamento = async (a: Agendamento) => {
+const addAgendamento = async (a: Agendamento) => {
+  try {
     const newA = await appointmentService.createAppointment(a);
-    setAgendamentos((prev) => [...prev, newA]);
-  };
+
+    if (newA && newA.id) {
+      setAgendamentos((prev) => [...prev, newA]);
+      console.log("Agendamento criado com sucesso!");
+    } else {
+      console.error("Erro: Agendamento retornado incompleto ou inválido");
+    }
+  } catch (error) {
+    console.error("Erro ao criar agendamento:", error);
+    console.error("Erro desconhecido ao criar agendamento");
+  }
+};
+
 
   const updateAgendamento = async (id: string, a: Partial<Agendamento>) => {
     await appointmentService.updateAppointment(id, a);
@@ -211,6 +223,6 @@ const handleUpdateStatusAgendamento = async (id: string, status: StatusAgendamen
     fetchAgendamentos,
     fetchTodosHorarios,
     fetchBarbeiroDados,
-    handleUpdateStatusAgendamento, // ✅ disponibiliza função de status
+    handleUpdateStatusAgendamento, 
   };
 }

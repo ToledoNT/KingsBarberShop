@@ -4,9 +4,10 @@ import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-in
 import { HorarioDisponivel, Procedimento } from "@/app/interfaces/agendamentoInterface";
 
 const api = axios.create({
-baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 10000,
+  withCredentials: true, // ✅ importante para cookies HTTP-only
 });
 
 export class ProfissionalService {
@@ -49,21 +50,21 @@ export class ProfissionalService {
     }
   }
 
-async deleteProfissional(id: string): Promise<ResponseTemplateInterface<any>> {
-  try {
-    const res = await api.delete<ResponseTemplateInterface<any>>(
-      `/profissional/delete/${id}`,
-      {
-        validateStatus: () => true, 
-      }
-    );
+  async deleteProfissional(id: string): Promise<ResponseTemplateInterface<any>> {
+    try {
+      const res = await api.delete<ResponseTemplateInterface<any>>(
+        `/profissional/delete/${id}`,
+        {
+          validateStatus: () => true, 
+        }
+      );
 
-    return res.data;
-  } catch (err: any) {
-    console.error("Erro ao deletar profissional:", err);
-    throw new Error(err.message || "Erro ao deletar profissional");
+      return res.data;
+    } catch (err: any) {
+      console.error("Erro ao deletar profissional:", err);
+      throw new Error(err.message || "Erro ao deletar profissional");
+    }
   }
-}
 
   // ---------------------------
   // Buscar horários e procedimentos de um barbeiro
@@ -76,7 +77,6 @@ async deleteProfissional(id: string): Promise<ResponseTemplateInterface<any>> {
 
       console.log(res);
 
-      // Garante que sempre retorna arrays válidos
       return {
         barbeiroId: res.data.data?.barbeiroId ?? profissionalId,
         horarios: res.data.data?.horarios ?? [],

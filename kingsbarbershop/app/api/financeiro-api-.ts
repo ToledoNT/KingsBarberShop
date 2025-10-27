@@ -4,26 +4,20 @@ import { ResponseTemplateInterface } from "../interfaces/response-templete-inter
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true, // envia cookies automaticamente
   headers: { "Content-Type": "application/json" },
 });
 
 export class FinanceiroService {
   async fetchFinanceiros(): Promise<IFinanceiro[]> {
     try {
-      const token = localStorage.getItem("token");
+      const res = await api.get<ResponseTemplateInterface<IFinanceiro[]>>("/financeiro/getall");
 
-      if (!token) {
-        throw new Error("Você precisa estar logado para acessar o financeiro.");
+      if (!res.data.status || !res.data.data) {
+        throw new Error(res.data.message || "Erro ao buscar lançamentos financeiros.");
       }
 
-      const res = await api.get<ResponseTemplateInterface<IFinanceiro[]>>(
-        "/financeiro/getall",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      return res.data.data || [];
+      return res.data.data;
     } catch (err: any) {
       const status = err?.response?.status;
       const message =
@@ -33,7 +27,6 @@ export class FinanceiroService {
           ? "Sessão expirada. Faça login novamente."
           : "Erro ao buscar lançamentos financeiros.";
 
-      // Lança o erro para ser tratado pelo componente
       throw new Error(message);
     }
   }

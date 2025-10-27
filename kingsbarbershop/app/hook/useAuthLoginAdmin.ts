@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LoginData, UseAuthReturn, LoginResult } from "../interfaces/loginInterface";
@@ -19,12 +17,12 @@ export function useAuth(): UseAuthReturn {
     setError(null);
 
     try {
-      // A resposta é diretamente um LoginResult, não mais LoginResponse
+      // Tentamos logar com o serviço de backend
       const user: LoginResult = await authService.login(data);
 
-      // O token já foi gerenciado pelo backend via cookie HttpOnly
+      // Se o login for bem-sucedido, o token já estará no cookie HttpOnly
       setIsAuthenticated(true);
-      router.push("/dashboard"); // Redireciona para o dashboard após o login bem-sucedido
+      router.push("/dashboard"); // Redireciona para o painel após o login
     } catch (err: any) {
       const message = err?.response?.data?.message || err.message || "Erro ao logar";
       setError(message);
@@ -58,13 +56,12 @@ export function useAuth(): UseAuthReturn {
     setError(null);
 
     try {
-      // Verificando se o token está presente através do backend
+      // Verifica se o token no cookie HttpOnly é válido
       const valid: boolean = await authService.verifyToken();
 
       setIsAuthenticated(valid);
 
       if (!valid) {
-        // Se o token não for válido, redireciona para login
         router.push("/login");
       }
     } catch (err) {
@@ -77,7 +74,7 @@ export function useAuth(): UseAuthReturn {
   };
 
   useEffect(() => {
-    verify(); // Verifica o token ao carregar
+    verify(); // Verifica o token ao carregar a página
   }, []);
 
   return {

@@ -10,7 +10,7 @@ export type MenuItem = {
   icon: React.ComponentType<{ size?: number }>;
   path: string;
   adminOnly?: boolean;
-  barberOnly?: boolean;
+  barberOnly?: boolean; 
 };
 
 const menuItems: MenuItem[] = [
@@ -28,27 +28,31 @@ export default function Sidebar({
   setCollapsed: (value: boolean) => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [role, setRole] = useState(""); // Estado para armazenar o role
+  const [role, setRole] = useState(""); // Adicionando o estado para armazenar o role
   const { logout } = useAuth();
   const pathname = usePathname();
 
-const checkUserRole = useCallback(() => {
-  try {
-    const userData = localStorage.getItem("user"); 
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      const userRole = parsedUser.role?.toUpperCase() || ""; 
-      setRole(userRole); 
-    }
-  } catch (err) {
-    console.error("Erro ao verificar o role do usuário:", err);
-  }
-}, []);
+  // ------------------- Check User Role -------------------
+  const checkUserRole = useCallback(() => {
+    let userRole = "";
 
-  // Atualiza o role sempre que o localStorage mudar
+    try {
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        userRole = parsedUser.role?.toLowerCase() || "";
+      }
+
+      setRole(userRole); // Definindo o role no estado
+    } catch (err) {
+      console.error("Erro ao verificar role:", err);
+    }
+  }, []);
+
   useEffect(() => {
     checkUserRole();
 
+    // Atualiza o role caso o localStorage mude
     const handleStorageChange = () => {
       checkUserRole();
     };
@@ -62,9 +66,9 @@ const checkUserRole = useCallback(() => {
   // ------------------- Filter Menu -------------------
   const filteredMenuItems = useMemo(() => {
     return menuItems.filter((item) => {
-      // Mostrar itens apenas para ADMIN
+      // Mostrar itens para ADMIN
       if (item.adminOnly && role !== "ADMIN") return false;
-      // Mostrar itens apenas para BARBEIRO
+      // Mostrar itens para BARBEIRO
       if (item.barberOnly && role !== "BARBEIRO") return false;
       return true;
     });
@@ -74,7 +78,7 @@ const checkUserRole = useCallback(() => {
   const handleLogout = useCallback(async () => {
     try {
       await logout();
-      // Limpar dados do usuário no localStorage
+      // Limpar dados do usuário no localStorage ao fazer logout
       localStorage.removeItem("role");
       localStorage.removeItem("user");
     } catch (err) {
@@ -110,8 +114,8 @@ const checkUserRole = useCallback(() => {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-bold text-lg">Sistema</span>
-              <span className={`text-xs mt-1 ${role === "ADMIN" ? "text-green-400" : "text-blue-400"}`}>
-                {role === "ADMIN" ? "Administrador" : "Usuário"}
+              <span className={`text-xs mt-1 ${role === "admin" ? "text-green-400" : "text-blue-400"}`}>
+                {role === "admin" ? "Administrador" : "Usuário"}
               </span>
             </div>
           )}

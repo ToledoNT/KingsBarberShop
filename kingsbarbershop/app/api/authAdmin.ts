@@ -14,21 +14,20 @@ async login(data: LoginData): Promise<LoginResult> {
     console.log("Tentando fazer login com os dados:", data); // Log para ver os dados enviados
 
     // Envia a requisição de login
-    const response = await api.post<{ status: boolean; data: LoginResult; message?: string }>("/auth/login", data);
+    const response = await api.post<{ status: boolean; data?: LoginResult; message?: string }>("/auth/login", data);
 
-    console.log("Resposta de login:", response.data);  
+    console.log("Resposta de login:", response.data);  // Log para ver a resposta
 
-    // Verifica se a resposta contém um status verdadeiro e se 'data' está presente
     if (!response.data.status || !response.data.data) {
       throw new Error(response.data.message || "Erro ao realizar login");
     }
 
-    // Salva o role no localStorage
-    const role = response.data.data.role;
-    localStorage.setItem("role", role);
+    // Agora, armazenamos os dados completos do usuário, incluindo o role
+    const user = response.data.data;
+    localStorage.setItem("user", JSON.stringify(user));  // Armazenando o objeto completo com id, email, role, etc.
 
     // Retorna os dados do usuário após login bem-sucedido
-    return response.data.data;
+    return user;
   } catch (err) {
     console.error("Erro durante o login:", err);  // Log para ver o erro
     throw err;

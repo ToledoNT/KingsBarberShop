@@ -22,16 +22,20 @@ const login = async (data: LoginData) => {
     // Armazenando todos os dados do usuário no localStorage
     localStorage.setItem("user", JSON.stringify(user)); // Armazenando o objeto completo
 
+    console.log("Usuário autenticado com sucesso:", user);  // Verificar se a role foi armazenada corretamente
+
     setIsAuthenticated(true);
     router.push("/dashboard");
   } catch (err: any) {
     const message = err?.response?.data?.message || err.message || "Erro ao logar";
     setError(message);
     setIsAuthenticated(false);
+    console.log("Erro no login:", message);  // Log para verificar erro no login
   } finally {
     setLoading(false);
   }
 };
+
 
   // ------------------- LOGOUT -------------------
   const logout = async () => {

@@ -1,9 +1,9 @@
 # ===============================
-# Base Node.js
+# Frontend Next.js (estático)
 # ===============================
-FROM node:20-alpine
+FROM node:20-alpine AS build
 
-# Diretório de trabalho dentro do container
+# Diretório de trabalho
 WORKDIR /app
 
 # Copia package.json e package-lock.json
@@ -12,14 +12,26 @@ COPY package*.json ./
 # Instala dependências
 RUN npm install --legacy-peer-deps
 
-# Copia o restante do código
+# Copia todo o código
 COPY . .
 
-# Build do Next.js
-RUN npm run build --if-present
+# Build e export para conteúdo estático
+RUN npm run build
+RUN npm run export
 
-# Expõe a porta que o frontend vai usar
-EXPOSE 3000
+# ===============================
+# Stage final Nginx
+# ===============================
+FROM nginx:alpine
 
-# Comando para rodar a aplicação em produção
-CMD ["npm", "start"]
+# Remove conteúdo default
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copia o build estático do Next.js
+COPY --from=build /app/out /usr/share/nginx/html
+
+# Expõe a porta 80
+EXPOSE 80
+
+# Start do Nginx
+CMD ["nginx", "-g", "daemon off;"]

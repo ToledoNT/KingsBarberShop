@@ -10,7 +10,7 @@ export type MenuItem = {
   icon: React.ComponentType<{ size?: number }>;
   path: string;
   adminOnly?: boolean;
-  barberOnly?: boolean; 
+  barberOnly?: boolean;
 };
 
 const menuItems: MenuItem[] = [
@@ -28,7 +28,7 @@ export default function Sidebar({
   setCollapsed: (value: boolean) => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [role, setRole] = useState(""); // Adicionando o estado para armazenar o role
+  const [role, setRole] = useState<string>("");
   const { logout } = useAuth();
   const pathname = usePathname();
 
@@ -40,10 +40,10 @@ export default function Sidebar({
       const userData = localStorage.getItem("user");
       if (userData) {
         const parsedUser = JSON.parse(userData);
-        userRole = parsedUser.role?.toLowerCase() || "";
+        userRole = parsedUser.role?.toLowerCase() || ""; 
       }
 
-      setRole(userRole); // Definindo o role no estado
+      setRole(userRole); 
     } catch (err) {
       console.error("Erro ao verificar role:", err);
     }
@@ -52,7 +52,6 @@ export default function Sidebar({
   useEffect(() => {
     checkUserRole();
 
-    // Atualiza o role caso o localStorage mude
     const handleStorageChange = () => {
       checkUserRole();
     };
@@ -67,9 +66,9 @@ export default function Sidebar({
   const filteredMenuItems = useMemo(() => {
     return menuItems.filter((item) => {
       // Mostrar itens para ADMIN
-      if (item.adminOnly && role !== "ADMIN") return false;
+      if (item.adminOnly && role !== "admin") return false;
       // Mostrar itens para BARBEIRO
-      if (item.barberOnly && role !== "BARBEIRO") return false;
+      if (item.barberOnly && role !== "barbeiro") return false;
       return true;
     });
   }, [role]);
@@ -78,7 +77,6 @@ export default function Sidebar({
   const handleLogout = useCallback(async () => {
     try {
       await logout();
-      // Limpar dados do usuário no localStorage ao fazer logout
       localStorage.removeItem("role");
       localStorage.removeItem("user");
     } catch (err) {

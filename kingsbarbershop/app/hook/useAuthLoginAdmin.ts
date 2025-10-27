@@ -12,30 +12,30 @@ export function useAuth(): UseAuthReturn {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // ------------------- LOGIN -------------------
-const login = async (data: LoginData) => {
-  setLoading(true);
-  setError(null);
+  const login = async (data: LoginData) => {
+    setLoading(true);
+    setError(null);
 
-  try {
-    const user: LoginResult = await authService.login(data);
+    try {
+      const user: LoginResult = await authService.login(data);
 
-    // Armazenando todos os dados do usuário no localStorage
-    localStorage.setItem("user", JSON.stringify(user)); // Armazenando o objeto completo
+      // Armazenando os dados do usuário no localStorage
+      localStorage.setItem("user", JSON.stringify(user)); 
+      localStorage.setItem("userRole", user.role); 
 
-    console.log("Usuário autenticado com sucesso:", user);  // Verificar se a role foi armazenada corretamente
+      console.log("Usuário autenticado com sucesso:", user);
 
-    setIsAuthenticated(true);
-    router.push("/dashboard");
-  } catch (err: any) {
-    const message = err?.response?.data?.message || err.message || "Erro ao logar";
-    setError(message);
-    setIsAuthenticated(false);
-    console.log("Erro no login:", message);  // Log para verificar erro no login
-  } finally {
-    setLoading(false);
-  }
-};
-
+      setIsAuthenticated(true);
+      router.push("/dashboard");
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Erro ao logar";
+      setError(message);
+      setIsAuthenticated(false);
+      console.log("Erro no login:", message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ------------------- LOGOUT -------------------
   const logout = async () => {
@@ -44,8 +44,8 @@ const login = async (data: LoginData) => {
 
     try {
       await authService.logout();
-      // O token HttpOnly será removido automaticamente pelo backend ao limpar o cookie
-      localStorage.removeItem("userRole"); // Remove o role do localStorage
+      localStorage.removeItem("user");
+      localStorage.removeItem("userRole"); 
       setIsAuthenticated(false);
       router.push("/login");
     } catch (err) {
@@ -62,12 +62,13 @@ const login = async (data: LoginData) => {
     setError(null);
 
     try {
-      // Verifica se o token no cookie HttpOnly é válido
       const valid: boolean = await authService.verifyToken();
+      console.log("Token válido?", valid);
 
       if (valid) {
-        // Se o token for válido, também verificamos o role armazenado
         const storedRole = localStorage.getItem("userRole");
+        console.log("Role armazenado:", storedRole);
+
         if (!storedRole) {
           setIsAuthenticated(false);
           router.push("/login");
@@ -87,9 +88,8 @@ const login = async (data: LoginData) => {
     }
   };
 
-  // Chama a função de verificação ao carregar a página
   useEffect(() => {
-    verify(); // Verifica o token e o role ao carregar a página
+    verify(); 
   }, []);
 
   return {

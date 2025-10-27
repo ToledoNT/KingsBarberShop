@@ -91,25 +91,31 @@ function DashboardConteudo() {
 
   // ------------------- VERIFICAÇÃO DE TOKEN -------------------
   useEffect(() => {
-    const verifyAuth = async () => {
-      setLoadingAuth(true);
-      try {
-        const valid = await authService.verifyToken();
-        if (!valid) {
-          router.replace("/login");
-        } else {
-          setIsAuthenticated(true);
-        }
-      } catch (err) {
-        console.error("Erro na verificação de token:", err);
+  const verifyAuth = async () => {
+    setLoadingAuth(true);
+    try {
+      const valid = await authService.verifyToken();
+      if (!valid) {
         router.replace("/login");
-      } finally {
-        setLoadingAuth(false);
+        return;
       }
-    };
 
-    verifyAuth();
-  }, [router]);
+      const storedRole = localStorage.getItem("userRole");
+      if (storedRole !== "ADMIN") {
+        router.replace("/agendamentos"); 
+      } else {
+        setIsAuthenticated(true);
+      }
+    } catch (err) {
+      console.error("Erro na verificação de token:", err);
+      router.replace("/login");
+    } finally {
+      setLoadingAuth(false);
+    }
+  };
+
+  verifyAuth();
+}, [router]);
 
   // FUNÇÃO PARA MOSTRAR NOTIFICAÇÃO
   const showNotification = (message: string, type: "info" | "success" | "warning" | "error" = "success") => {

@@ -17,10 +17,6 @@ import { formatarDataBrasileira, formatarHorarioBrasileiro } from "../utils/vali
 // Serviço de autenticação
 const authService = new AuthService();
 
-/* 
-  ✅ Corrige erro de fuso horário UTC: lê apenas a parte da data (YYYY-MM-DD)
-*/
-
 // Componente de Loading
 const LoadingSpinner = () => (
   <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5] items-center justify-center">
@@ -28,7 +24,7 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// Componente de Aviso de Permissão compacto
+// Componente de Aviso de Permissão
 const AvisoPermissao = () => (
   <div className="flex-1 flex items-center justify-center p-6">
     <div className="text-center max-w-md mx-auto">
@@ -53,7 +49,7 @@ const AvisoPermissao = () => (
   </div>
 );
 
-// Componente de Erro Geral compacto
+// Componente de Erro Geral
 const ErroCarregamento = ({ error }: { error: string }) => (
   <div className="flex-1 flex items-center justify-center p-6">
     <div className="text-center max-w-md mx-auto">
@@ -64,7 +60,7 @@ const ErroCarregamento = ({ error }: { error: string }) => (
   </div>
 );
 
-// Componente de Dados Não Encontrados compacto
+// Componente de Dados Não Encontrados
 const DadosNaoEncontrados = () => (
   <div className="flex-1 flex items-center justify-center p-6">
     <div className="text-center max-w-md mx-auto">
@@ -175,46 +171,44 @@ function DashboardConteudo() {
     const agendamentosOrdenados = [...agendamentos].sort(
       (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
     );
+// ✅ CORREÇÃO: Cálculos usando a função corrigida
+const agendamentosHoje = agendamentos.filter((a: any) => 
+  isMesmoDia(a.data, hoje)
+).length;
 
-    // ✅ CORREÇÃO: Cálculos usando a função corrigida
-    const agendamentosHoje = agendamentos.filter(a => 
-      isMesmoDia(a.data, hoje)
-    ).length;
+const concluidosHoje = agendamentos.filter((a: any) => 
+  isMesmoDia(a.data, hoje) && a.status === "Concluído"
+).length;
 
-    const concluidosHoje = agendamentos.filter(a => 
-      isMesmoDia(a.data, hoje) && a.status === "Concluído"
-    ).length;
+// ✅ CORREÇÃO: Financeiro de hoje também usando a mesma lógica
+const faturamentoHoje = financeiro
+  .filter((f: any) => isMesmoDia(f.criadoEm, hoje) && f.status === "Pago")
+  .reduce((acc: number, curr: any) => acc + curr.valor, 0);
 
-    // ✅ CORREÇÃO: Financeiro de hoje também usando a mesma lógica
-    const faturamentoHoje = financeiro
-      .filter(f => isMesmoDia(f.criadoEm, hoje) && f.status === "Pago")
-      .reduce((acc, curr) => acc + curr.valor, 0);
+// Métricas mensais
+const agendamentosMes = agendamentos.filter((a: any) => {
+  const d = new Date(a.data);
+  return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+}).length;
 
-    // Métricas mensais
-    const agendamentosMes = agendamentos.filter(a => {
-      const d = new Date(a.data);
-      return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
-    }).length;
+const faturamentoMensal = financeiro
+  .filter((f: any) => {
+    const d = new Date(f.criadoEm);
+    return d.getMonth() === mesAtual && d.getFullYear() === anoAtual && f.status === "Pago";
+  })
+  .reduce((acc: number, curr: any) => acc + curr.valor, 0);
 
-    const faturamentoMensal = financeiro
-      .filter(f => {
-        const d = new Date(f.criadoEm);
-        return d.getMonth() === mesAtual && d.getFullYear() === anoAtual && f.status === "Pago";
-      })
-      .reduce((acc, curr) => acc + curr.valor, 0);
-
-    // Totais gerais
-    const totalConcluidos = agendamentos.filter(a => a.status === "Concluído").length;
-    const totalCancelados = agendamentos.filter(a => a.status === "Cancelado").length;
-    const totalNaoCompareceu = agendamentos.filter(a => a.status === "Não Compareceu").length;
-    const totalAgendados = agendamentos.filter(a => a.status === "Agendado").length;
+// Totais gerais
+const totalConcluidos = agendamentos.filter((a: any) => a.status === "Concluído").length;
+const totalCancelados = agendamentos.filter((a: any) => a.status === "Cancelado").length;
+const totalNaoCompareceu = agendamentos.filter((a: any) => a.status === "Não Compareceu").length;
+const totalAgendados = agendamentos.filter((a: any) => a.status === "Agendado").length;
 
     // Relatório anual
-    const relatorioAnual = relatorios.find(r => {
-      const relatorioDate = new Date(r.mesAno);
-      return relatorioDate.getFullYear() === anoAtual && relatorioDate.getMonth() === mesAtual;
-    });
-
+const relatorioAnual = relatorios.find((r: any) => {
+  const relatorioDate = new Date(r.mesAno);
+  return relatorioDate.getFullYear() === anoAtual && relatorioDate.getMonth() === mesAtual;
+});
     const faturamentoAnual = relatorioAnual?.faturamento || 0;
     const agendamentosAnuais = relatorioAnual?.agendamentos || 0;
 
@@ -224,20 +218,6 @@ function DashboardConteudo() {
     const taxaCancelamento = totalProcessados > 0 ? ((totalCancelados / totalProcessados) * 100).toFixed(1) : "0.0";
     const taxaNaoCompareceu = totalProcessados > 0 ? ((totalNaoCompareceu / totalProcessados) * 100).toFixed(1) : "0.0";
     const taxaConclusao = totalProcessados > 0 ? ((totalConcluidos / totalProcessados) * 100).toFixed(1) : "0.0";
-
-    // ✅ DEBUG: Mostrar no console para verificar
-    console.log('🔍 DEBUG AGENDAMENTOS HOJE:');
-    console.log('Data de hoje:', hoje.toISOString().split('T')[0]);
-    console.log('Total agendamentos:', agendamentos.length);
-    console.log('Agendamentos de hoje encontrados:', agendamentosHoje);
-    console.log('Agendamentos de hoje detalhados:', 
-      agendamentos.filter(a => isMesmoDia(a.data, hoje)).map(a => ({
-        id: a.id,
-        data: a.data,
-        nome: a.nome,
-        status: a.status
-      }))
-    );
 
     return (
       <>
@@ -303,7 +283,6 @@ function DashboardConteudo() {
   );
 }
 
-// COMPONENTE PRINCIPAL COM CADEADO DE ACESSO
 export default function AdminHome() {
   return (
     <CadeadoAcesso>

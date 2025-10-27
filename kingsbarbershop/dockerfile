@@ -1,37 +1,17 @@
-# ===============================
-# Frontend Next.js (estático)
-# ===============================
-FROM node:20-alpine AS build
+# Base Node.js
+FROM node:20-alpine
 
-# Diretório de trabalho
 WORKDIR /app
 
-# Copia package.json e package-lock.json
 COPY package*.json ./
-
-# Instala dependências
 RUN npm install --legacy-peer-deps
 
-# Copia todo o código
 COPY . .
 
-# Build e export para conteúdo estático
-RUN npm run build
-RUN npm run export
+# Build do Next.js
+RUN npm run build --no-lint
 
-# ===============================
-# Stage final Nginx
-# ===============================
-FROM nginx:alpine
+EXPOSE 3000
 
-# Remove conteúdo default
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copia o build estático do Next.js
-COPY --from=build /app/out /usr/share/nginx/html
-
-# Expõe a porta 80
-EXPOSE 80
-
-# Start do Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Comando para rodar o frontend
+CMD ["npm", "start"]

@@ -10,6 +10,7 @@ export type MenuItem = {
   icon: React.ComponentType<{ size?: number }>;
   path: string;
   adminOnly?: boolean;
+  barberOnly?: boolean; 
 };
 
 const menuItems: MenuItem[] = [
@@ -27,64 +28,59 @@ export default function Sidebar({
   setCollapsed: (value: boolean) => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState(""); // Adicionando o estado para armazenar o role
   const { logout } = useAuth();
   const pathname = usePathname();
 
-  // ------------------- Check Admin Status -------------------
-  const checkAdminStatus = useCallback(() => {
-    let admin = false;
+  // ------------------- Check User Role -------------------
+  const checkUserRole = useCallback(() => {
+    let userRole = "";
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) return setIsAdmin(false);
-
       const userData = localStorage.getItem("user");
       if (userData) {
         const parsedUser = JSON.parse(userData);
-        const userRole = parsedUser.role?.toLowerCase();
-        if (userRole === "admin" || userRole === "administrador") admin = true;
+        userRole = parsedUser.role?.toLowerCase() || "";
       }
 
-      if (!admin) {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        const tokenRole = payload.role?.toLowerCase();
-        if (tokenRole === "admin" || tokenRole === "administrador") admin = true;
-      }
+      setRole(userRole); // Definindo o role no estado
     } catch (err) {
-      console.error("Erro ao verificar admin:", err);
+      console.error("Erro ao verificar role:", err);
     }
-
-    setIsAdmin(admin);
   }, []);
 
   useEffect(() => {
-    checkAdminStatus();
+    checkUserRole();
 
-    // Atualiza status de admin se localStorage mudar
-    let timeoutId: NodeJS.Timeout;
+    // Atualiza o role caso o localStorage mude
     const handleStorageChange = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(checkAdminStatus, 100);
+      checkUserRole();
     };
 
     window.addEventListener("storage", handleStorageChange);
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      clearTimeout(timeoutId);
     };
-  }, [checkAdminStatus]);
+  }, [checkUserRole]);
 
   // ------------------- Filter Menu -------------------
-  const filteredMenuItems = useMemo(
-    () => menuItems.filter((item) => !item.adminOnly || isAdmin),
-    [isAdmin]
-  );
+  const filteredMenuItems = useMemo(() => {
+    return menuItems.filter((item) => {
+      // Mostrar itens para ADMIN
+      if (item.adminOnly && role !== "admin") return false;
+      // Mostrar itens para BARBEIRO
+      if (item.barberOnly && role !== "barbeiro") return false;
+      return true;
+    });
+  }, [role]);
 
   // ------------------- Handlers -------------------
   const handleLogout = useCallback(async () => {
     try {
       await logout();
+      // Limpar dados do usuário no localStorage ao fazer logout
+      localStorage.removeItem("role");
+      localStorage.removeItem("user");
     } catch (err) {
       console.error("Erro ao fazer logout:", err);
     }
@@ -118,8 +114,8 @@ export default function Sidebar({
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-bold text-lg">Sistema</span>
-              <span className={`text-xs mt-1 ${isAdmin ? "text-green-400" : "text-blue-400"}`}>
-                {isAdmin ? "Administrador" : "Usuário"}
+              <span className={`text-xs mt-1 ${role === "admin" ? "text-green-400" : "text-blue-400"}`}>
+                {role === "admin" ? "Administrador" : "Usuário"}
               </span>
             </div>
           )}
@@ -161,6 +157,11 @@ export default function Sidebar({
                     {item.name}
                     {item.adminOnly && active && (
                       <span className="text-xs text-orange-400" title="Apenas administradores">
+                        ●
+                      </span>
+                    )}
+                    {item.barberOnly && active && (
+                      <span className="text-xs text-orange-400" title="Apenas barbeiros">
                         ●
                       </span>
                     )}

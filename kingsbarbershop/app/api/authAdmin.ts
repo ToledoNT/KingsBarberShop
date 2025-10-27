@@ -22,6 +22,10 @@ export class AuthService {
         throw new Error(response.data.message || "Erro ao realizar login");
       }
 
+      // Salvar o role no localStorage
+      const role = response.data.data.role;
+      localStorage.setItem("role", role);
+
       // Retorna os dados do usuário após login bem-sucedido
       return response.data.data;
     } catch (err) {
@@ -56,6 +60,7 @@ export class AuthService {
       await api.post("/auth/logout");
 
       // O backend deve limpar o cookie de autenticação automaticamente
+      localStorage.removeItem("role"); // Remover role ao fazer logout
       console.log("Logout realizado com sucesso.");
     } catch (err: any) {
       console.error("Erro durante o logout:", err);

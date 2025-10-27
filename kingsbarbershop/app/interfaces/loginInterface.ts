@@ -27,11 +27,12 @@ export interface LoginResponseData {
   token: string;
 }
 
-export interface LoginResponse {
-  status: boolean;  // Indica se o login foi bem-sucedido ou não
-  code: number;     // Código HTTP da resposta
-  message: string;  // Mensagem associada à resposta (erro ou sucesso)
-  data?: LoginResult;  // Dados do usuário, incluindo o token (opcional)
+// loginInterface.ts
+export interface LoginResult {
+  id: string;
+  name: string;
+  email: string;
+  role: string;  
 }
 
 export interface LoginResult {

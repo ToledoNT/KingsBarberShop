@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/components/ui/Sidebar";
 import { AuthService } from "../api/authAdmin";
-import { useDashboard } from "../hook/useDashboard";
+import { useDashboard } from "../hook/useDashboard"; // Importando o hook
 import HeaderDashboard from "../components/dashboard/HeraderDashboard";
 import MetricasDiarias from "../components/dashboard/MetricasDiarias";
 import MetricasMensais from "../components/dashboard/MetricasMensais";
@@ -171,44 +171,40 @@ function DashboardConteudo() {
     const agendamentosOrdenados = [...agendamentos].sort(
       (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
     );
-// ✅ CORREÇÃO: Cálculos usando a função corrigida
-const agendamentosHoje = agendamentos.filter((a: any) => 
-  isMesmoDia(a.data, hoje)
-).length;
+    
+    // Correção de cálculos e filtragem de dados
+    const agendamentosHoje = agendamentos.filter((a: any) => isMesmoDia(a.data, hoje)).length;
+    const concluidosHoje = agendamentos.filter((a: any) => isMesmoDia(a.data, hoje) && a.status === "Concluído").length;
 
-const concluidosHoje = agendamentos.filter((a: any) => 
-  isMesmoDia(a.data, hoje) && a.status === "Concluído"
-).length;
+    const faturamentoHoje = financeiro
+      .filter((f: any) => isMesmoDia(f.criadoEm, hoje) && f.status === "Pago")
+      .reduce((acc: number, curr: any) => acc + curr.valor, 0);
 
-// ✅ CORREÇÃO: Financeiro de hoje também usando a mesma lógica
-const faturamentoHoje = financeiro
-  .filter((f: any) => isMesmoDia(f.criadoEm, hoje) && f.status === "Pago")
-  .reduce((acc: number, curr: any) => acc + curr.valor, 0);
+    // Métricas mensais
+    const agendamentosMes = agendamentos.filter((a: any) => {
+      const d = new Date(a.data);
+      return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+    }).length;
 
-// Métricas mensais
-const agendamentosMes = agendamentos.filter((a: any) => {
-  const d = new Date(a.data);
-  return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
-}).length;
+    const faturamentoMensal = financeiro
+      .filter((f: any) => {
+        const d = new Date(f.criadoEm);
+        return d.getMonth() === mesAtual && d.getFullYear() === anoAtual && f.status === "Pago";
+      })
+      .reduce((acc: number, curr: any) => acc + curr.valor, 0);
 
-const faturamentoMensal = financeiro
-  .filter((f: any) => {
-    const d = new Date(f.criadoEm);
-    return d.getMonth() === mesAtual && d.getFullYear() === anoAtual && f.status === "Pago";
-  })
-  .reduce((acc: number, curr: any) => acc + curr.valor, 0);
-
-// Totais gerais
-const totalConcluidos = agendamentos.filter((a: any) => a.status === "Concluído").length;
-const totalCancelados = agendamentos.filter((a: any) => a.status === "Cancelado").length;
-const totalNaoCompareceu = agendamentos.filter((a: any) => a.status === "Não Compareceu").length;
-const totalAgendados = agendamentos.filter((a: any) => a.status === "Agendado").length;
+    // Totais gerais
+    const totalConcluidos = agendamentos.filter((a: any) => a.status === "Concluído").length;
+    const totalCancelados = agendamentos.filter((a: any) => a.status === "Cancelado").length;
+    const totalNaoCompareceu = agendamentos.filter((a: any) => a.status === "Não Compareceu").length;
+    const totalAgendados = agendamentos.filter((a: any) => a.status === "Agendado").length;
 
     // Relatório anual
-const relatorioAnual = relatorios.find((r: any) => {
-  const relatorioDate = new Date(r.mesAno);
-  return relatorioDate.getFullYear() === anoAtual && relatorioDate.getMonth() === mesAtual;
-});
+    const relatorioAnual = relatorios.find((r: any) => {
+      const relatorioDate = new Date(r.mesAno);
+      return relatorioDate.getFullYear() === anoAtual && relatorioDate.getMonth() === mesAtual;
+    });
+    
     const faturamentoAnual = relatorioAnual?.faturamento || 0;
     const agendamentosAnuais = relatorioAnual?.agendamentos || 0;
 
@@ -283,6 +279,7 @@ const relatorioAnual = relatorios.find((r: any) => {
   );
 }
 
+// COMPONENTE PRINCIPAL COM CADEADO DE ACESSO
 export default function AdminHome() {
   return (
     <CadeadoAcesso>

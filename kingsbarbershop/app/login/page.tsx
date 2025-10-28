@@ -17,7 +17,7 @@ const LOCKOUT_TIME = 5 * 60 * 1000;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, loading } = useAuth();
+  const { login, isAuthenticated, loading, error } = useAuth();
 
   const [form, setForm] = useState<LoginData>({ email: "", password: "" });
   const [touched, setTouched] = useState({ email: false, password: false });
@@ -28,10 +28,12 @@ export default function LoginPage() {
 
   const emailInputRef = useRef<HTMLInputElement>(null);
 
+  // Foco no email ao montar
   useEffect(() => {
     if (!lockoutUntil && emailInputRef.current) emailInputRef.current.focus();
   }, [lockoutUntil]);
 
+  // Recupera tentativas anteriores
   useEffect(() => {
     const savedAttempts = localStorage.getItem("loginAttempts");
     const savedLockout = localStorage.getItem("loginLockout");
@@ -44,6 +46,29 @@ export default function LoginPage() {
       localStorage.removeItem("loginLockout");
     }
   }, []);
+
+  // Checa role e redireciona
+  const checkUserRoleAndRedirect = () => {
+    try {
+      const userData = localStorage.getItem("user");
+      let role = userData ? JSON.parse(userData).role?.toUpperCase() : null;
+
+      const isAdminOrBarbeiro = ["ADMIN", "BARBEIRO"].includes(role);
+      router.push(isAdminOrBarbeiro ? "/dashboard" : "/agendamentos");
+    } catch {
+      router.push("/agendamentos");
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) checkUserRoleAndRedirect();
+  }, [isAuthenticated]);
+
+  const isValidForm = (email: string, password: string) =>
+    email.includes("@") && email.includes(".") && email.length > 5 && password.length >= 6;
+
+  const isLocked = lockoutUntil !== null && Date.now() < lockoutUntil;
+  const canSubmit = !isLocked && form.email && form.password && !loading && !isSubmitting;
 
   const handleFailedAttempt = () => {
     const newAttempts = attempts + 1;
@@ -63,50 +88,38 @@ export default function LoginPage() {
     localStorage.removeItem("loginLockout");
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setTouched({ email: true, password: true });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTouched({ email: true, password: true });
 
-  if (!form.email.includes("@") || form.password.length < 6 || lockoutUntil) {
-    setValidationError("Verifique seus dados e tente novamente");
-    return;
-  }
-
-  setIsSubmitting(true);
-  setValidationError(null);
-
-  try {
-    await login({ email: form.email.trim(), password: form.password.trim() });
-    handleSuccessfulAttempt();
-
-    const role = (localStorage.getItem("role") || "").toUpperCase();
-
-    // Redireciona conforme role
-    if (role === "ADMIN" || role === "BARBEIRO") {
-      router.push("/dashboard");
-    } else {
-      router.push("/agendamentos");
+    if (!canSubmit || !isValidForm(form.email, form.password)) {
+      setValidationError("Verifique seus dados e tente novamente");
+      return;
     }
-  } catch {
-    handleFailedAttempt();
-    setValidationError("Erro ao fazer login. Tente novamente.");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
 
+    setIsSubmitting(true);
+    setValidationError(null);
+
+    try {
+      await login({ email: form.email.trim(), password: form.password.trim() });
+      handleSuccessfulAttempt();
+      setTimeout(() => checkUserRoleAndRedirect(), 300);
+    } catch {
+      handleFailedAttempt();
+      setValidationError("Erro ao fazer login. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: name === "email" ? value.replace(/[<>]/g, "") : value }));
     if (validationError) setValidationError(null);
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) =>
     setTouched((prev) => ({ ...prev, [e.target.name]: true }));
-
-  const isLocked = lockoutUntil !== null && Date.now() < lockoutUntil;
-  const canSubmit = !isLocked && form.email && form.password && !loading && !isSubmitting;
 
   const getLockoutTimeLeft = () =>
     lockoutUntil ? Math.ceil((lockoutUntil - Date.now()) / 1000 / 60) : 0;
@@ -136,9 +149,9 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
           )}
 
-          {validationError && (
+          {(error || validationError) && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
-              <p className="text-red-400 text-sm">{validationError}</p>
+              <p className="text-red-400 text-sm">{error || validationError}</p>
             </div>
           )}
 

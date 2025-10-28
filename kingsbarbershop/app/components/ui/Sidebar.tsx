@@ -38,9 +38,10 @@ export default function Sidebar({
 
     try {
       const userData = localStorage.getItem("user");
+      
       if (userData) {
         const parsedUser = JSON.parse(userData);
-        userRole = parsedUser.role || ""; // Remover toLowerCase(), se não for necessário
+        userRole = parsedUser.role || ""; 
       }
 
       setRole(userRole);

@@ -14,21 +14,24 @@ export default function Footer() {
           </address>
           
           <div className="text-gray-500 text-xs">
-            <p className="px-2 leading-5 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
-              <span className="flex items-center gap-1 md:gap-2">
+            <div className="px-2 leading-5 flex flex-col sm:flex-row items-center justify-center gap-1 md:gap-2">
+              {/* Primeira linha - Desenvolvido por Toledo Software */}
+              <span className="flex items-center justify-center gap-1 flex-wrap">
                 <span>Desenvolvido por</span>
-                <span className="text-gray-400 font-medium">Toledo Software</span>
-                <span className="hidden md:inline">•</span>
+                <span className="text-gray-400 font-medium whitespace-nowrap">Toledo Software</span>
               </span>
               
-              <span className="flex items-center gap-1">
+              {/* Separador */}
+              <span className="hidden sm:inline text-gray-600">•</span>
+              
+              {/* Segunda linha - Copyright */}
+              <span className="flex items-center justify-center gap-1 flex-wrap">
                 <span className="text-gray-400">©</span>
                 <span>{currentYear}</span>
-                {/* <span>Toledo Software</span> */}
-                <span>-</span>
+                <span className="text-gray-600">-</span>
                 <span>Todos os direitos reservados</span>
               </span>
-            </p>
+            </div>
           </div>
         </div>
       </div>

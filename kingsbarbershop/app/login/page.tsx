@@ -47,28 +47,15 @@ export default function LoginPage() {
     }
   }, []);
 
-  // Checa role e redireciona
-  const checkUserRoleAndRedirect = () => {
-    try {
-      const userData = localStorage.getItem("user");
-      let role = userData ? JSON.parse(userData).role?.toUpperCase() : null;
-
-      const isAdminOrBarbeiro = ["ADMIN", "BARBEIRO"].includes(role);
-      router.push(isAdminOrBarbeiro ? "/dashboard" : "/agendamentos");
-    } catch {
-      router.push("/agendamentos");
-    }
-  };
-
-  useEffect(() => {
-    if (isAuthenticated) checkUserRoleAndRedirect();
-  }, [isAuthenticated]);
+  // ---------- FUNÇÕES AUXILIARES ----------
+  const isLocked = lockoutUntil !== null && Date.now() < lockoutUntil;
+  const canSubmit = !isLocked && form.email && form.password && !loading && !isSubmitting;
 
   const isValidForm = (email: string, password: string) =>
     email.includes("@") && email.includes(".") && email.length > 5 && password.length >= 6;
 
-  const isLocked = lockoutUntil !== null && Date.now() < lockoutUntil;
-  const canSubmit = !isLocked && form.email && form.password && !loading && !isSubmitting;
+  const getLockoutTimeLeft = () =>
+    lockoutUntil ? Math.ceil((lockoutUntil - Date.now()) / 1000 / 60) : 0;
 
   const handleFailedAttempt = () => {
     const newAttempts = attempts + 1;
@@ -88,6 +75,22 @@ export default function LoginPage() {
     localStorage.removeItem("loginLockout");
   };
 
+  const checkUserRoleAndRedirect = () => {
+    try {
+      const userData = localStorage.getItem("user");
+      let role = userData ? JSON.parse(userData).role?.toUpperCase() : null;
+      router.push(["ADMIN", "BARBEIRO"].includes(role) ? "/dashboard" : "/agendamentos");
+    } catch {
+      router.push("/agendamentos");
+    }
+  };
+
+  // Redireciona se já estiver autenticado
+  useEffect(() => {
+    if (isAuthenticated) checkUserRoleAndRedirect();
+  }, [isAuthenticated]);
+
+  // ---------- EVENTOS ----------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({ email: true, password: true });
@@ -114,19 +117,20 @@ export default function LoginPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: name === "email" ? value.replace(/[<>]/g, "") : value }));
+    setForm((prev) => ({
+      ...prev,
+      [name]: name === "email" ? value.replace(/[<>]/g, "") : value,
+    }));
     if (validationError) setValidationError(null);
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) =>
     setTouched((prev) => ({ ...prev, [e.target.name]: true }));
 
-  const getLockoutTimeLeft = () =>
-    lockoutUntil ? Math.ceil((lockoutUntil - Date.now()) / 1000 / 60) : 0;
-
+  // ---------- RENDER ----------
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#1A1A2E] to-[#16213E] flex items-center justify-center p-4 relative">
-      {loading && <FullScreenLoader />}
+      {(loading || isSubmitting) && <FullScreenLoader />}
 
       <div className="relative w-full max-w-md z-10">
         <form

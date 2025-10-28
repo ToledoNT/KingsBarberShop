@@ -1,13 +1,36 @@
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+  
   return (
-    <footer className="w-full bg-[#0D0D0D] py-3 border-t border-gray-800">
-      <div className="container mx-auto px-6 text-center">
-        <p className="text-gray-400 text-xs tracking-tight">
-          Av. Alto Jacuí, 572 • Sala 17 • Centro • Não-Me-Toque/RS
-        </p>
-        <p className="text-gray-500 text-xs tracking-tight mt-1">
-          Desenvolvido por Toledo Software• © {new Date().getFullYear()}
-        </p>
+    <footer 
+      className="w-full bg-[#0D0D0D] py-4 md:py-6 border-t border-gray-800"
+      role="contentinfo"
+      aria-label="Rodapé"
+    >
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="text-center space-y-2 md:space-y-3">
+          <address className="text-gray-300 text-xs md:text-sm leading-relaxed not-italic px-2">
+            Av. Alto Jacuí, 572 • Sala 17 • Centro • Não-Me-Toque/RS
+          </address>
+          
+          <div className="text-gray-500 text-xs">
+            <p className="px-2 leading-5 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+              <span className="flex items-center gap-1 md:gap-2">
+                <span>Desenvolvido por</span>
+                <span className="text-gray-400 font-medium">Toledo Software</span>
+                <span className="hidden md:inline">•</span>
+              </span>
+              
+              <span className="flex items-center gap-1">
+                <span className="text-gray-400">©</span>
+                <span>{currentYear}</span>
+                {/* <span>Toledo Software</span> */}
+                <span>-</span>
+                <span>Todos os direitos reservados</span>
+              </span>
+            </p>
+          </div>
+        </div>
       </div>
     </footer>
   );

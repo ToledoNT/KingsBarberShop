@@ -13,11 +13,11 @@ const FullScreenLoader = () => (
 );
 
 const MAX_ATTEMPTS = 5;
-const LOCKOUT_TIME = 5 * 60 * 1000;
+const LOCKOUT_TIME = 5 * 60 * 1000; // 5 minutos
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated, loading, error } = useAuth();
+  const { login, loading } = useAuth();
 
   const [form, setForm] = useState<LoginData>({ email: "", password: "" });
   const [touched, setTouched] = useState({ email: false, password: false });
@@ -28,12 +28,11 @@ export default function LoginPage() {
 
   const emailInputRef = useRef<HTMLInputElement>(null);
 
-  // Foco no email ao montar
   useEffect(() => {
     if (!lockoutUntil && emailInputRef.current) emailInputRef.current.focus();
   }, [lockoutUntil]);
 
-  // Recupera tentativas anteriores
+  // Recupera tentativas e lockout do localStorage
   useEffect(() => {
     const savedAttempts = localStorage.getItem("loginAttempts");
     const savedLockout = localStorage.getItem("loginLockout");
@@ -47,12 +46,8 @@ export default function LoginPage() {
     }
   }, []);
 
-  // ---------- FUNÇÕES AUXILIARES ----------
   const isLocked = lockoutUntil !== null && Date.now() < lockoutUntil;
   const canSubmit = !isLocked && form.email && form.password && !loading && !isSubmitting;
-
-  const isValidForm = (email: string, password: string) =>
-    email.includes("@") && email.includes(".") && email.length > 5 && password.length >= 6;
 
   const getLockoutTimeLeft = () =>
     lockoutUntil ? Math.ceil((lockoutUntil - Date.now()) / 1000 / 60) : 0;
@@ -75,59 +70,58 @@ export default function LoginPage() {
     localStorage.removeItem("loginLockout");
   };
 
-  const checkUserRoleAndRedirect = () => {
-    try {
-      const userData = localStorage.getItem("user");
-      let role = userData ? JSON.parse(userData).role?.toUpperCase() : null;
-      router.push(["ADMIN", "BARBEIRO"].includes(role) ? "/dashboard" : "/agendamentos");
-    } catch {
+  const isValidForm = (email: string, password: string) =>
+    email.includes("@") && email.includes(".") && email.length > 5 && password.length >= 6;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setTouched({ email: true, password: true });
+
+  if (isLocked) {
+    setValidationError(`Muitas tentativas. Tente novamente em ${getLockoutTimeLeft()} minutos.`);
+    return;
+  }
+
+  if (!isValidForm(form.email, form.password)) {
+    setValidationError("Verifique seus dados e tente novamente");
+    return;
+  }
+
+  setIsSubmitting(true);
+  setValidationError(null);
+
+  try {
+    // Dispara login (AuthService já salva role no localStorage)
+    await login({ email: form.email.trim(), password: form.password.trim() });
+    handleSuccessfulAttempt();
+
+    // Pega role direto do localStorage
+    const role = (localStorage.getItem("role") || "").toUpperCase();
+
+    if (role === "ADMIN") {
+      router.push("/dashboard");
+    } else if (role === "BARBEIRO") {
+      router.push("/agendamentos");
+    } else {
       router.push("/agendamentos");
     }
-  };
-
-  // Redireciona se já estiver autenticado
-  useEffect(() => {
-    if (isAuthenticated) checkUserRoleAndRedirect();
-  }, [isAuthenticated]);
-
-  // ---------- EVENTOS ----------
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setTouched({ email: true, password: true });
-
-    if (!canSubmit || !isValidForm(form.email, form.password)) {
-      setValidationError("Verifique seus dados e tente novamente");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setValidationError(null);
-
-    try {
-      await login({ email: form.email.trim(), password: form.password.trim() });
-      handleSuccessfulAttempt();
-      setTimeout(() => checkUserRoleAndRedirect(), 300);
-    } catch {
-      handleFailedAttempt();
-      setValidationError("Erro ao fazer login. Tente novamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  } catch {
+    handleFailedAttempt();
+    setValidationError("Erro ao fazer login. Tente novamente.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: name === "email" ? value.replace(/[<>]/g, "") : value,
-    }));
+    setForm((prev) => ({ ...prev, [name]: value }));
     if (validationError) setValidationError(null);
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) =>
     setTouched((prev) => ({ ...prev, [e.target.name]: true }));
 
-  // ---------- RENDER ----------
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#1A1A2E] to-[#16213E] flex items-center justify-center p-4 relative">
       {(loading || isSubmitting) && <FullScreenLoader />}
@@ -153,9 +147,9 @@ export default function LoginPage() {
             </div>
           )}
 
-          {(error || validationError) && (
+          {validationError && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
-              <p className="text-red-400 text-sm">{error || validationError}</p>
+              <p className="text-red-400 text-sm">{validationError}</p>
             </div>
           )}
 

@@ -28,19 +28,17 @@ export default function LoginPage() {
 
   const emailInputRef = useRef<HTMLInputElement>(null);
 
-  // Foca no input se não estiver bloqueado
   useEffect(() => {
     if (!lockoutUntil && emailInputRef.current) emailInputRef.current.focus();
   }, [lockoutUntil]);
 
-  // Recupera tentativas e bloqueio do localStorage
   useEffect(() => {
     const savedAttempts = localStorage.getItem("loginAttempts");
     const savedLockout = localStorage.getItem("loginLockout");
 
-    if (savedAttempts) setAttempts(Number(savedAttempts));
-    if (savedLockout && Date.now() < Number(savedLockout)) {
-      setLockoutUntil(Number(savedLockout));
+    if (savedAttempts) setAttempts(parseInt(savedAttempts, 10));
+    if (savedLockout && Date.now() < parseInt(savedLockout, 10)) {
+      setLockoutUntil(parseInt(savedLockout, 10));
     } else {
       localStorage.removeItem("loginAttempts");
       localStorage.removeItem("loginLockout");
@@ -65,36 +63,38 @@ export default function LoginPage() {
     localStorage.removeItem("loginLockout");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setTouched({ email: true, password: true });
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setTouched({ email: true, password: true });
 
-    if (!form.email.includes("@") || form.password.length < 6 || lockoutUntil) {
-      setValidationError("Verifique seus dados e tente novamente");
-      return;
+  if (!form.email.includes("@") || form.password.length < 6 || lockoutUntil) {
+    setValidationError("Verifique seus dados e tente novamente");
+    return;
+  }
+
+  setIsSubmitting(true);
+  setValidationError(null);
+
+  try {
+    await login({ email: form.email.trim(), password: form.password.trim() });
+    handleSuccessfulAttempt();
+
+    const role = (localStorage.getItem("role") || "").toUpperCase();
+
+    // Redireciona conforme role
+    if (role === "ADMIN" || role === "BARBEIRO") {
+      router.push("/dashboard");
+    } else {
+      router.push("/agendamentos");
     }
+  } catch {
+    handleFailedAttempt();
+    setValidationError("Erro ao fazer login. Tente novamente.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-    setIsSubmitting(true);
-    setValidationError(null);
-
-    try {
-      await login({ email: form.email.trim(), password: form.password.trim() });
-      handleSuccessfulAttempt();
-
-      const role = (localStorage.getItem("role") || "").toUpperCase();
-
-      if (role === "ADMIN" || role === "BARBEIRO") {
-        router.push("/dashboard");
-      } else {
-        router.push("/agendamentos");
-      }
-    } catch {
-      handleFailedAttempt();
-      setValidationError("Erro ao fazer login. Tente novamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -113,7 +113,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#1A1A2E] to-[#16213E] flex items-center justify-center p-4 relative">
-      {(loading || isSubmitting) && <FullScreenLoader />}
+      {loading && <FullScreenLoader />}
 
       <div className="relative w-full max-w-md z-10">
         <form
@@ -158,7 +158,7 @@ export default function LoginPage() {
                 onBlur={handleBlur}
                 className="w-full p-4 rounded-2xl bg-[#2A2A2A]/80 border border-gray-700/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 transition-all duration-300"
                 required
-                disabled={isLocked || loading || isSubmitting}
+                disabled={isLocked || loading}
                 autoComplete="email"
               />
               {touched.email && form.email && !form.email.includes("@") && (
@@ -180,7 +180,7 @@ export default function LoginPage() {
                 onBlur={handleBlur}
                 className="w-full p-4 rounded-2xl bg-[#2A2A2A]/80 border border-gray-700/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 transition-all duration-300"
                 required
-                disabled={isLocked || loading || isSubmitting}
+                disabled={isLocked || loading}
                 maxLength={100}
                 autoComplete="current-password"
               />
@@ -190,17 +190,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            fullWidth
-            disabled={!canSubmit}
-          >
-            {isLocked
-              ? "Acesso Temporariamente Bloqueado"
-              : isSubmitting
-              ? "Verificando..."
-              : "Entrar"}
+          <Button type="submit" variant="primary" fullWidth disabled={!canSubmit || isSubmitting}>
+            {isLocked ? "Acesso Temporariamente Bloqueado" : isSubmitting ? "Verificando..." : "Entrar"}
           </Button>
         </form>
       </div>

@@ -23,7 +23,6 @@ export function useAuth(): UseAuthReturn {
       localStorage.setItem("user", JSON.stringify(user)); 
       localStorage.setItem("userRole", user.role); 
 
-      console.log("Usuário autenticado com sucesso:", user);
 
       setIsAuthenticated(true);
       router.push("/dashboard");
@@ -31,7 +30,6 @@ export function useAuth(): UseAuthReturn {
       const message = err?.response?.data?.message || err.message || "Erro ao logar";
       setError(message);
       setIsAuthenticated(false);
-      console.log("Erro no login:", message);
     } finally {
       setLoading(false);
     }
@@ -63,11 +61,9 @@ export function useAuth(): UseAuthReturn {
 
     try {
       const valid: boolean = await authService.verifyToken();
-      console.log("Token válido?", valid);
 
       if (valid) {
         const storedRole = localStorage.getItem("userRole");
-        console.log("Role armazenado:", storedRole);
 
         if (!storedRole) {
           setIsAuthenticated(false);

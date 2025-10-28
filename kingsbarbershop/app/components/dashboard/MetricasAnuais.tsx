@@ -6,12 +6,12 @@ import { MetricasAnuaisProps } from "@/app/interfaces/dashboardInterface";
 
 const MetricasAnuais = ({ agendamentosAnuais, faturamentoAnual, anoAtual }: MetricasAnuaisProps) => {
   const faturamentoFormatado = useMemo(
-    () => `R$ ${faturamentoAnual.toLocaleString('pt-BR')}`,
+    () => `R$ ${faturamentoAnual.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     [faturamentoAnual]
   );
 
   const mediaMensalFormatada = useMemo(
-    () => `R$ ${Math.round(faturamentoAnual / 12).toLocaleString('pt-BR')}`,
+    () => `R$ ${Math.floor(faturamentoAnual / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     [faturamentoAnual]
   );
 

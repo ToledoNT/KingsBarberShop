@@ -18,7 +18,6 @@ export class ProfissionalService {
         method: "GET",
         ...(signal ? { signal } as any : {}),
       });
-      console.log(res);
       return res.data.data ?? [];
     } catch (err: any) {
       if (err.name === "CanceledError" || err.name === "AbortError") return [];
@@ -74,8 +73,6 @@ export class ProfissionalService {
       const res = await api.get<ResponseTemplateInterface<BarbeiroDadosResponse>>(
         `/horario/barbeiro/${profissionalId}`
       );
-
-      console.log(res);
 
       return {
         barbeiroId: res.data.data?.barbeiroId ?? profissionalId,

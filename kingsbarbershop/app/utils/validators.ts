@@ -5,7 +5,6 @@ export function validateEmail(email: string): boolean {
 export function trimField(value: string): string {
   return value.trim();
 }
-// Função para formatar o número de telefone
 export const formatPhoneNumber = (value: string) => {
   const cleaned = value.replace(/\D/g, "");
   if (cleaned.length <= 10) {

@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale/pt-BR";
@@ -10,7 +8,6 @@ import Button from "../ui/Button";
 import {
   Agendamento,
   AgendamentoForm,
-  HorarioDisponivel,
   StatusAgendamento,
   Procedimento,
   AgendamentoPrivadoFormProps,
@@ -40,9 +37,11 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
     barbeiro: "",
     data: null,
     hora: "",
-    servico: "",
+    servico: localStorage.getItem("selectedServicoId") || "", // Recupera o ID do serviço armazenado
     status: StatusAgendamento.PENDENTE,
   });
+
+  const [procedimentoNome, setProcedimentoNome] = useState<string>("");
 
   useEffect(() => {
     const loadAgendamento = async () => {
@@ -120,19 +119,36 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
     await onSave(payload);
   };
 
+const handleServicoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const selectedId = e.target.value;
+
+  const selectedServico = procedimentosBarbeiro.find((p) => p.id === selectedId);
+
+  setLocalForm({ ...localForm, servico: selectedId });
+
+  if (selectedServico) {
+    setProcedimentoNome(`${selectedServico.label} - R$ ${selectedServico.valor}`);
+
+    localStorage.setItem(
+      "selectedServico",
+      JSON.stringify({ label: selectedServico.label, valor: selectedServico.valor })
+    );
+
+  } else {
+    setProcedimentoNome('');
+    localStorage.removeItem("selectedServico");
+  }
+};
+
+
   return (
     <div className="w-full flex justify-center mt-6 mb-12 px-2 sm:px-4">
       <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-4 sm:p-6 md:p-8 bg-[#1B1B1B] rounded-2xl shadow-xl">
-        {/* TÍTULO AJUSTADO - Agora é mais genérico */}
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-6">
           {agendamento ? "Editar Agendamento" : "Agende seu Horário"}
         </h2>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-3 sm:gap-4"
-          noValidate
-        >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4" noValidate>
           <Input
             name="nome"
             value={localForm.nome}
@@ -185,7 +201,6 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
             onChange={(e) => setLocalForm({ ...localForm, hora: e.target.value })}
             options={(() => {
               if (!localForm.data) return [];
-
               const dataString = localForm.data.toISOString().split("T")[0];
               const horariosFiltrados = horarios.filter(
                 (h) => h.disponivel && h.data === dataString
@@ -200,16 +215,6 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
                   });
               });
 
-              if (localForm.hora && !mapHorarios.has(localForm.hora)) {
-                const h = horarios.find((h) => h.id === localForm.hora);
-                if (h && h.id) {
-                  mapHorarios.set(h.id, {
-                    value: h.id,
-                    label: h.label ?? `${h.inicio} - ${h.fim}`,
-                  });
-                }
-              }
-
               return Array.from(mapHorarios.values());
             })()}
             placeholder="Selecione o horário"
@@ -219,13 +224,17 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
           <Select
             name="servico"
             value={localForm.servico}
-            onChange={(e) => setLocalForm({ ...localForm, servico: e.target.value })}
+            onChange={handleServicoChange}
             options={procedimentosBarbeiro
               .filter((p): p is Procedimento & { id: string } => !!p.id)
               .map((p) => ({ value: p.id, label: p.label! }))}
             placeholder="Selecione o serviço"
             required
           />
+
+          {procedimentoNome && (
+            <p className="mt-2 text-sm text-gray-400">Serviço Selecionado: {procedimentoNome}</p>
+          )}
 
           {agendamento && (
             <Select
@@ -242,12 +251,7 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
           )}
 
           <div className="flex flex-col sm:flex-row justify-end gap-3 mt-4">
-            <Button
-              variant="secondary"
-              type="button"
-              onClick={onCancel}
-              className="w-full sm:w-auto"
-            >
+            <Button variant="secondary" type="button" onClick={onCancel} className="w-full sm:w-auto">
               Cancelar
             </Button>
             <Button type="submit" className="w-full sm:w-auto">

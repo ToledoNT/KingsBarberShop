@@ -111,7 +111,6 @@ const addAgendamento = async (a: Agendamento) => {
 
     if (newA && newA.id) {
       setAgendamentos((prev) => [...prev, newA]);
-      console.log("Agendamento criado com sucesso!");
     } else {
       console.error("Erro: Agendamento retornado incompleto ou inválido");
     }

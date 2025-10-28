@@ -14,17 +14,14 @@ import CadeadoAcesso from "../components/ui/LockAccess";
 import { Notification } from "../components/ui/componenteNotificacao";
 import { formatarDataBrasileira, formatarHorarioBrasileiro } from "../utils/validators";
 
-// Serviço de autenticação
 const authService = new AuthService();
 
-// Componente de Loading
 const LoadingSpinner = () => (
   <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5] items-center justify-center">
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FFA500]"></div>
   </div>
 );
 
-// Componente de Aviso de Permissão
 const AvisoPermissao = () => (
   <div className="flex-1 flex items-center justify-center p-6">
     <div className="text-center max-w-md mx-auto">
@@ -91,31 +88,31 @@ function DashboardConteudo() {
 
   // ------------------- VERIFICAÇÃO DE TOKEN -------------------
   useEffect(() => {
-  const verifyAuth = async () => {
-    setLoadingAuth(true);
-    try {
-      const valid = await authService.verifyToken();
-      if (!valid) {
+    const verifyAuth = async () => {
+      setLoadingAuth(true);
+      try {
+        const valid = await authService.verifyToken();
+        if (!valid) {
+          router.replace("/login");
+          return;
+        }
+
+        const storedRole = localStorage.getItem("userRole");
+        if (storedRole !== "ADMIN") {
+          router.replace("/agendamentos"); 
+        } else {
+          setIsAuthenticated(true);
+        }
+      } catch (err) {
+        console.error("Erro na verificação de token:", err);
         router.replace("/login");
-        return;
+      } finally {
+        setLoadingAuth(false);
       }
+    };
 
-      const storedRole = localStorage.getItem("userRole");
-      if (storedRole !== "ADMIN") {
-        router.replace("/agendamentos"); 
-      } else {
-        setIsAuthenticated(true);
-      }
-    } catch (err) {
-      console.error("Erro na verificação de token:", err);
-      router.replace("/login");
-    } finally {
-      setLoadingAuth(false);
-    }
-  };
-
-  verifyAuth();
-}, [router]);
+    verifyAuth();
+  }, [router]);
 
   // FUNÇÃO PARA MOSTRAR NOTIFICAÇÃO
   const showNotification = (message: string, type: "info" | "success" | "warning" | "error" = "success") => {
@@ -208,7 +205,7 @@ function DashboardConteudo() {
     // Relatório anual
     const relatorioAnual = relatorios.find((r: any) => {
       const relatorioDate = new Date(r.mesAno);
-      return relatorioDate.getFullYear() === anoAtual && relatorioDate.getMonth() === mesAtual;
+      return relatorioDate.getFullYear() === anoAtual;
     });
     
     const faturamentoAnual = relatorioAnual?.faturamento || 0;

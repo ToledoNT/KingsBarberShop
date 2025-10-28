@@ -9,11 +9,10 @@ import { Agendamento } from "./interfaces/agendamentoInterface";
 import { Notification } from "./components/ui/componenteNotificacao";
 import { ConfirmDialog } from "./components/ui/componenteConfirmação";
 
-// Função para formatar a data corretamente (resolvendo problema do fuso horário)
 const formatarDataBrasileira = (dataString: string) => {
   const data = new Date(dataString);
-  const dataAjustada = new Date(data.getTime() + (3 * 60 * 60 * 1000));
-  
+  const dataAjustada = new Date(data.getTime() + (3 * 60 * 60 * 1000)); 
+
   return dataAjustada.toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
@@ -39,9 +38,9 @@ export default function Home() {
   }>({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
 
   const [formKey, setFormKey] = useState(0);
-  const [showForm, setShowForm] = useState(false); // Novo estado para controlar a exibição do formulário
+  const [showForm, setShowForm] = useState(false);
 
-  const whatsappNumber = "5511999999999";
+  const whatsappNumber = "555499229241";
   const whatsappMessage = "Olá! Gostaria de mais informações sobre os serviços da barbearia.";
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
 
@@ -77,40 +76,32 @@ export default function Home() {
     notify("ℹ️ Agendamento cancelado. Clique em 'Agendar Agora' quando quiser marcar seu horário.", "info");
   };
 
+  // Função de confirmação de agendamento
   const confirmarAgendamento = (agendamento: Agendamento): Promise<boolean> => {
     return new Promise((resolve) => {
-      console.log("DEBUG - Agendamento recebido:", agendamento);
-      console.log("DEBUG - Procedimentos disponíveis:", procedimentosBarbeiro);
-      
-      // Buscar dados reais
+
       const barbeiroSelecionado = barbeiros.find(b => b.id === agendamento.barbeiro);
       const barbeiroNome = barbeiroSelecionado?.nome || "Barbeiro não encontrado";
-      
-      // CORREÇÃO: Buscar o serviço da mesma forma que no formulário
+
+      // Recuperando o serviço do localStorage (parseando o objeto JSON)
       let procedimentoNome = "Serviço não selecionado";
-      
-      if (agendamento.servico) {
-        const procedimentoSelecionado = procedimentosBarbeiro
-          .filter((p): p is any => !!p.id)
-          .find(p => p.id === agendamento.servico);
-        
-        if (procedimentoSelecionado) {
-          procedimentoNome = procedimentoSelecionado.label || procedimentoSelecionado.nome || "Serviço";
-        } else {
-          procedimentoNome = agendamento.servico;
-        }
+      const savedServico = localStorage.getItem('selectedServico');
+      if (savedServico) {
+        const parsedServico = JSON.parse(savedServico);
+        procedimentoNome = parsedServico.label || "Serviço não encontrado";
       }
 
+      // Recuperando dados do horário
       const horarioSelecionado = horarios.find(h => h.id === agendamento.hora);
       const horarioLabel = horarioSelecionado?.label || `${horarioSelecionado?.inicio} - ${horarioSelecionado?.fim}` || "Horário não encontrado";
 
-      // CORREÇÃO: Usar a função para formatar a data corretamente
+      // Formatando a data
       const dataFormatada = formatarDataBrasileira(agendamento.data);
-      
-      // Confirmação com scroll suave
+
+      // Confirmação com os detalhes do agendamento
       const mensagemConfirmacao = (
         <div className="space-y-4">
-          {/* Cabeçalho compacto */}
+          {/* Cabeçalho */}
           <div className="text-center">
             <div className="w-10 h-10 bg-gradient-to-br from-[#FFA500] to-[#FF8C00] rounded-full flex items-center justify-center mx-auto mb-2">
               <span className="text-white text-base">📋</span>
@@ -118,8 +109,8 @@ export default function Home() {
             <h3 className="text-white font-bold text-base mb-1">Confirmar Agendamento</h3>
             <p className="text-gray-300 text-xs">Revise os detalhes abaixo</p>
           </div>
-          
-          {/* Container com scroll suave */}
+
+          {/* Detalhes do agendamento */}
           <div className="bg-gradient-to-br from-[#1E1E1E] to-[#2A2A2A] border border-[#FFA500]/20 rounded-lg p-3 max-h-[45vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFA500] scrollbar-track-gray-700">
             <div className="space-y-2">
               {/* Barbeiro */}
@@ -132,8 +123,8 @@ export default function Home() {
                   <p className="font-semibold text-white text-sm truncate">{barbeiroNome}</p>
                 </div>
               </div>
-              
-              {/* Data e Horário lado a lado */}
+
+              {/* Data e Horário */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex items-center gap-2 p-2 bg-white/5 rounded-md">
                   <div className="w-6 h-6 bg-[#FFA500]/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -144,7 +135,7 @@ export default function Home() {
                     <p className="font-semibold text-white text-xs">{dataFormatada}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2 p-2 bg-white/5 rounded-md">
                   <div className="w-6 h-6 bg-[#FFA500]/20 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-[#FFA500] text-xs">⏰</span>
@@ -155,7 +146,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Cliente */}
               <div className="flex items-center gap-2 p-2 bg-white/5 rounded-md">
                 <div className="w-7 h-7 bg-[#FFA500]/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -166,7 +157,7 @@ export default function Home() {
                   <p className="font-semibold text-white text-sm truncate">{agendamento.nome}</p>
                 </div>
               </div>
-              
+
               {/* Serviço */}
               <div className="flex items-center gap-2 p-2 bg-white/5 rounded-md">
                 <div className="w-7 h-7 bg-[#FFA500]/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -177,34 +168,9 @@ export default function Home() {
                   <p className="font-semibold text-white text-sm truncate">{procedimentoNome}</p>
                 </div>
               </div>
-              
-              {/* Contatos - condicionais */}
-              {agendamento.telefone && (
-                <div className="flex items-center gap-2 p-2 bg-white/5 rounded-md">
-                  <div className="w-7 h-7 bg-[#FFA500]/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-[#FFA500] text-xs">📞</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-400 font-medium">Telefone</p>
-                    <p className="font-semibold text-white text-sm truncate">{agendamento.telefone}</p>
-                  </div>
-                </div>
-              )}
-              
-              {agendamento.email && (
-                <div className="flex items-center gap-2 p-2 bg-white/5 rounded-md">
-                  <div className="w-7 h-7 bg-[#FFA500]/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-[#FFA500] text-xs">📧</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-400 font-medium">Email</p>
-                    <p className="font-semibold text-white text-sm truncate">{agendamento.email}</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
-          
+
           {/* Mensagem de confirmação */}
           <div className="text-center pt-2">
             <p className="text-[#FFA500] font-semibold text-sm">Confirmar este agendamento?</p>
@@ -218,7 +184,6 @@ export default function Home() {
 
   const handleSaveAgendamento = async (agendamento: Agendamento) => {
     try {
-      console.log("Dados do agendamento para salvar:", agendamento);
       
       const confirmado = await confirmarAgendamento(agendamento);
       
@@ -237,7 +202,7 @@ export default function Home() {
       await addAgendamento(payload);
       notify("✅ Agendamento realizado com sucesso! Te esperamos na barbearia! 🎉", "success");
       setFormKey(prev => prev + 1);
-      setShowForm(false); // Esconde o formulário após agendamento bem-sucedido
+      setShowForm(false); 
 
     } catch (err) {
       console.error("Erro ao salvar agendamento:", err);
@@ -246,7 +211,7 @@ export default function Home() {
   };
 
   const handleCancel = () => {
-    handleHideForm(); // Usa a função de esconder formulário
+    handleHideForm(); 
   };
 
   return (
@@ -285,12 +250,11 @@ export default function Home() {
 
       {/* Conteúdo Principal */}
       <div className="flex-1 container mx-auto px-3 sm:px-6 lg:px-8 py-4">
-        
         {/* Header compacto */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
             <Image 
-              src="/logo1.png" 
+              src="/kingsbarber2.png" 
               alt="Logo da Barbearia" 
               width={120}
               height={25}
@@ -332,28 +296,24 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Botão para mostrar formulário - MAIS ELEGANTE E MODERNO */}
+          {/* Botão para mostrar formulário */}
           {!showForm && (
             <div className="mt-6 lg:mt-8">
               <button
                 onClick={handleShowForm}
                 className="group relative bg-gradient-to-r from-[#FFA500] to-[#FF8C00] hover:from-[#FF8C00] hover:to-[#FF6B00] text-white font-bold py-4 px-10 rounded-xl shadow-2xl transition-all duration-500 transform hover:scale-105 hover:shadow-3xl text-lg overflow-hidden"
               >
-                {/* Efeito de brilho */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 
-                {/* Conteúdo do botão */}
                 <div className="relative flex items-center justify-center gap-3">
                   <span className="text-xl transition-transform duration-300 group-hover:scale-110">📅</span>
                   <span className="transition-all duration-300 group-hover:tracking-wider">Agendar Agora</span>
                 </div>
                 
-                {/* Borda animada */}
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FFA500] to-[#FF8C00] opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
                 <div className="absolute inset-[2px] rounded-xl bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A] -z-10"></div>
               </button>
               
-              {/* Texto abaixo do botão */}
               <p className="text-gray-400 text-xs mt-3 animate-pulse">
                 Clique para fazer seu agendamento
               </p>

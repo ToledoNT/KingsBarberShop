@@ -34,8 +34,6 @@ async login(data: LoginData): Promise<LoginResult> {
   // ---------------- VERIFICAR TOKEN ----------------2
   async verifyToken(): Promise<boolean> {
     try {
-      console.log("Verificando token...");
-
       const response = await api.get<VerifyTokenResponse>("/auth/verify");
 
       return response.data.status === true;  
@@ -48,12 +46,9 @@ async login(data: LoginData): Promise<LoginResult> {
   // ---------------- LOGOUT ----------------
   async logout(): Promise<void> {
     try {
-      console.log("Fazendo logout...");
-
       await api.post("/auth/logout");
 
       localStorage.removeItem("role"); 
-      console.log("Logout realizado com sucesso.");
     } catch (err: any) {
       console.error("Erro durante o logout:", err);
       throw err; 

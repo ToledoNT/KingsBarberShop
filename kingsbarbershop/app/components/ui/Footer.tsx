@@ -1,15 +1,14 @@
 export default function Footer() {
   return (
-    <footer className="w-full bg-[#0D0D0D] text-[#A3A3A3] py-6 border-t border-gray-700 flex flex-col items-center px-6">
-      {/* Endereço da barbearia */}
-      <p className="text-sm sm:text-base text-center text-[#8A8A8A]">
-        Avenida Alto Jacuí, 123 - Centro, Não-Me-Toque, Rio Grande do Sul
-      </p>
-      
-      {/* Crédito de desenvolvimento */}
-      <p className="text-sm sm:text-base text-center mt-3">
-        © {new Date().getFullYear()} Software Toledo. Todos os direitos reservados.
-      </p>
+    <footer className="w-full bg-[#0D0D0D] py-3 border-t border-gray-800">
+      <div className="container mx-auto px-6 text-center">
+        <p className="text-gray-400 text-xs tracking-tight">
+          Av. Alto Jacuí, 572 • Sala 17 • Centro • Não-Me-Toque/RS
+        </p>
+        <p className="text-gray-500 text-xs tracking-tight mt-1">
+          Desenvolvido por Toledo Software• © {new Date().getFullYear()}
+        </p>
+      </div>
     </footer>
   );
 }

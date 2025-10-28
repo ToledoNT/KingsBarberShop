@@ -114,7 +114,6 @@ export function AgendamentosGrid({ agendamentos, onStatusChange }: AgendamentosG
         </div>
       ), { duration: Infinity });
     } else {
-      // Status que não precisam de confirmação (AGENDADO, EM_ANDAMENTO)
       onStatusChange?.(agendamento.id!, novoStatus);
     }
   };

@@ -28,16 +28,16 @@ export interface LoginResponseData {
 }
 
 export interface LoginResult {
-  id: string;    // ID do usuário
-  email: string; // E-mail do usuário
-  name: string;  // Nome do usuário
-  role: string;  // Adiciona a propriedade role
+  id: string;    
+  email: string; 
+  name: string;  
+  role: string;  
 }
 
 export interface LoginResult {
-  id: string;    // ID do usuário
-  email: string; // E-mail do usuário
-  name: string;  // Nome do usuário
+  id: string;    
+  email: string; 
+  name: string; 
 }
 
 export interface VerifyTokenResponse {

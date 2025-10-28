@@ -12,7 +12,6 @@ export class ProcedimentoService {
   async fetchProcedimentos(): Promise<Procedimento[]> {
     try {
       const res = await api.get<ResponseTemplateInterface<Procedimento[]>>("/procedimento/getall");
-      console.log(res);
       return res.data.data || [];
     } catch (err) {
       console.error("Erro ao buscar procedimentos:", err);

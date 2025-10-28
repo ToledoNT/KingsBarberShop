@@ -33,48 +33,31 @@ export default function Sidebar({
   const pathname = usePathname();
 
   // ------------------- Check User Role -------------------
-  const checkUserRole = useCallback(() => {
-    let userRole = "";
-
-    try {
-      const userData = localStorage.getItem("user");
-      
-      if (userData) {
-        const parsedUser = JSON.parse(userData);
-        userRole = parsedUser.role || ""; 
-      }
-
-      setRole(userRole);
-    } catch (err) {
-      console.error("Erro ao verificar role:", err);
-    }
-  }, []);
-
   useEffect(() => {
+    const checkUserRole = () => {
+      try {
+        const userData = localStorage.getItem("user");
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          setRole(parsedUser.role.toLowerCase()); // converte para minúsculo
+        }
+      } catch (err) {
+        console.error("Erro ao verificar role:", err);
+      }
+    };
+
     checkUserRole();
-
-    const handleStorageChange = () => {
-      checkUserRole();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, [checkUserRole]);
+    window.addEventListener("storage", checkUserRole);
+    return () => window.removeEventListener("storage", checkUserRole);
+  }, []);
 
   // ------------------- Filter Menu -------------------
   const filteredMenuItems = useMemo(() => {
-    const filtered = menuItems.filter((item) => {
-      // Mostrar itens para ADMIN
+    return menuItems.filter((item) => {
       if (item.adminOnly && role !== "admin") return false;
-      // Mostrar itens para BARBEIRO
       if (item.barberOnly && role !== "barbeiro") return false;
       return true;
     });
-
-    console.log("Itens filtrados:", filtered); // Verifique os itens filtrados no console
-    return filtered;
   }, [role]);
 
   // ------------------- Handlers -------------------

@@ -37,7 +37,7 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
     barbeiro: "",
     data: null,
     hora: "",
-    servico: localStorage.getItem("selectedServicoId") || "", // Recupera o ID do serviço armazenado
+    servico: localStorage.getItem("selectedServicoId") || "",
     status: StatusAgendamento.PENDENTE,
   });
 
@@ -88,7 +88,6 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
     const erros: string[] = [];
     if (!localForm.nome.trim()) erros.push("Nome");
     if (!localForm.telefone.trim()) erros.push("Telefone");
-    if (!localForm.email.trim()) erros.push("Email");
     if (!localForm.barbeiro) erros.push("Barbeiro");
     if (!localForm.data) erros.push("Data");
     if (!localForm.hora) erros.push("Horário");
@@ -106,7 +105,7 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
       id: agendamento?.id,
       nome: localForm.nome.trim(),
       telefone: localForm.telefone.trim(),
-      email: localForm.email.trim(),
+      email: localForm.email?.trim() || "",
       barbeiro: localForm.barbeiro,
       data: dataString,
       hora: localForm.hora,
@@ -119,28 +118,25 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
     await onSave(payload);
   };
 
-const handleServicoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const selectedId = e.target.value;
+  const handleServicoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
 
-  const selectedServico = procedimentosBarbeiro.find((p) => p.id === selectedId);
+    const selectedServico = procedimentosBarbeiro.find((p) => p.id === selectedId);
 
-  setLocalForm({ ...localForm, servico: selectedId });
+    setLocalForm({ ...localForm, servico: selectedId });
 
-  if (selectedServico) {
-    setProcedimentoNome(`${selectedServico.label} - R$ ${selectedServico.valor}`);
+    if (selectedServico) {
+      setProcedimentoNome(`${selectedServico.label} - R$ ${selectedServico.valor}`);
 
-    localStorage.setItem(
-      "selectedServico",
-      JSON.stringify({ label: selectedServico.label, valor: selectedServico.valor })
-    );
-
-  } else {
+      localStorage.setItem(
+        "selectedServico",
+        JSON.stringify({ label: selectedServico.label, valor: selectedServico.valor })
+      );
+    } else {
     setProcedimentoNome('');
-    localStorage.removeItem("selectedServico");
-  }
-};
-
-
+      localStorage.removeItem("selectedServico");
+    }
+  };
   return (
     <div className="w-full flex justify-center mt-6 mb-12 px-2 sm:px-4">
       <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-4 sm:p-6 md:p-8 bg-[#1B1B1B] rounded-2xl shadow-xl">
@@ -170,9 +166,8 @@ const handleServicoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
           <Input
             name="email"
             value={localForm.email}
-            placeholder="Email"
+            placeholder="Email (opcional)"
             onChange={(e) => setLocalForm({ ...localForm, email: e.target.value })}
-            required
           />
 
           <Select
@@ -233,7 +228,9 @@ const handleServicoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
           />
 
           {procedimentoNome && (
-            <p className="mt-2 text-sm text-gray-400">Serviço Selecionado: {procedimentoNome}</p>
+            <p className="mt-2 text-sm text-gray-400">
+              Serviço Selecionado: {procedimentoNome}
+            </p>
           )}
 
           {agendamento && (
@@ -251,7 +248,12 @@ const handleServicoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
           )}
 
           <div className="flex flex-col sm:flex-row justify-end gap-3 mt-4">
-            <Button variant="secondary" type="button" onClick={onCancel} className="w-full sm:w-auto">
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={onCancel}
+              className="w-full sm:w-auto"
+            >
               Cancelar
             </Button>
             <Button type="submit" className="w-full sm:w-auto">

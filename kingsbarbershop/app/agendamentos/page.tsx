@@ -75,22 +75,46 @@ export default function CriarAgendamentoPage() {
     type: "info" | "success" | "warning" | "error";
   }>({ isOpen: false, message: "", type: "info" });
 
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    type: "info" | "warning" | "error";
-    onConfirm: (() => void) | null;
-  }>({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
+const [confirmDialog, setConfirmDialog] = useState<{
+  isOpen: boolean;
+  title: string;
+  message: string;
+  type: "info" | "warning" | "error";
+  onConfirm: (() => void) | null;
+  onCancel?: () => void;
+  position?: { top: number; left: number };
+}>({
+  isOpen: false,
+  title: "",
+  message: "",
+  type: "info",
+  onConfirm: null,
+});
+
 
   // ------------------- FUNÇÕES DE NOTIFICAÇÃO -------------------
   const notify = (msg: string, type: "info" | "success" | "warning" | "error" = "info") => {
     setNotification({ isOpen: true, message: msg, type });
   };
 
-  const confirm = (title: string, message: string, onConfirm: () => void, type: "info" | "warning" | "error" = "info") => {
-    setConfirmDialog({ isOpen: true, title, message, type, onConfirm });
-  };
+const confirm = (
+  title: string,
+  message: string,
+  onConfirm: () => void,
+  type: "info" | "warning" | "error" = "info",
+  onCancel?: () => void,
+  position?: { top: number; left: number }
+) => {
+  setConfirmDialog({
+    isOpen: true,
+    title,
+    message,
+    type,
+    onConfirm,
+    onCancel: onCancel || (() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))),
+    position,
+  });
+};
 
   const closeNotification = () => {
     setNotification(prev => ({ ...prev, isOpen: false }));
@@ -211,18 +235,30 @@ const handleRemoveHorario = async (id?: string) => {
     );
   };
 
-  const handleUpdateStatusAgendamento = async (
-    id: string,
-    status: StatusAgendamento
-  ) => {
-    try {
+const handleUpdateStatusAgendamento = async (
+  id: string,
+  status: StatusAgendamento,
+  elementRef: HTMLElement | null // <- mudou para HTMLElement
+) => {
+  const rect = elementRef?.getBoundingClientRect();
+  const position = rect
+    ? { top: rect.top + window.scrollY, left: rect.left + rect.width / 2 }
+    : undefined;
+
+  setConfirmDialog({
+    isOpen: true,
+    title: "Atualizar Status",
+    message: `Deseja realmente mudar para ${status}?`,
+    type: "info",
+    onConfirm: async () => {
       await updateAgendamento(id, { status });
-      notify("Status do agendamento atualizado!", "success");
-    } catch (err) {
-      console.error(err);
-      notify("Erro ao atualizar status.", "error");
-    }
-  };
+      notify("Status atualizado!", "success");
+    },
+    onCancel: () => setConfirmDialog(prev => ({ ...prev, isOpen: false })),
+    position,
+  });
+};
+
 
   // ------------------- BLOQUEIO DE RENDER -------------------
   if (loading) return <Loader fullScreen={true} />;
@@ -530,9 +566,11 @@ const handleRemoveHorario = async (id?: string) => {
                       {/* Grid de Agendamentos */}
                       <div className="flex-1">
                         <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 transition-all duration-300 max-h-[700px] rounded-lg">
-                          <AgendamentosGrid
-                            agendamentos={agendamentosFiltrados}
-                            onStatusChange={handleUpdateStatusAgendamento}
+                        <AgendamentosGrid
+                        agendamentos={agendamentosFiltrados}
+                        onStatusChange={(id, status, elementRef) => {
+                        handleUpdateStatusAgendamento(id, status, elementRef ?? null);
+                      }}
                           />
                         </div>
                       </div>

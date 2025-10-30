@@ -114,7 +114,11 @@ export interface AgendamentoPrivadoFormProps {
 
 export interface AgendamentosGridProps {
   agendamentos: Agendamento[];
-  onStatusChange?: (id: string, status: StatusAgendamento) => void | Promise<void>;
+  onStatusChange?: (
+    id: string,
+    status: StatusAgendamento,
+    buttonRef?: HTMLButtonElement | null
+  ) => void | Promise<void>;
 }
 
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/components/ui/Sidebar";
 import { AuthService } from "../api/authAdmin";
-import { useDashboard } from "../hook/useDashboard"; // Importando o hook
+import { useDashboard } from "../hook/useDashboard"; 
 import HeaderDashboard from "../components/dashboard/HeraderDashboard";
 import MetricasDiarias from "../components/dashboard/MetricasDiarias";
 import MetricasMensais from "../components/dashboard/MetricasMensais";
@@ -46,7 +46,6 @@ const AvisoPermissao = () => (
   </div>
 );
 
-// Componente de Erro Geral
 const ErroCarregamento = ({ error }: { error: string }) => (
   <div className="flex-1 flex items-center justify-center p-6">
     <div className="text-center max-w-md mx-auto">
@@ -57,7 +56,6 @@ const ErroCarregamento = ({ error }: { error: string }) => (
   </div>
 );
 
-// Componente de Dados Não Encontrados
 const DadosNaoEncontrados = () => (
   <div className="flex-1 flex items-center justify-center p-6">
     <div className="text-center max-w-md mx-auto">
@@ -68,25 +66,20 @@ const DadosNaoEncontrados = () => (
   </div>
 );
 
-// COMPONENTE PRINCIPAL PROTEGIDO PELO CADEADO
 function DashboardConteudo() {
   const router = useRouter();
   const { data: dashboardData, loading: dataLoading, error, refetch } = useDashboard();
   
   const [collapsed, setCollapsed] = useState(false);
-  
-  // VERIFICAÇÃO DE TOKEN
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
-  // NOTIFICAÇÃO
   const [notification, setNotification] = useState({
     isOpen: false,
     message: "",
     type: "success" as "info" | "success" | "warning" | "error"
   });
 
-  // ------------------- VERIFICAÇÃO DE TOKEN -------------------
   useEffect(() => {
     const verifyAuth = async () => {
       setLoadingAuth(true);
@@ -114,17 +107,14 @@ function DashboardConteudo() {
     verifyAuth();
   }, [router]);
 
-  // FUNÇÃO PARA MOSTRAR NOTIFICAÇÃO
   const showNotification = (message: string, type: "info" | "success" | "warning" | "error" = "success") => {
     setNotification({ isOpen: true, message, type });
   };
 
-  // FUNÇÃO PARA FECHAR NOTIFICAÇÃO
   const closeNotification = () => {
     setNotification(prev => ({ ...prev, isOpen: false }));
   };
 
-  // FUNÇÃO DE REFRESH COM NOTIFICAÇÃO
   const handleRefresh = async () => {
     try {
       await refetch();
@@ -134,25 +124,19 @@ function DashboardConteudo() {
     }
   };
 
-  // ------------------- BLOQUEIO DE RENDER -------------------
   if (loadingAuth) return <LoadingSpinner />;
   if (!isAuthenticated) return null;
   if (dataLoading) return <LoadingSpinner />;
 
-  // Função para renderizar o conteúdo baseado no estado
   const renderConteudo = () => {
-    const isPermissionError = error && (error.includes('403') || error.includes('permissão') || error.includes('autorização') || error.includes('não autorizado'));
+    const isPermissionError = error && (error.includes("403") || error.includes("permissão") || error.includes("autorização") || error.includes("não autorizado"));
     
     if (error) {
-      if (isPermissionError) {
-        return <AvisoPermissao />;
-      }
+      if (isPermissionError) return <AvisoPermissao />;
       return <ErroCarregamento error={error} />;
     }
 
-    if (!dashboardData) {
-      return <DadosNaoEncontrados />;
-    }
+    if (!dashboardData) return <DadosNaoEncontrados />;
 
     const { metrics, agendamentos, financeiro, relatorios } = dashboardData;
 
@@ -160,22 +144,17 @@ function DashboardConteudo() {
     const mesAtual = hoje.getMonth();
     const anoAtual = hoje.getFullYear();
 
-    // ✅ CORREÇÃO: Função para comparar datas ISO (YYYY-MM-DD)
     const isMesmoDia = (dataISO: string, dataComparacao: Date) => {
       if (!dataISO) return false;
-      
-      // Pega apenas a parte da data (YYYY-MM-DD) da string ISO
-      const dataAgendamentoStr = dataISO.split('T')[0];
-      const dataComparacaoStr = dataComparacao.toISOString().split('T')[0];
-      
+      const dataAgendamentoStr = dataISO.split("T")[0];
+      const dataComparacaoStr = dataComparacao.toISOString().split("T")[0];
       return dataAgendamentoStr === dataComparacaoStr;
     };
 
     const agendamentosOrdenados = [...agendamentos].sort(
       (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
     );
-    
-    // Correção de cálculos e filtragem de dados
+
     const agendamentosHoje = agendamentos.filter((a: any) => isMesmoDia(a.data, hoje)).length;
     const concluidosHoje = agendamentos.filter((a: any) => isMesmoDia(a.data, hoje) && a.status === "Concluído").length;
 
@@ -183,7 +162,6 @@ function DashboardConteudo() {
       .filter((f: any) => isMesmoDia(f.criadoEm, hoje) && f.status === "Pago")
       .reduce((acc: number, curr: any) => acc + curr.valor, 0);
 
-    // Métricas mensais
     const agendamentosMes = agendamentos.filter((a: any) => {
       const d = new Date(a.data);
       return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
@@ -196,22 +174,27 @@ function DashboardConteudo() {
       })
       .reduce((acc: number, curr: any) => acc + curr.valor, 0);
 
-    // Totais gerais
     const totalConcluidos = agendamentos.filter((a: any) => a.status === "Concluído").length;
     const totalCancelados = agendamentos.filter((a: any) => a.status === "Cancelado").length;
     const totalNaoCompareceu = agendamentos.filter((a: any) => a.status === "Não Compareceu").length;
     const totalAgendados = agendamentos.filter((a: any) => a.status === "Agendado").length;
 
-    // Relatório anual
-    const relatorioAnual = relatorios.find((r: any) => {
+    // ✅ CORRIGIDO: soma de todos relatórios do ano atual
+    const relatoriosAnoAtual = relatorios.filter((r: any) => {
       const relatorioDate = new Date(r.mesAno);
       return relatorioDate.getFullYear() === anoAtual;
     });
-    
-    const faturamentoAnual = relatorioAnual?.faturamento || 0;
-    const agendamentosAnuais = relatorioAnual?.agendamentos || 0;
 
-    // Cálculos de taxas
+    const faturamentoAnual = relatoriosAnoAtual.reduce(
+      (acc: number, r: any) => acc + (r.faturamento || 0),
+      0
+    );
+
+    const agendamentosAnuais = relatoriosAnoAtual.reduce(
+      (acc: number, r: any) => acc + (r.agendamentos || 0),
+      0
+    );
+
     const totalProcessados = totalConcluidos + totalCancelados + totalNaoCompareceu;
     const ticketMedio = totalConcluidos > 0 ? (faturamentoMensal / totalConcluidos).toFixed(2) : "0.00";
     const taxaCancelamento = totalProcessados > 0 ? ((totalCancelados / totalProcessados) * 100).toFixed(1) : "0.0";
@@ -282,7 +265,6 @@ function DashboardConteudo() {
   );
 }
 
-// COMPONENTE PRINCIPAL COM CADEADO DE ACESSO
 export default function AdminHome() {
   return (
     <CadeadoAcesso>

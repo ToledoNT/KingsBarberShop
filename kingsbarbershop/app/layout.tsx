@@ -1,15 +1,4 @@
-import localFont from "next/font/local";
 import "./globals.css";
-
-const geistSans = localFont({
-  src: "./fonts/Geist.woff2",
-  variable: "--font-geist-sans",
-});
-
-const geistMono = localFont({
-  src: "./fonts/GeistMono.woff2",
-  variable: "--font-geist-mono",
-});
 
 export const metadata = {
   title: "Kings Barber - A Melhor Barbearia de Não-Me-Toque",
@@ -20,7 +9,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className="antialiased">
         {children}
       </body>
     </html>

@@ -20,7 +20,7 @@ import { Notification } from "../components/ui/componenteNotificacao";
 
 const authService = new AuthService();
 
-export const mapToAgendamento = (a: Agendamento): Agendamento => ({
+ const mapToAgendamento = (a: Agendamento): Agendamento => ({
   ...a,
   id: a.id || "",
   servicoId: a.servicoId || "",

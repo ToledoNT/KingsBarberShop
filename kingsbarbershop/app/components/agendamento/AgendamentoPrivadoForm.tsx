@@ -227,12 +227,6 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
             required
           />
 
-          {procedimentoNome && (
-            <p className="mt-2 text-sm text-gray-400">
-              Serviço Selecionado: {procedimentoNome}
-            </p>
-          )}
-
           {agendamento && (
             <Select
               name="status"

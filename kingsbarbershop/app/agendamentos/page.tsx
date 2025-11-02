@@ -74,7 +74,6 @@ export default function CriarAgendamentoPage() {
     message: string;
     type: "info" | "success" | "warning" | "error";
   }>({ isOpen: false, message: "", type: "info" });
-
 const [confirmDialog, setConfirmDialog] = useState<{
   isOpen: boolean;
   title: string;
@@ -83,6 +82,7 @@ const [confirmDialog, setConfirmDialog] = useState<{
   onConfirm: (() => void) | null;
   onCancel?: () => void;
   position?: { top: number; left: number };
+  color?: { bg: string; text: string }; // ✅ adiciona aqui
 }>({
   isOpen: false,
   title: "",
@@ -234,22 +234,33 @@ const handleRemoveHorario = async (id?: string) => {
       "error"
     );
   };
+const statusColors: Record<StatusAgendamento, { bg: string; text: string }> = {
+  [StatusAgendamento.PENDENTE]: { bg: "bg-gray-500", text: "text-white" },
+  [StatusAgendamento.AGENDADO]: { bg: "bg-blue-600", text: "text-white" },
+  [StatusAgendamento.EM_ANDAMENTO]: { bg: "bg-orange-500", text: "text-white" },
+  [StatusAgendamento.CONCLUIDO]: { bg: "bg-green-600", text: "text-white" },
+  [StatusAgendamento.CANCELADO]: { bg: "bg-red-600", text: "text-white" },
+  [StatusAgendamento.NAO_COMPARECEU]: { bg: "bg-gray-700", text: "text-white" },
+};
+
 
 const handleUpdateStatusAgendamento = async (
   id: string,
   status: StatusAgendamento,
-  elementRef: HTMLElement | null // <- mudou para HTMLElement
+  elementRef: HTMLElement | null
 ) => {
   const rect = elementRef?.getBoundingClientRect();
   const position = rect
     ? { top: rect.top + window.scrollY, left: rect.left + rect.width / 2 }
     : undefined;
 
+  const color = statusColors[status] || { bg: "bg-gray-500", text: "text-white" };
   setConfirmDialog({
     isOpen: true,
     title: "Atualizar Status",
     message: `Deseja realmente mudar para ${status}?`,
     type: "info",
+    color, // ✅ ok
     onConfirm: async () => {
       await updateAgendamento(id, { status });
       notify("Status atualizado!", "success");
@@ -257,8 +268,11 @@ const handleUpdateStatusAgendamento = async (
     onCancel: () => setConfirmDialog(prev => ({ ...prev, isOpen: false })),
     position,
   });
-};
 
+  // ------------------- BLOQUEIO DE RENDER -------------------
+  if (loading) return <Loader fullScreen={true} />;
+  if (!isAuthenticated) return null;
+};
 
   // ------------------- BLOQUEIO DE RENDER -------------------
   if (loading) return <Loader fullScreen={true} />;
@@ -267,7 +281,6 @@ const handleUpdateStatusAgendamento = async (
   // ------------------- JSX -------------------
   return (
     <>
-      {/* Componentes de UI */}
       <Notification
         isOpen={notification.isOpen}
         message={notification.message}
@@ -275,14 +288,15 @@ const handleUpdateStatusAgendamento = async (
         onClose={closeNotification}
       />
 
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        type={confirmDialog.type}
-        onConfirm={handleConfirm}
-        onCancel={closeConfirmDialog}
-      />
+<ConfirmDialog
+  isOpen={confirmDialog.isOpen}
+  title={confirmDialog.title}
+  message={confirmDialog.message}
+  type={confirmDialog.type}
+  onConfirm={handleConfirm}
+  onCancel={closeConfirmDialog}
+/>
+
 
       {/* Conteúdo principal */}
       <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5]">
@@ -564,16 +578,15 @@ const handleUpdateStatusAgendamento = async (
                       </div>
 
                       {/* Grid de Agendamentos */}
-                      <div className="flex-1">
-                        <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 transition-all duration-300 max-h-[700px] rounded-lg">
-                        <AgendamentosGrid
-                        agendamentos={agendamentosFiltrados}
-                        onStatusChange={(id, status, elementRef) => {
-                        handleUpdateStatusAgendamento(id, status, elementRef ?? null);
-                      }}
-                          />
-                        </div>
-                      </div>
+                <div className="rounded-lg">
+  <AgendamentosGrid
+    agendamentos={agendamentosFiltrados}
+    onStatusChange={(id, status, elementRef) => {
+      handleUpdateStatusAgendamento(id, status, elementRef ?? null);
+    }}
+  />
+</div>
+
                     </>
                   )}
                 </div>

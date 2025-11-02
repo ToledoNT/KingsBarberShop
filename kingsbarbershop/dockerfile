@@ -1,0 +1,17 @@
+# Base Node.js
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
+
+COPY . .
+
+# Build do Next.js
+RUN npm run build --no-lint
+
+EXPOSE 3000
+
+# Comando para rodar o frontend
+CMD ["npm", "start"]

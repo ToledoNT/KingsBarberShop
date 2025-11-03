@@ -1,17 +1,20 @@
-# Base Node.js
+  GNU nano 4.8       dockerfile                 
 FROM node:20-alpine
 
 WORKDIR /app
 
+# Copia os arquivos de dependências e instala
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install
 
+# Copia o restante do código
 COPY . .
 
-# Build do Next.js
-RUN npm run build --no-lint
+# Gera o build de produção do Next.js
+RUN npm run build
 
+# Expõe a porta padrão do frontend
 EXPOSE 3000
 
-# Comando para rodar o frontend
-CMD ["npm", "start"]
+# CMD correto para rodar o Next.js em produção
+CMD ["npm", "run", "start"]

@@ -20,7 +20,7 @@ import { Notification } from "../components/ui/componenteNotificacao";
 
 const authService = new AuthService();
 
- const mapToAgendamento = (a: Agendamento): Agendamento => ({
+const mapToAgendamento = (a: Agendamento): Agendamento => ({
   ...a,
   id: a.id || "",
   servicoId: a.servicoId || "",
@@ -39,6 +39,7 @@ export default function CriarAgendamentoPage() {
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [gerandoHorarios, setGerandoHorarios] = useState(false);
 
   const {
     agendamentos,
@@ -62,8 +63,9 @@ export default function CriarAgendamentoPage() {
   });
   const [selectedAgendamento, setSelectedAgendamento] =
     useState<Agendamento | null>(null);
+  
   const [filtros, setFiltros] = useState({
-    status: "todos" as "todos" | StatusAgendamento,
+    status: StatusAgendamento.AGENDADO as "todos" | StatusAgendamento,
     data: "",
     barbeiro: "todos",
   });
@@ -74,47 +76,47 @@ export default function CriarAgendamentoPage() {
     message: string;
     type: "info" | "success" | "warning" | "error";
   }>({ isOpen: false, message: "", type: "info" });
-const [confirmDialog, setConfirmDialog] = useState<{
-  isOpen: boolean;
-  title: string;
-  message: string;
-  type: "info" | "warning" | "error";
-  onConfirm: (() => void) | null;
-  onCancel?: () => void;
-  position?: { top: number; left: number };
-  color?: { bg: string; text: string }; // ✅ adiciona aqui
-}>({
-  isOpen: false,
-  title: "",
-  message: "",
-  type: "info",
-  onConfirm: null,
-});
 
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "info" | "warning" | "error";
+    onConfirm: (() => void) | null;
+    onCancel?: () => void;
+    position?: { top: number; left: number };
+    color?: { bg: string; text: string };
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+    onConfirm: null,
+  });
 
   // ------------------- FUNÇÕES DE NOTIFICAÇÃO -------------------
   const notify = (msg: string, type: "info" | "success" | "warning" | "error" = "info") => {
     setNotification({ isOpen: true, message: msg, type });
   };
 
-const confirm = (
-  title: string,
-  message: string,
-  onConfirm: () => void,
-  type: "info" | "warning" | "error" = "info",
-  onCancel?: () => void,
-  position?: { top: number; left: number }
-) => {
-  setConfirmDialog({
-    isOpen: true,
-    title,
-    message,
-    type,
-    onConfirm,
-    onCancel: onCancel || (() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))),
-    position,
-  });
-};
+  const confirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    type: "info" | "warning" | "error" = "info",
+    onCancel?: () => void,
+    position?: { top: number; left: number }
+  ) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      type,
+      onConfirm,
+      onCancel: onCancel || (() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))),
+      position,
+    });
+  };
 
   const closeNotification = () => {
     setNotification(prev => ({ ...prev, isOpen: false }));
@@ -181,14 +183,17 @@ const confirm = (
       notify("Preencha barbeiro e data.", "warning");
       return;
     }
+
     const barbeiro = barbeiros.find((b) => b.id === form.barbeiro);
     if (!barbeiro) {
       notify("Barbeiro não encontrado.", "error");
       return;
     }
+
     const dataParaBackend = new Date(form.data).toISOString().split("T")[0];
 
     try {
+      setGerandoHorarios(true);
       await addHorario({
         profissional: barbeiro,
         data: dataParaBackend,
@@ -198,14 +203,16 @@ const confirm = (
     } catch (err) {
       console.error("Erro ao gerar horários:", err);
       notify("Erro ao gerar horários. Verifique o console.", "error");
+    } finally {
+      setGerandoHorarios(false);
     }
   };
 
-const handleRemoveHorario = async (id?: string) => {
-  if (id) {
-    await removeHorario(id);
-  }
-};
+  const handleRemoveHorario = async (id?: string) => {
+    if (id) {
+      await removeHorario(id);
+    }
+  };
 
   // ------------------- AGENDAMENTOS -------------------
   const handleSaveAgendamento = async (a: Agendamento) => {
@@ -234,45 +241,41 @@ const handleRemoveHorario = async (id?: string) => {
       "error"
     );
   };
-const statusColors: Record<StatusAgendamento, { bg: string; text: string }> = {
-  [StatusAgendamento.PENDENTE]: { bg: "bg-gray-500", text: "text-white" },
-  [StatusAgendamento.AGENDADO]: { bg: "bg-blue-600", text: "text-white" },
-  [StatusAgendamento.EM_ANDAMENTO]: { bg: "bg-orange-500", text: "text-white" },
-  [StatusAgendamento.CONCLUIDO]: { bg: "bg-green-600", text: "text-white" },
-  [StatusAgendamento.CANCELADO]: { bg: "bg-red-600", text: "text-white" },
-  [StatusAgendamento.NAO_COMPARECEU]: { bg: "bg-gray-700", text: "text-white" },
-};
 
+  const statusColors: Record<StatusAgendamento, { bg: string; text: string }> = {
+    [StatusAgendamento.PENDENTE]: { bg: "bg-gray-500", text: "text-white" },
+    [StatusAgendamento.AGENDADO]: { bg: "bg-blue-600", text: "text-white" },
+    [StatusAgendamento.EM_ANDAMENTO]: { bg: "bg-orange-500", text: "text-white" },
+    [StatusAgendamento.CONCLUIDO]: { bg: "bg-green-600", text: "text-white" },
+    [StatusAgendamento.CANCELADO]: { bg: "bg-red-600", text: "text-white" },
+    [StatusAgendamento.NAO_COMPARECEU]: { bg: "bg-gray-700", text: "text-white" },
+  };
 
-const handleUpdateStatusAgendamento = async (
-  id: string,
-  status: StatusAgendamento,
-  elementRef: HTMLElement | null
-) => {
-  const rect = elementRef?.getBoundingClientRect();
-  const position = rect
-    ? { top: rect.top + window.scrollY, left: rect.left + rect.width / 2 }
-    : undefined;
+  const handleUpdateStatusAgendamento = async (
+    id: string,
+    status: StatusAgendamento,
+    elementRef: HTMLElement | null
+  ) => {
+    const rect = elementRef?.getBoundingClientRect();
+    const position = rect
+      ? { top: rect.top + window.scrollY, left: rect.left + rect.width / 2 }
+      : undefined;
 
-  const color = statusColors[status] || { bg: "bg-gray-500", text: "text-white" };
-  setConfirmDialog({
-    isOpen: true,
-    title: "Atualizar Status",
-    message: `Deseja realmente mudar para ${status}?`,
-    type: "info",
-    color, // ✅ ok
-    onConfirm: async () => {
-      await updateAgendamento(id, { status });
-      notify("Status atualizado!", "success");
-    },
-    onCancel: () => setConfirmDialog(prev => ({ ...prev, isOpen: false })),
-    position,
-  });
-
-  // ------------------- BLOQUEIO DE RENDER -------------------
-  if (loading) return <Loader fullScreen={true} />;
-  if (!isAuthenticated) return null;
-};
+    const color = statusColors[status] || { bg: "bg-gray-500", text: "text-white" };
+    setConfirmDialog({
+      isOpen: true,
+      title: "Atualizar Status",
+      message: `Deseja realmente mudar para ${status}?`,
+      type: "info",
+      color,
+      onConfirm: async () => {
+        await updateAgendamento(id, { status });
+        notify("Status atualizado!", "success");
+      },
+      onCancel: () => setConfirmDialog(prev => ({ ...prev, isOpen: false })),
+      position,
+    });
+  };
 
   // ------------------- BLOQUEIO DE RENDER -------------------
   if (loading) return <Loader fullScreen={true} />;
@@ -288,15 +291,14 @@ const handleUpdateStatusAgendamento = async (
         onClose={closeNotification}
       />
 
-<ConfirmDialog
-  isOpen={confirmDialog.isOpen}
-  title={confirmDialog.title}
-  message={confirmDialog.message}
-  type={confirmDialog.type}
-  onConfirm={handleConfirm}
-  onCancel={closeConfirmDialog}
-/>
-
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type={confirmDialog.type}
+        onConfirm={handleConfirm}
+        onCancel={closeConfirmDialog}
+      />
 
       {/* Conteúdo principal */}
       <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5]">
@@ -393,29 +395,37 @@ const handleUpdateStatusAgendamento = async (
                         </label>
                         <input
                           type="date"
-                          value={
-                            form.data ? new Date(form.data).toISOString().split("T")[0] : ""
-                          }
+                          value={form.data ? new Date(form.data).toISOString().split("T")[0] : ""}
                           onChange={(e) =>
                             setForm((prev) => ({ ...prev, data: new Date(e.target.value) }))
                           }
                           className="w-full p-3 sm:p-4 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm sm:text-base backdrop-blur-sm"
                         />
                       </div>
-
-                      <div className="space-y-2 flex flex-col justify-end">
+                      <div className="space-y-2 flex flex-col justify-end relative">
                         <Button
                           onClick={handleGenerateHorarios}
                           variant="primary"
                           className="px-6 py-3 text-sm sm:text-base font-medium w-full justify-center"
-                          disabled={!form.barbeiro || !form.data}
+                          disabled={!form.barbeiro || !form.data || gerandoHorarios}
                         >
-                          <span className="mr-2">⚡</span>
-                          Gerar Horários
+                          {gerandoHorarios ? (
+                            <Loader size={24} color="#FFA500" />
+                          ) : (
+                            <>
+                              <span className="mr-2">⚡</span>
+                              Gerar Horários
+                            </>
+                          )}
                         </Button>
+                        {/* Loader full screen */}
+                        {gerandoHorarios && (
+                          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                            <Loader size={60} color="#FFA500" />
+                          </div>
+                        )}
                       </div>
                     </div>
-
                     {(!form.barbeiro || !form.data) && (
                       <div className="text-xs text-gray-400 bg-gray-800/30 p-3 rounded-lg border border-gray-700 mt-4">
                         ⚠️ Selecione um profissional e uma data para gerar horários
@@ -508,7 +518,11 @@ const handleUpdateStatusAgendamento = async (
                           <Button
                             variant="secondary"
                             onClick={() =>
-                              setFiltros({ status: "todos", data: "", barbeiro: "todos" })
+                              setFiltros({ 
+                                status: StatusAgendamento.AGENDADO, 
+                                data: "", 
+                                barbeiro: "todos" 
+                              })
                             }
                             className="px-4 py-2 text-sm"
                           >
@@ -532,12 +546,13 @@ const handleUpdateStatusAgendamento = async (
                               }
                               className="w-full p-3 sm:p-4 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm sm:text-base backdrop-blur-sm"
                             >
-                              <option value="todos">Todos os status</option>
-                              <option value={StatusAgendamento.AGENDADO}>Agendado</option>
-                              <option value={StatusAgendamento.EM_ANDAMENTO}>Em Andamento</option>
-                              <option value={StatusAgendamento.CONCLUIDO}>Concluído</option>
-                              <option value={StatusAgendamento.CANCELADO}>Cancelado</option>
-                              <option value={StatusAgendamento.NAO_COMPARECEU}>Não Compareceu</option>
+                               <option value="todos">Todos os status</option>
+        <option value={StatusAgendamento.PENDENTE}>Pendente</option>
+        <option value={StatusAgendamento.AGENDADO}>Agendado</option>
+        <option value={StatusAgendamento.EM_ANDAMENTO}>Em Andamento</option>
+        <option value={StatusAgendamento.CONCLUIDO}>Concluído</option>
+        <option value={StatusAgendamento.CANCELADO}>Cancelado</option>
+        <option value={StatusAgendamento.NAO_COMPARECEU}>Não Compareceu</option>
                             </select>
                           </div>
 
@@ -578,15 +593,14 @@ const handleUpdateStatusAgendamento = async (
                       </div>
 
                       {/* Grid de Agendamentos */}
-                <div className="rounded-lg">
-  <AgendamentosGrid
-    agendamentos={agendamentosFiltrados}
-    onStatusChange={(id, status, elementRef) => {
-      handleUpdateStatusAgendamento(id, status, elementRef ?? null);
-    }}
-  />
-</div>
-
+                      <div className="rounded-lg">
+                        <AgendamentosGrid
+                          agendamentos={agendamentosFiltrados}
+                          onStatusChange={(id, status, elementRef) => {
+                            handleUpdateStatusAgendamento(id, status, elementRef ?? null);
+                          }}
+                        />
+                      </div>
                     </>
                   )}
                 </div>
@@ -613,7 +627,6 @@ const handleUpdateStatusAgendamento = async (
           background-color: #6B7280;
         }
         
-        /* Scrollbar para Firefox */
         .scrollbar-thin {
           scrollbar-width: thin;
           scrollbar-color: #4B5563 #1F2937;

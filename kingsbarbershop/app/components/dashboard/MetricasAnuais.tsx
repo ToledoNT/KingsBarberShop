@@ -4,16 +4,26 @@ import { useMemo } from "react";
 import MetricCard from "./MetricaCard";
 import { MetricasAnuaisProps } from "@/app/interfaces/dashboardInterface";
 
-const MetricasAnuais = ({ agendamentosAnuais, faturamentoAnual, anoAtual }: MetricasAnuaisProps) => {
-  const faturamentoFormatado = useMemo(
-    () => `R$ ${faturamentoAnual.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-    [faturamentoAnual]
-  );
+const MetricasAnuais = ({
+  agendamentosAnuais = 0,
+  faturamentoAnual = 0,
+  anoAtual = new Date().getFullYear(),
+}: MetricasAnuaisProps) => {
 
-  const mediaMensalFormatada = useMemo(
-    () => `R$ ${Math.floor(faturamentoAnual / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-    [faturamentoAnual]
-  );
+  const faturamentoFormatado = useMemo(() => {
+    return `R$ ${faturamentoAnual.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }, [faturamentoAnual]);
+
+  const mediaMensalFormatada = useMemo(() => {
+    const media = faturamentoAnual / 12;
+    return `R$ ${media.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }, [faturamentoAnual]);
 
   return (
     <div className="mb-6 flex-shrink-0">
@@ -25,7 +35,7 @@ const MetricasAnuais = ({ agendamentosAnuais, faturamentoAnual, anoAtual }: Metr
             ANUAL {anoAtual}
           </span>
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           <MetricCard
             title="📅 TOTAL AGENDAMENTOS"
@@ -35,7 +45,7 @@ const MetricasAnuais = ({ agendamentosAnuais, faturamentoAnual, anoAtual }: Metr
             color="green"
             period="yearly"
           />
-          
+
           <MetricCard
             title="💰 FATURAMENTO ANUAL"
             value={faturamentoFormatado}
@@ -44,7 +54,7 @@ const MetricasAnuais = ({ agendamentosAnuais, faturamentoAnual, anoAtual }: Metr
             color="orange"
             period="yearly"
           />
-          
+
           <MetricCard
             title="📊 MÉDIA MENSAL"
             value={mediaMensalFormatada}

@@ -14,6 +14,7 @@ export interface AgendamentoItem {
   servicoNome: string;
   servicoPreco: number;
   status: string;
+  horario?: string; 
 }
 
 export interface AgendamentosTableProps {
@@ -33,20 +34,20 @@ export interface MetricasDiariasProps {
 export interface MetricasMensaisProps {
   agendamentosMes: number;
   faturamentoMensal: number;
-  ticketMedio: string;
-  taxaConclusao: string;
-  taxaCancelamento: string;
+  ticketMedio: number;         
+  taxaConclusao: number;       
+  taxaCancelamento: number;     
   totalConcluidos: number;
   totalNaoCompareceu: number;
   totalCancelados: number;
   totalAgendados: number;
-  metrics: any;
+  metrics?: any;                
 }
 
 export interface MetricasAnuaisProps {
   agendamentosAnuais: number;
   faturamentoAnual: number;
-  anoAtual: number;
+  anoAtual: number; // obrigatório
 }
 
 export interface DashboardResponse {

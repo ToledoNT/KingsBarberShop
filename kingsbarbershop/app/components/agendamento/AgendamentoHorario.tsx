@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { AgendamentoHorarioProps, HorarioDisponivel } from "../../interfaces/agendamentoInterface";
 import Button from "../ui/Button";
-import { FaTrash, FaFilter, FaUser, FaCalendarAlt } from "react-icons/fa";
+import { FaTrash, FaUser, FaCalendarAlt } from "react-icons/fa";
 
 export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
   horarios,
@@ -47,19 +47,25 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
   const horariosFiltradosEAgrupados = useMemo(() => {
     let horariosFiltrados = horarios;
 
+    // FILTROS
     if (filtros.profissional !== "todos") {
-      horariosFiltrados = horariosFiltrados.filter(h => h.profissional?.nome === filtros.profissional);
+      horariosFiltrados = horariosFiltrados.filter(
+        (h) => h.profissional?.nome === filtros.profissional
+      );
     }
     if (filtros.data) {
-      horariosFiltrados = horariosFiltrados.filter(h => datasSaoIguais(h.data, filtros.data));
+      horariosFiltrados = horariosFiltrados.filter((h) =>
+        datasSaoIguais(h.data, filtros.data)
+      );
     }
     if (filtros.disponivel !== "todos") {
       const disponivel = filtros.disponivel === "disponivel";
-      horariosFiltrados = horariosFiltrados.filter(h => h.disponivel === disponivel);
+      horariosFiltrados = horariosFiltrados.filter((h) => h.disponivel === disponivel);
     }
 
+    // AGRUPAR POR PROFISSIONAL E DATA
     const grouped: Record<string, Record<string, HorarioDisponivel[]>> = {};
-    horariosFiltrados.forEach(h => {
+    horariosFiltrados.forEach((h) => {
       const nome = h.profissional?.nome || "Sem profissional";
       const dataFormatada = formatarData(h.data);
       if (!grouped[nome]) grouped[nome] = {};
@@ -67,11 +73,22 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
       grouped[nome][dataFormatada].push(h);
     });
 
+    // ORDENAR HORÁRIOS POR HORA DE INÍCIO
+    Object.values(grouped).forEach((dias) => {
+      Object.values(dias).forEach((horariosDia) => {
+        horariosDia.sort((a, b) => {
+          const inicioA = a.inicio || "";
+          const inicioB = b.inicio || "";
+          return inicioA.localeCompare(inicioB);
+        });
+      });
+    });
+
     return grouped;
   }, [horarios, filtros]);
 
   const profissionaisUnicos = useMemo(
-    () => [...new Set(horarios.map(h => h.profissional?.nome).filter(Boolean) as string[])],
+    () => [...new Set(horarios.map((h) => h.profissional?.nome).filter(Boolean) as string[])],
     [horarios]
   );
 
@@ -95,9 +112,9 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
             <div className="text-[#FFA500] text-lg">🎯</div>
             <h3 className="text-white font-semibold text-lg">Filtros</h3>
           </div>
-          <Button 
-            variant="secondary" 
-            onClick={resetFiltros} 
+          <Button
+            variant="secondary"
+            onClick={resetFiltros}
             className="px-4 py-2 text-sm"
           >
             <span className="mr-2">🔄</span>
@@ -115,12 +132,16 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
             </label>
             <select
               value={filtros.profissional}
-              onChange={e => setFiltros(prev => ({ ...prev, profissional: e.target.value }))}
+              onChange={(e) =>
+                setFiltros((prev) => ({ ...prev, profissional: e.target.value }))
+              }
               className="w-full p-3 sm:p-4 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm sm:text-base backdrop-blur-sm"
             >
               <option value="todos">Todos os profissionais</option>
-              {profissionaisUnicos.map(prof => (
-                <option key={prof} value={prof}>{prof}</option>
+              {profissionaisUnicos.map((prof) => (
+                <option key={prof} value={prof}>
+                  {prof}
+                </option>
               ))}
             </select>
           </div>
@@ -134,7 +155,9 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
             <input
               type="date"
               value={filtros.data}
-              onChange={e => setFiltros(prev => ({ ...prev, data: e.target.value }))}
+              onChange={(e) =>
+                setFiltros((prev) => ({ ...prev, data: e.target.value }))
+              }
               className="w-full p-3 sm:p-4 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm sm:text-base backdrop-blur-sm"
             />
           </div>
@@ -146,7 +169,12 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
             </label>
             <select
               value={filtros.disponivel}
-              onChange={e => setFiltros(prev => ({ ...prev, disponivel: e.target.value as any }))}
+              onChange={(e) =>
+                setFiltros((prev) => ({
+                  ...prev,
+                  disponivel: e.target.value as any,
+                }))
+              }
               className="w-full p-3 sm:p-4 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm sm:text-base backdrop-blur-sm"
             >
               <option value="todos">Todos</option>
@@ -159,7 +187,9 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
         {/* Contador */}
         <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-700">
           <div className="text-sm text-gray-400">
-            Mostrando <span className="text-white font-semibold">{totalHorarios}</span> horário{totalHorarios !== 1 ? "s" : ""}
+            Mostrando{" "}
+            <span className="text-white font-semibold">{totalHorarios}</span>{" "}
+            horário{totalHorarios !== 1 ? "s" : ""}
           </div>
           <div className="text-xs text-gray-500 bg-gray-800/50 px-2 py-1 rounded-lg">
             Total: {horarios.length}
@@ -173,13 +203,14 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
           <div className="text-center py-12 border-2 border-dashed border-gray-700 rounded-xl bg-gray-900/30 backdrop-blur-sm">
             <div className="text-6xl mb-4 opacity-60">📅</div>
             <p className="text-lg font-semibold text-gray-300 mb-3">
-              {horarios.length === 0 ? "Nenhum horário disponível" : "Nenhum horário encontrado"}
+              {horarios.length === 0
+                ? "Nenhum horário disponível"
+                : "Nenhum horário encontrado"}
             </p>
             <p className="text-gray-400 text-sm max-w-xs mx-auto">
-              {horarios.length === 0 
-                ? "Comece adicionando horários ao sistema" 
-                : "Tente ajustar os filtros para ver mais resultados"
-              }
+              {horarios.length === 0
+                ? "Comece adicionando horários ao sistema"
+                : "Tente ajustar os filtros para ver mais resultados"}
             </p>
           </div>
         ) : (
@@ -192,17 +223,28 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
               <div
                 className="flex justify-between items-center cursor-pointer select-none mb-4"
                 onClick={() =>
-                  setOpenProfissionais(prev => ({ ...prev, [profissional]: !prev[profissional] }))
+                  setOpenProfissionais((prev) => ({
+                    ...prev,
+                    [profissional]: !prev[profissional],
+                  }))
                 }
               >
                 <div className="flex items-center gap-3">
                   <div className="text-[#FFA500] text-xl">👤</div>
                   <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-white">
-                      {profissional}
-                    </h2>
+                    <h2 className="text-lg sm:text-xl font-bold text-white">{profissional}</h2>
                     <p className="text-gray-400 text-sm">
-                      {Object.values(dias).reduce((total, horarios) => total + horarios.length, 0)} horário{Object.values(dias).reduce((total, horarios) => total + horarios.length, 0) !== 1 ? "s" : ""}
+                      {Object.values(dias).reduce(
+                        (total, horarios) => total + horarios.length,
+                        0
+                      )}{" "}
+                      horário
+                      {Object.values(dias).reduce(
+                        (total, horarios) => total + horarios.length,
+                        0
+                      ) !== 1
+                        ? "s"
+                        : ""}
                     </p>
                   </div>
                 </div>
@@ -218,16 +260,14 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
                     <div key={data} className="border-l-2 border-[#FFA500] pl-4">
                       <div className="flex items-center gap-2 mb-3">
                         <div className="text-[#FFA500]">📅</div>
-                        <h3 className="font-semibold text-white text-sm sm:text-base">
-                          {data}
-                        </h3>
+                        <h3 className="font-semibold text-white text-sm sm:text-base">{data}</h3>
                         <span className="text-xs text-gray-400 bg-gray-800/50 px-2 py-1 rounded-lg">
                           {horariosDia.length} horário{horariosDia.length !== 1 ? "s" : ""}
                         </span>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                        {horariosDia.map(h => (
+                        {horariosDia.map((h) => (
                           <div
                             key={h.id}
                             className={`p-3 sm:p-4 rounded-xl border transition-all duration-300 ${
@@ -250,7 +290,9 @@ export const AgendamentoHorario: React.FC<AgendamentoHorarioProps> = ({
                                   onChange={() => onToggleDisponivel(h)}
                                   className="accent-[#FFA500] scale-110"
                                 />
-                                <span className={h.disponivel ? "text-green-400" : "text-gray-400"}>
+                                <span
+                                  className={h.disponivel ? "text-green-400" : "text-gray-400"}
+                                >
                                   {h.disponivel ? "Disponível" : "Indisponível"}
                                 </span>
                               </label>

@@ -4,14 +4,11 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { IFinanceiro } from "@/app/interfaces/financeiroInterface";
 import { useFinanceiro } from "@/app/hook/useFinanceiroHook";
-import FinanceiroCard from "@/app/components/financeiro/financeiroCard";
 import Sidebar from "@/app/components/ui/Sidebar";
 import { AuthService } from "../api/authAdmin";
 import { Notification } from "../components/ui/componenteNotificacao"; // ADICIONEI AQUI
 
 const authService = new AuthService();
-
-// ========== COMPONENTES REUTILIZÁVEIS ==========
 
 const LoadingSpinner = () => (
   <div className="flex min-h-screen bg-[#0D0D0D] text-[#E5E5E5] items-center justify-center">
@@ -172,30 +169,31 @@ export default function FinanceiroPage() {
   }, [financeiros, filtros]);
 
   // ------------------- CÁLCULOS OTIMIZADOS -------------------
-  const totais = useMemo(() => {
-    const { receitas, pendentes, quantidadePagos, quantidadePendentes } = movimentosFiltrados.reduce(
-      (acc, mov) => {
-        if (mov.status === "Pago") {
-          acc.receitas += mov.valor || 0;
-          acc.quantidadePagos++;
-        } else if (mov.status === "pendente") {
-          acc.pendentes += mov.valor || 0;
-          acc.quantidadePendentes++;
-        }
-        return acc;
-      },
-      { receitas: 0, pendentes: 0, quantidadePagos: 0, quantidadePendentes: 0 }
-    );
+const totais = useMemo(() => {
+  const { receitas, pendentes, quantidadePagos, quantidadePendentes } = movimentosFiltrados.reduce(
+    (acc, mov) => {
+      const status = (mov.status ?? "").toLowerCase();
+      if (status === "pago") {
+        acc.receitas += mov.valor || 0;
+        acc.quantidadePagos++;
+      } else if (status === "pendente") {
+        acc.pendentes += mov.valor || 0;
+        acc.quantidadePendentes++;
+      }
+      return acc;
+    },
+    { receitas: 0, pendentes: 0, quantidadePagos: 0, quantidadePendentes: 0 }
+  );
 
-    return {
-      receitas,
-      pendentes,
-      total: receitas + pendentes,
-      quantidade: movimentosFiltrados.length,
-      quantidadePagos,
-      quantidadePendentes,
-    };
-  }, [movimentosFiltrados]);
+  return {
+    receitas,
+    pendentes,
+    total: receitas + pendentes, // <- aqui adiciona total
+    quantidade: movimentosFiltrados.length,
+    quantidadePagos,
+    quantidadePendentes,
+  };
+}, [movimentosFiltrados]);
 
   // ------------------- HANDLERS -------------------
   const handleAtualizarDados = async () => {
@@ -417,7 +415,7 @@ const FiltrosSection = ({
               >
                 <option value="todos">Todos os status</option>
                 <option value="Pago">Pagos</option>
-                <option value="pendente">Pendentes</option>
+                <option value="Pendente">Pendentes</option>
               </select>
             </div>
           </div>
@@ -452,44 +450,81 @@ const FiltrosSection = ({
   );
 };
 
-const ListaMovimentos = ({ 
-  movimentos, 
-  ordenacao, 
-  onLimparFiltros, 
-  filtrosAtivos 
-}: { 
+const ListaMovimentos = ({
+  movimentos,
+  ordenacao,
+  onLimparFiltros,
+  filtrosAtivos,
+}: {
   movimentos: IFinanceiro[];
   ordenacao: string;
   onLimparFiltros: () => void;
   filtrosAtivos: boolean;
 }) => (
   <div className="flex-1 flex flex-col min-h-0">
-    <div className="flex-1 bg-gradient-to-br from-[#111111] to-[#1A1A1A] border border-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col backdrop-blur-sm overflow-hidden">
+    <div className="flex-1 bg-gradient-to-br from-[#111111] to-[#1A1A1A] border border-gray-800 rounded-2xl p-5 shadow-2xl flex flex-col backdrop-blur-md overflow-hidden">
+      
+      {/* Caso não haja movimentos */}
       {movimentos.length === 0 ? (
-        <NenhumMovimento 
-          filtrosAtivos={filtrosAtivos}
-          onLimparFiltros={onLimparFiltros}
-        />
+        <NenhumMovimento filtrosAtivos={filtrosAtivos} onLimparFiltros={onLimparFiltros} />
       ) : (
         <>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4 sm:mb-6 flex-shrink-0">
-            <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+          {/* Header da lista */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-5 flex-shrink-0">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
               <span className="text-[#FFA500]">📋</span>
-              Movimentos
-              <span className="text-xs sm:text-sm text-gray-400 bg-gray-800/50 px-2 py-1 rounded-lg ml-2">
+              Movimentos Financeiros
+              <span className="text-sm text-gray-400 bg-gray-800/50 px-2 py-1 rounded-lg ml-2">
                 {movimentos.length}
               </span>
             </h3>
-            <div className="text-xs sm:text-sm text-gray-400">
+            <div className="text-sm text-gray-400">
               Ordenado por: {ordenacao === "data" ? "Data" : ordenacao === "valor" ? "Valor" : "Cliente"}
             </div>
           </div>
 
+          {/* Lista de movimentos */}
           <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar scroll-smooth max-h-[calc(100vh-400px)]">
             <div className="grid gap-3 sm:gap-4 pb-2">
-              {movimentos.map((mov) => (
-                <FinanceiroCard key={mov.id} mov={mov} />
-              ))}
+              {movimentos.map((mov) => {
+                const status = mov.status ?? "-";
+                const statusColor =
+                  status.toLowerCase() === "pago"
+                    ? "bg-green-600/20 text-green-400"
+                    : status.toLowerCase() === "pendente"
+                    ? "bg-yellow-600/20 text-yellow-400"
+                    : "bg-gray-600/20 text-gray-400";
+
+                return (
+                  <div
+                    key={mov.id}
+                    className="flex flex-col sm:flex-row justify-between items-start sm:items-center 
+                               bg-gradient-to-r from-[#1F1F1F] to-[#121212] border border-gray-700 rounded-2xl 
+                               p-4 sm:p-5 shadow-md hover:shadow-lg hover:from-[#2A2A2A] hover:to-[#161616] 
+                               transition-all duration-300"
+                  >
+                    {/* Cliente e valor */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                      <span className="text-gray-300 font-medium">{mov.clienteNome || "-"}</span>
+                      <span className="text-white font-bold">
+                        {mov.valor != null
+                          ? mov.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                          : "-"}
+                      </span>
+                    </div>
+
+                    {/* Status e data */}
+                    <div className="flex items-center gap-3 mt-2 sm:mt-0">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}>
+                        {status}
+                      </span>
+                      <span className="text-gray-400 text-xs sm:text-sm">
+                        {mov.criadoEm ? new Date(mov.criadoEm).toLocaleDateString("pt-BR") : "-"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </>
@@ -499,7 +534,6 @@ const ListaMovimentos = ({
 );
 
 // ========== COMPONENTES AUXILIARES ==========
-
 const ResumoCard = ({
   emoji,
   titulo,

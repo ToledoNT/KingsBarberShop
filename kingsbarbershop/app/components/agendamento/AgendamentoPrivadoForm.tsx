@@ -120,23 +120,22 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
 
   const handleServicoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
-
     const selectedServico = procedimentosBarbeiro.find((p) => p.id === selectedId);
 
     setLocalForm({ ...localForm, servico: selectedId });
 
     if (selectedServico) {
       setProcedimentoNome(`${selectedServico.label} - R$ ${selectedServico.valor}`);
-
       localStorage.setItem(
         "selectedServico",
         JSON.stringify({ label: selectedServico.label, valor: selectedServico.valor })
       );
     } else {
-    setProcedimentoNome('');
+      setProcedimentoNome('');
       localStorage.removeItem("selectedServico");
     }
   };
+
   return (
     <div className="w-full flex justify-center mt-6 mb-12 px-2 sm:px-4">
       <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-4 sm:p-6 md:p-8 bg-[#1B1B1B] rounded-2xl shadow-xl">
@@ -190,6 +189,7 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
             />
           </div>
 
+          {/* SELECT HORÁRIOS ORDENADOS */}
           <Select
             name="hora"
             value={localForm.hora || ""}
@@ -197,20 +197,17 @@ const AgendamentoPrivadoForm: React.FC<AgendamentoPrivadoFormProps> = ({
             options={(() => {
               if (!localForm.data) return [];
               const dataString = localForm.data.toISOString().split("T")[0];
-              const horariosFiltrados = horarios.filter(
-                (h) => h.disponivel && h.data === dataString
-              );
-
-              const mapHorarios = new Map<string, { value: string; label: string }>();
-              horariosFiltrados.forEach((h) => {
-                if (h.id)
-                  mapHorarios.set(h.id, {
-                    value: h.id,
-                    label: h.label ?? `${h.inicio} - ${h.fim}`,
-                  });
-              });
-
-              return Array.from(mapHorarios.values());
+              return horarios
+                .filter((h) => h.disponivel && h.data === dataString)
+                .sort((a, b) => {
+                  const [aH, aM] = a.inicio.split(":").map(Number);
+                  const [bH, bM] = b.inicio.split(":").map(Number);
+                  return aH * 60 + aM - (bH * 60 + bM);
+                })
+                .map((h) => ({
+                  value: h.id!,
+                  label: h.label ?? `${h.inicio} - ${h.fim}`,
+                }));
             })()}
             placeholder="Selecione o horário"
             required

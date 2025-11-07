@@ -3,38 +3,55 @@
 import { useMemo } from "react";
 import MetricCard from "./MetricaCard";
 import MiniMetricCard from "./MiniMetricCard";
-import { MetricasMensaisProps } from "@/app/interfaces/dashboardInterface";
+
+interface MetricasMensaisProps {
+  agendamentosMes?: number;
+  faturamentoMensal?: number;
+  ticketMedio?: number;
+  taxaSucesso?: number; // ✅ Adicionada
+  taxaCancelamento?: number;
+  totalConcluidos?: number;
+  totalNaoCompareceu?: number;
+  totalCancelados?: number;
+  totalAgendados?: number;
+  // Recebendo metrics inteiro para fallback
+  metrics?: {
+    mensal?: {
+      agendamentosMes?: number;
+    };
+  };
+}
 
 const MetricasMensais = ({
-  agendamentosMes,
-  faturamentoMensal,
-  ticketMedio,
-  taxaConclusao,
-  taxaCancelamento,
-  totalConcluidos,
-  totalNaoCompareceu,
-  totalCancelados,
-  totalAgendados,
+  agendamentosMes = 0,
+  faturamentoMensal = 0,
+  ticketMedio = 0,
+  taxaSucesso = 0, // ✅ valor padrão
+  taxaCancelamento = 0,
+  totalConcluidos = 0,
+  totalNaoCompareceu = 0,
+  totalCancelados = 0,
+  totalAgendados = 0,
   metrics
 }: MetricasMensaisProps) => {
 
   const agendamentosProgress = useMemo(() => ({
     value: agendamentosMes,
-    max: metrics.agendamentosMensais,
+    max: metrics?.mensal?.agendamentosMes ?? agendamentosMes,
     color: "bg-gradient-to-r from-purple-400 to-indigo-400"
-  }), [agendamentosMes, metrics.agendamentosMensais]);
+  }), [agendamentosMes, metrics?.mensal?.agendamentosMes]);
 
   const faturamentoFormatado = useMemo(
-    () => `R$ ${faturamentoMensal.toLocaleString('pt-BR')}`,
+    () => `R$ ${faturamentoMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     [faturamentoMensal]
   );
 
   const ticketFormatado = useMemo(
-    () => `Ticket: R$ ${ticketMedio}`,
+    () => `Ticket médio: R$ ${ticketMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     [ticketMedio]
   );
 
-  const taxaConclusaoStr = useMemo(() => `${taxaConclusao}%`, [taxaConclusao]);
+  const taxaSucessoStr = useMemo(() => `${taxaSucesso}%`, [taxaSucesso]);
   const taxaCancelamentoStr = useMemo(() => `${taxaCancelamento}%`, [taxaCancelamento]);
 
   return (
@@ -48,11 +65,12 @@ const MetricasMensais = ({
           </span>
         </h2>
 
+        {/* Cards principais */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <MetricCard
             title="📅 AGENDAMENTOS MÊS"
             value={agendamentosMes}
-            subtitle={`${metrics.agendamentosMensais} previstos`}
+            subtitle={`${metrics?.mensal?.agendamentosMes ?? agendamentosMes} previstos`}
             icon="📋"
             color="purple"
             progress={agendamentosProgress}
@@ -70,7 +88,7 @@ const MetricasMensais = ({
 
           <MetricCard
             title="✅ TAXA DE SUCESSO"
-            value={taxaConclusaoStr}
+            value={taxaSucessoStr} // ✅ usar taxaSucesso
             subtitle={`${totalConcluidos} concluídos`}
             icon="🚀"
             color="green"
@@ -87,12 +105,12 @@ const MetricasMensais = ({
           />
         </div>
 
-        {/* Métricas Secundárias Mensais */}
+        {/* Métricas secundárias */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
           <MiniMetricCard
             title="Concluídos"
             value={totalConcluidos}
-            subtitle={`${taxaConclusaoStr} de sucesso`}
+            subtitle={`${taxaSucessoStr} de sucesso`} // ✅ usar taxaSucesso
             icon="✅"
             color="green"
             period="monthly"
@@ -115,15 +133,17 @@ const MetricasMensais = ({
             color="red"
             period="monthly"
           />
+<MiniMetricCard
+  title="Agendados"
+  value={agendamentosMes ?? 0} 
+  subtitle="Em aberto"
+  icon="⏳"
+  color="blue"
+  period="monthly"
+/>
 
-          <MiniMetricCard
-            title="Agendados"
-            value={totalAgendados}
-            subtitle="Em aberto"
-            icon="⏳"
-            color="blue"
-            period="monthly"
-          />
+
+
         </div>
       </div>
     </div>

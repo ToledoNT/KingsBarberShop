@@ -29,18 +29,12 @@ export function useAgendamentosAdmin() {
   const [procedimentosBarbeiro, setProcedimentosBarbeiro] = useState<Procedimento[]>([]);
   const [form, setForm] = useState<FormState>({ barbeiro: "", data: null });
 
-  // ---------------------------
-  // Fetch inicial
-  // ---------------------------
   useEffect(() => {
     fetchAgendamentos();
     fetchBarbeiros();
     fetchTodosHorarios();
   }, []);
 
-  // ---------------------------
-  // Funções de Fetch
-  // ---------------------------
   const fetchBarbeiros = async () => {
     const response = await profissionalService.fetchProfissionais();
     if (Array.isArray(response)) {
@@ -64,9 +58,6 @@ export function useAgendamentosAdmin() {
     setHorarios(data || []);
   };
 
-  // ---------------------------
-  // Buscar dados do barbeiro (horários e procedimentos)
-  // ---------------------------
   type BarbeiroDadosResponse = {
     barbeiroId: string;
     horarios: HorarioDisponivel[];
@@ -102,24 +93,19 @@ export function useAgendamentosAdmin() {
     setForm((prev) => ({ ...prev, hora: "", servico: "" }));
   };
 
-  // ---------------------------
-  // CRUD Agendamentos
-  // ---------------------------
-const addAgendamento = async (a: Agendamento) => {
-  try {
-    const newA = await appointmentService.createAppointment(a);
+  const addAgendamento = async (a: Agendamento) => {
+    try {
+      const newA = await appointmentService.createAppointment(a);
 
-    if (newA && newA.id) {
-      setAgendamentos((prev) => [...prev, newA]);
-    } else {
-      console.error("Erro: Agendamento retornado incompleto ou inválido");
+      if (newA && newA.id) {
+        setAgendamentos((prev) => [...prev, newA]);
+      } else {
+        console.error("Erro: Agendamento retornado incompleto ou inválido");
+      }
+    } catch (error) {
+      console.error("Erro ao criar agendamento:", error);
     }
-  } catch (error) {
-    console.error("Erro ao criar agendamento:", error);
-    console.error("Erro desconhecido ao criar agendamento");
-  }
-};
-
+  };
 
   const updateAgendamento = async (id: string, a: Partial<Agendamento>) => {
     await appointmentService.updateAppointment(id, a);
@@ -133,9 +119,6 @@ const addAgendamento = async (a: Agendamento) => {
     setAgendamentos((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // ---------------------------
-  // CRUD Horários
-  // ---------------------------
   const addHorario = async (h: Partial<HorarioDisponivel>) => {
     const response = await horarioService.createHorarioDisponivel(h);
 
@@ -163,6 +146,20 @@ const addAgendamento = async (a: Agendamento) => {
     return response;
   };
 
+  // ✅ Adicionado apenas isto:
+  const createHorarioIndividual = async (h: Partial<HorarioDisponivel>) => {
+    try {
+      const response = await horarioService.createHorarioIndividual(h);
+      const horarioCriado = Array.isArray(response) ? response[0] : response;
+      setHorarios((prev) => [...prev, horarioCriado]);
+      return horarioCriado;
+    } catch (error: any) {
+      console.error("❌ Erro ao criar horário individual:", error);
+      throw new Error(error.message || "Erro ao criar horário individual");
+    }
+  };
+  // ✅ Fim da adição
+
   const removeHorario = async (id: string) => {
     await horarioService.deleteHorarioDisponivel(id);
     setHorarios((prev) => prev.filter((h) => h.id !== id));
@@ -180,31 +177,18 @@ const addAgendamento = async (a: Agendamento) => {
     );
   };
 
-  // ---------------------------
-  // Atualizar apenas status
-  // ---------------------------
-// ---------------------------
-// Atualizar apenas status
-// ---------------------------
-const handleUpdateStatusAgendamento = async (id: string, status: StatusAgendamento) => {
-  try {
-    // Envia só id + status
-    const payload = { id, status };
-    await appointmentService.updateAppointment(id, payload);
+  const handleUpdateStatusAgendamento = async (id: string, status: StatusAgendamento) => {
+    try {
+      const payload = { id, status };
+      await appointmentService.updateAppointment(id, payload);
+      setAgendamentos((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, status } : a))
+      );
+    } catch (err) {
+      console.error("Erro ao atualizar status:", err);
+    }
+  };
 
-    // Atualiza localmente apenas o status
-    setAgendamentos(prev =>
-      prev.map(a => a.id === id ? { ...a, status } : a)
-    );
-  } catch (err) {
-    console.error("Erro ao atualizar status:", err);
-  }
-};
-
-
-  // ---------------------------
-  // Retorno do hook
-  // ---------------------------
   return {
     agendamentos,
     addAgendamento,
@@ -222,6 +206,7 @@ const handleUpdateStatusAgendamento = async (id: string, status: StatusAgendamen
     fetchAgendamentos,
     fetchTodosHorarios,
     fetchBarbeiroDados,
-    handleUpdateStatusAgendamento, 
+    handleUpdateStatusAgendamento,
+    createHorarioIndividual, // ✅ apenas essa linha foi adicionada no return
   };
 }

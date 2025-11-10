@@ -33,7 +33,121 @@ const mapToAgendamento = (a: Agendamento): Agendamento => ({
   atualizadoEm: a.atualizadoEm || new Date().toISOString(),
 });
 
-// ------------------- COMPONENT -------------------
+// ------------------- COMPONENTE TIMEPICKER PROFISSIONAL -------------------
+interface TimePickerProps {
+  value: string;
+  onChange: (time: string) => void;
+  label: string;
+}
+
+const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, label }) => {
+  const [hours, setHours] = useState("08");
+  const [minutes, setMinutes] = useState("00");
+
+  // Gerar horas de 00 até 23
+  const hoursOptions = Array.from({ length: 24 }, (_, i) => 
+    i.toString().padStart(2, '0')
+  );
+
+  // Gerar minutos de 00 até 59
+  const minutesOptions = Array.from({ length: 60 }, (_, i) => 
+    i.toString().padStart(2, '0')
+  );
+
+  useEffect(() => {
+    if (value) {
+      const [h, m] = value.split(':');
+      setHours(h || '08');
+      setMinutes(m || '00');
+    }
+  }, [value]);
+
+  const handleHoursChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newHours = e.target.value;
+    setHours(newHours);
+    onChange(`${newHours}:${minutes}`);
+  };
+
+  const handleMinutesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newMinutes = e.target.value;
+    setMinutes(newMinutes);
+    onChange(`${hours}:${newMinutes}`);
+  };
+
+  const formatTimeLabel = (time: string) => {
+    if (!time) return "Selecione o horário";
+    const [h, m] = time.split(':');
+    return `${h}h${m}m`;
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-300">
+        {label}
+      </label>
+      
+      <div className="flex gap-2">
+        {/* Seletor de Horas */}
+        <div className="flex-1">
+          <div className="relative">
+            <select
+              value={hours}
+              onChange={handleHoursChange}
+              className="w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm backdrop-blur-sm appearance-none cursor-pointer"
+            >
+              {hoursOptions.map((hour) => (
+                <option key={hour} value={hour}>
+                  {hour}h
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Separador */}
+        <div className="flex items-center justify-center">
+          <span className="text-gray-400 font-bold">:</span>
+        </div>
+
+        {/* Seletor de Minutos */}
+        <div className="flex-1">
+          <div className="relative">
+            <select
+              value={minutes}
+              onChange={handleMinutesChange}
+              className="w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm backdrop-blur-sm appearance-none cursor-pointer"
+            >
+              {minutesOptions.map((minute) => (
+                <option key={minute} value={minute}>
+                  {minute}m
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Preview do horário selecionado */}
+      {value && (
+        <div className="text-xs text-gray-400 text-center mt-1">
+          Selecionado: <span className="text-[#FFA500] font-medium">{formatTimeLabel(value)}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ------------------- COMPONENT PRINCIPAL -------------------
 export default function CriarAgendamentoPage() {
   const router = useRouter();
 
@@ -54,6 +168,7 @@ export default function CriarAgendamentoPage() {
     form,
     setForm,
     fetchBarbeiros,
+    createHorarioIndividual, // ✅ JÁ ESTÁ NO SEU HOOK
   } = useAgendamentosAdmin();
 
   const [collapsed, setCollapsed] = useState(false);
@@ -68,6 +183,12 @@ export default function CriarAgendamentoPage() {
     status: StatusAgendamento.AGENDADO as "todos" | StatusAgendamento,
     data: "",
     barbeiro: "todos",
+  });
+
+  // Estados para horário individual
+  const [novoHorario, setNovoHorario] = useState({
+    inicio: "",
+    fim: "",
   });
 
   // Estados para notificações e confirmações
@@ -205,6 +326,44 @@ export default function CriarAgendamentoPage() {
       notify("Erro ao gerar horários. Verifique o console.", "error");
     } finally {
       setGerandoHorarios(false);
+    }
+  };
+
+  const handleAddHorarioIndividual = async () => {
+    if (!form.barbeiro || !form.data || !novoHorario.inicio || !novoHorario.fim) {
+      notify("Preencha barbeiro, data e horários.", "warning");
+      return;
+    }
+
+    // Validar se horário de início é antes do fim
+    if (novoHorario.inicio >= novoHorario.fim) {
+      notify("Horário de início deve ser anterior ao horário de fim.", "warning");
+      return;
+    }
+
+    const barbeiro = barbeiros.find((b) => b.id === form.barbeiro);
+    if (!barbeiro) {
+      notify("Barbeiro não encontrado.", "error");
+      return;
+    }
+
+    const dataParaBackend = new Date(form.data).toISOString().split("T")[0];
+
+    try {
+      // ✅ AGORA USANDO O HOOK CORRETO QUE JÁ EXISTE
+      await createHorarioIndividual({
+        profissional: barbeiro,
+        data: dataParaBackend,
+        inicio: novoHorario.inicio,
+        fim: novoHorario.fim,
+        disponivel: true,
+      });
+
+      setNovoHorario({ inicio: "", fim: "" });
+      notify("Horário individual adicionado com sucesso!", "success");
+    } catch (err) {
+      console.error("Erro ao adicionar horário individual:", err);
+      notify("Erro ao adicionar horário individual.", "error");
     }
   };
 
@@ -362,75 +521,179 @@ export default function CriarAgendamentoPage() {
 
                 {/* Conteúdo Horários */}
                 {tabs.horario === "criar" && (
-                  <div className="bg-gradient-to-br from-[#1A1A1A] to-[#2A2A2A] border border-gray-700 rounded-xl p-4 sm:p-6 lg:p-8 backdrop-blur-sm">
-                    <h3 className="text-lg sm:text-xl font-semibold text-[#FFA500] mb-4 sm:mb-6 flex items-center gap-2">
-                      <span>🆕</span>
-                      Criar Novos Horários
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-300">
-                          Profissional
-                        </label>
-                        <select
-                          value={form.barbeiro || ""}
-                          onChange={(e) =>
-                            setForm((prev) => ({ ...prev, barbeiro: e.target.value }))
-                          }
-                          className="w-full p-3 sm:p-4 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm sm:text-base backdrop-blur-sm"
-                        >
-                          <option value="">Selecione um profissional</option>
-                          {barbeiros.map((b) => (
-                            <option key={b.id} value={b.id}>
-                              {b.nome}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                  <div className="space-y-6">
+                    {/* Seção de horário individual */}
+                    <div className="bg-gradient-to-br from-[#1A1A1A] to-[#2A2A2A] border border-gray-700 rounded-xl p-4 sm:p-6 backdrop-blur-sm">
+                      <h3 className="text-lg sm:text-xl font-semibold text-[#FFA500] mb-4 flex items-center gap-2">
+                        <span>🕒</span>
+                        Criar Horário Individual
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-300">
+                            Profissional
+                          </label>
+                          <select
+                            value={form.barbeiro || ""}
+                            onChange={(e) =>
+                              setForm((prev) => ({ ...prev, barbeiro: e.target.value }))
+                            }
+                            className="w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm backdrop-blur-sm"
+                          >
+                            <option value="">Selecione um profissional</option>
+                            {barbeiros.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.nome}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
 
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-300">
-                          Data
-                        </label>
-                        <input
-                          type="date"
-                          value={form.data ? new Date(form.data).toISOString().split("T")[0] : ""}
-                          onChange={(e) =>
-                            setForm((prev) => ({ ...prev, data: new Date(e.target.value) }))
-                          }
-                          className="w-full p-3 sm:p-4 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm sm:text-base backdrop-blur-sm"
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-300">
+                            Data
+                          </label>
+                          <input
+                            type="date"
+                            value={form.data ? new Date(form.data).toISOString().split("T")[0] : ""}
+                            onChange={(e) =>
+                              setForm((prev) => ({ ...prev, data: new Date(e.target.value) }))
+                            }
+                            className="w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm backdrop-blur-sm"
+                          />
+                        </div>
+
+                        {/* Timepicker profissional para Início */}
+                        <TimePicker
+                          value={novoHorario.inicio}
+                          onChange={(time) => setNovoHorario({ ...novoHorario, inicio: time })}
+                          label="Hora Início"
+                        />
+
+                        {/* Timepicker profissional para Fim */}
+                        <TimePicker
+                          value={novoHorario.fim}
+                          onChange={(time) => setNovoHorario({ ...novoHorario, fim: time })}
+                          label="Hora Fim"
                         />
                       </div>
-                      <div className="space-y-2 flex flex-col justify-end relative">
+
+                      {/* Visualização do horário selecionado */}
+                      {(novoHorario.inicio || novoHorario.fim) && (
+                        <div className="mt-4 p-3 bg-gray-800/30 rounded-lg border border-gray-600">
+                          <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+                            <span className="text-gray-300 text-sm">Horário selecionado:</span>
+                            <div className="flex items-center gap-2">
+                              <span className="bg-[#FFA500] text-black px-3 py-1 rounded-lg font-medium text-sm">
+                                {novoHorario.inicio ? formatTimeForDisplay(novoHorario.inicio) : "--:--"}
+                              </span>
+                              <span className="text-gray-400">→</span>
+                              <span className="bg-[#FFA500] text-black px-3 py-1 rounded-lg font-medium text-sm">
+                                {novoHorario.fim ? formatTimeForDisplay(novoHorario.fim) : "--:--"}
+                              </span>
+                            </div>
+                          </div>
+                          {novoHorario.inicio && novoHorario.fim && (
+                            <div className="mt-2 text-xs text-gray-400 text-center sm:text-left">
+                              Duração: {calculateDuration(novoHorario.inicio, novoHorario.fim)}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex justify-end mt-4">
+                        <Button
+                          onClick={handleAddHorarioIndividual}
+                          variant="primary"
+                          className="px-6 py-3 text-sm font-medium bg-[#FFA500] hover:bg-[#ffb733] text-black"
+                          disabled={!form.barbeiro || !form.data || !novoHorario.inicio || !novoHorario.fim || novoHorario.inicio >= novoHorario.fim}
+                        >
+                          <span className="mr-2">➕</span>
+                          Adicionar Horário Individual
+                        </Button>
+                      </div>
+                      
+                      {(!form.barbeiro || !form.data) && (
+                        <div className="text-xs text-gray-400 bg-gray-800/30 p-3 rounded-lg border border-gray-700 mt-4">
+                          ⚠️ Selecione um profissional e uma data para adicionar horários
+                        </div>
+                      )}
+                      
+                      {novoHorario.inicio && novoHorario.fim && novoHorario.inicio >= novoHorario.fim && (
+                        <div className="text-xs text-red-400 bg-red-900/20 p-3 rounded-lg border border-red-700 mt-4">
+                          ⚠️ O horário de início deve ser anterior ao horário de fim
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Seção de geração automática de horários */}
+                    <div className="bg-gradient-to-br from-[#1A1A1A] to-[#2A2A2A] border border-gray-700 rounded-xl p-4 sm:p-6 backdrop-blur-sm">
+                      <h3 className="text-lg sm:text-xl font-semibold text-[#FFA500] mb-4 flex items-center gap-2">
+                        <span>🔧</span>
+                        Gerar Horários Automaticamente
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-300">
+                            Profissional
+                          </label>
+                          <select
+                            value={form.barbeiro || ""}
+                            onChange={(e) =>
+                              setForm((prev) => ({ ...prev, barbeiro: e.target.value }))
+                            }
+                            className="w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm backdrop-blur-sm"
+                          >
+                            <option value="">Selecione um profissional</option>
+                            {barbeiros.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.nome}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-300">
+                            Data
+                          </label>
+                          <input
+                            type="date"
+                            value={form.data ? new Date(form.data).toISOString().split("T")[0] : ""}
+                            onChange={(e) =>
+                              setForm((prev) => ({ ...prev, data: new Date(e.target.value) }))
+                            }
+                            className="w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm backdrop-blur-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end mt-4">
                         <Button
                           onClick={handleGenerateHorarios}
                           variant="primary"
-                          className="px-6 py-3 text-sm sm:text-base font-medium w-full justify-center"
+                          className="px-6 py-3 text-sm font-medium w-full md:w-auto justify-center"
                           disabled={!form.barbeiro || !form.data || gerandoHorarios}
                         >
                           {gerandoHorarios ? (
                             <Loader size={24} color="#FFA500" />
                           ) : (
                             <>
-                              <span className="mr-2">⚡</span>
-                              Gerar Horários
+                              <span className="mr-2">🔧</span>
+                              Gerar Horários Automaticamente
                             </>
                           )}
                         </Button>
-                        {/* Loader full screen */}
-                        {gerandoHorarios && (
-                          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                            <Loader size={60} color="#FFA500" />
-                          </div>
-                        )}
                       </div>
+                      
+                      {(!form.barbeiro || !form.data) && (
+                        <div className="text-xs text-gray-400 bg-gray-800/30 p-3 rounded-lg border border-gray-700 mt-4">
+                          ⚠️ Selecione um profissional e uma data para gerar horários
+                        </div>
+                      )}
                     </div>
-                    {(!form.barbeiro || !form.data) && (
-                      <div className="text-xs text-gray-400 bg-gray-800/30 p-3 rounded-lg border border-gray-700 mt-4">
-                        ⚠️ Selecione um profissional e uma data para gerar horários
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -546,13 +809,13 @@ export default function CriarAgendamentoPage() {
                               }
                               className="w-full p-3 sm:p-4 rounded-xl bg-gray-900/50 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#FFA500]/50 focus:border-[#FFA500] transition-all duration-300 text-sm sm:text-base backdrop-blur-sm"
                             >
-                               <option value="todos">Todos os status</option>
-        <option value={StatusAgendamento.PENDENTE}>Pendente</option>
-        <option value={StatusAgendamento.AGENDADO}>Agendado</option>
-        <option value={StatusAgendamento.EM_ANDAMENTO}>Em Andamento</option>
-        <option value={StatusAgendamento.CONCLUIDO}>Concluído</option>
-        <option value={StatusAgendamento.CANCELADO}>Cancelado</option>
-        <option value={StatusAgendamento.NAO_COMPARECEU}>Não Compareceu</option>
+                              <option value="todos">Todos os status</option>
+                              <option value={StatusAgendamento.PENDENTE}>Pendente</option>
+                              <option value={StatusAgendamento.AGENDADO}>Agendado</option>
+                              <option value={StatusAgendamento.EM_ANDAMENTO}>Em Andamento</option>
+                              <option value={StatusAgendamento.CONCLUIDO}>Concluído</option>
+                              <option value={StatusAgendamento.CANCELADO}>Cancelado</option>
+                              <option value={StatusAgendamento.NAO_COMPARECEU}>Não Compareceu</option>
                             </select>
                           </div>
 
@@ -610,6 +873,13 @@ export default function CriarAgendamentoPage() {
         </div>
       </div>
 
+      {/* Loader full screen */}
+      {gerandoHorarios && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Loader size={60} color="#FFA500" />
+        </div>
+      )}
+
       {/* Estilos customizados para scrollbar */}
       <style jsx global>{`
         .scrollbar-thin::-webkit-scrollbar {
@@ -634,4 +904,27 @@ export default function CriarAgendamentoPage() {
       `}</style>
     </>
   );
+}
+
+// Função auxiliar para calcular duração
+function calculateDuration(start: string, end: string): string {
+  const startTime = new Date(`2000-01-01T${start}`);
+  const endTime = new Date(`2000-01-01T${end}`);
+  const diff = endTime.getTime() - startTime.getTime();
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  
+  if (hours === 0) {
+    return `${minutes}min`;
+  } else if (minutes === 0) {
+    return `${hours}h`;
+  } else {
+    return `${hours}h${minutes}min`;
+  }
+}
+
+// Função para formatar hora para display
+function formatTimeForDisplay(time: string): string {
+  const [hours, minutes] = time.split(':');
+  return `${hours}:${minutes}`;
 }

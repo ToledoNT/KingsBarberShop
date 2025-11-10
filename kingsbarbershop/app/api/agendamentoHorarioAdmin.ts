@@ -68,4 +68,37 @@ export class HorarioService {
       return null;
     }
   }
+
+   async createHorarioIndividual(
+  horario: Partial<HorarioDisponivel>
+): Promise<HorarioDisponivel> {
+  try {
+    const res = await api.post<ResponseTemplateInterface<HorarioDisponivel>>(
+      "/horario/create-individual",
+      horario
+    );
+
+    const data = res.data as ResponseTemplateInterface<HorarioDisponivel>;
+
+    if (!data.status) {
+      throw new Error(data.message || "Falha ao criar horário individual");
+    }
+
+    const horarioCriado =
+      (data.data as any)?.data || data.data || (res.data as any)?.data?.data;
+
+    if (!horarioCriado) {
+      throw new Error("Horário criado inválido ou vazio.");
+    }
+
+    return horarioCriado;
+  } catch (err: any) {
+    console.error("❌ Erro ao criar horário individual:", err);
+    const msg =
+      err?.response?.data?.message ||
+      err?.message ||
+      "Erro desconhecido ao criar horário individual";
+    throw new Error(msg);
+    }
+  }
 }

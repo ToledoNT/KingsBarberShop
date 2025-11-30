@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ProductService } from "../api/produtosApi";
-import { Produto } from "../interfaces/produtosInterface";
+import { IProduto } from "../interfaces/produtosInterface";
 
 const produtoService = new ProductService();
 
 export function useProdutos() {
-  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [produtos, setProdutos] = useState<IProduto[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const mounted = useRef(true);
 
-  // 📌 Buscar todos os produtos (MOVIDO PARA CIMA)
+  // 📌 Buscar todos os produtos
   const fetchProdutos = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -36,7 +36,7 @@ export function useProdutos() {
   }, [fetchProdutos]);
 
   // 📌 Adicionar novo produto
-  const addProduto = useCallback(async (p: Omit<Produto, "id">) => {
+  const addProduto = useCallback(async (p: Omit<IProduto, "id">) => {
     setLoading(true);
     setError(null);
     try {
@@ -54,29 +54,31 @@ export function useProdutos() {
   }, []);
 
   // 📌 Atualizar produto
-  const updateProduto = useCallback(
-    async (id: string, p: Omit<Produto, "id">) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const atualizado = await produtoService.updateProduto(id, p);
-        if (atualizado && mounted.current) {
-          setProdutos((prev) =>
-            prev.map((item) => (item.id === id ? atualizado : item))
-          );
-        }
-        return atualizado;
-      } catch (err: any) {
-        console.error(err);
-        if (mounted.current)
-          setError(err.message || "Erro ao atualizar produto");
-        return null;
-      } finally {
-        if (mounted.current) setLoading(false);
+const updateProduto = useCallback(
+  async (id: string, p: Partial<Omit<IProduto, "id">>) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const atualizado = await produtoService.updateProduto(id, p);
+      if (atualizado && mounted.current) {
+        setProdutos((prev) =>
+          prev.map((item) => (item.id === id ? atualizado : item))
+        );
       }
-    },
-    []
-  );
+      return atualizado;
+    } catch (err: any) {
+      console.error(err);
+      if (mounted.current)
+        setError(err.message || "Erro ao atualizar produto");
+      throw err;
+    } finally {
+      if (mounted.current) setLoading(false);
+    }
+  },
+  []
+);
+
 
   // 📌 Remover produto
   const removeProduto = useCallback(async (id: string) => {

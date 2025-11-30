@@ -1,11 +1,14 @@
-export interface Produto {
+export interface IProduto {
   id: string;
   nome: string;
-  descricao?: string;
-  preco: number;
-  quantidade: number;
   categoria?: string;
-  ativo: boolean;
-  criadoEm: string;   // ou Date, se preferir
-  atualizadoEm: string; // ou Date
+  preco?: number;
+  estoque?: number;
+  descricao?: string;
+  criadoEm?: string;
+  atualizadoEm?: string;
+  quantidade?: number;
+  ativo?: boolean;
+  status?: "disponivel" | "vendido" | "consumido" | "pendente";
+  usuarioPendente?: string; // Novo campo
 }

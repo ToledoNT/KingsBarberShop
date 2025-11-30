@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, DollarSign, Users, LogOut } from "lucide-react";
+import { Home, Calendar, DollarSign, Users, LogOut, Package } from "lucide-react";
 import { useAuth } from "@/app/hook/useAuthLoginAdmin";
 
 export type MenuItem = {
@@ -18,6 +18,9 @@ const menuItems: MenuItem[] = [
   { name: "Agendamentos", icon: Calendar, path: "/agendamentos" },
   { name: "Financeiro", icon: DollarSign, path: "/financeiro", adminOnly: true },
   { name: "Profissionais", icon: Users, path: "/profissionais" },
+
+  // ⭐ ITEM NOVO — Produtos (livre, qualquer usuário acessa)
+  { name: "Produtos", icon: Package, path: "/produtos" },
 ];
 
 export default function Sidebar({
@@ -32,14 +35,13 @@ export default function Sidebar({
   const { logout } = useAuth();
   const pathname = usePathname();
 
-  // ------------------- Check User Role -------------------
   useEffect(() => {
     const checkUserRole = () => {
       try {
         const userData = localStorage.getItem("user");
         if (userData) {
           const parsedUser = JSON.parse(userData);
-          setRole(parsedUser.role.toLowerCase()); // converte para minúsculo
+          setRole(parsedUser.role.toLowerCase());
         }
       } catch (err) {
         console.error("Erro ao verificar role:", err);
@@ -51,7 +53,6 @@ export default function Sidebar({
     return () => window.removeEventListener("storage", checkUserRole);
   }, []);
 
-  // ------------------- Filter Menu -------------------
   const filteredMenuItems = useMemo(() => {
     return menuItems.filter((item) => {
       if (item.adminOnly && role !== "admin") return false;
@@ -60,7 +61,6 @@ export default function Sidebar({
     });
   }, [role]);
 
-  // ------------------- Handlers -------------------
   const handleLogout = useCallback(async () => {
     try {
       await logout();
@@ -77,7 +77,6 @@ export default function Sidebar({
     if (window.innerWidth < 768) setMobileOpen(false);
   }, []);
 
-  // ------------------- Render -------------------
   return (
     <>
       {mobileOpen && (
@@ -99,7 +98,11 @@ export default function Sidebar({
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-bold text-lg">Sistema</span>
-              <span className={`text-xs mt-1 ${role === "admin" ? "text-green-400" : "text-blue-400"}`}>
+              <span
+                className={`text-xs mt-1 ${
+                  role === "admin" ? "text-green-400" : "text-blue-400"
+                }`}
+              >
                 {role === "admin" ? "Administrador" : "Usuário"}
               </span>
             </div>

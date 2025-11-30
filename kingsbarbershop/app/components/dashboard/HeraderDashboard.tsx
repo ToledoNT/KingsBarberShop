@@ -1,5 +1,6 @@
 import { HeaderDashboardProps } from "@/app/interfaces/dashboardInterface";
 import { useMemo } from "react";
+import { RefreshCcw } from "lucide-react";
 
 const HeaderDashboard = ({ onRefresh }: HeaderDashboardProps) => {
   const hoje = useMemo(
@@ -16,9 +17,11 @@ const HeaderDashboard = ({ onRefresh }: HeaderDashboardProps) => {
     <>
       {/* Header */}
       <div className="mb-6 flex-shrink-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#FFA500] mb-1">
-          Dashboard
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#FFA500] mb-1 flex items-center gap-2 sm:gap-3">
+          <span className="text-3xl sm:text-4xl">📊</span>
+          <span className="truncate">Dashboard</span>
         </h1>
+
         <p className="text-gray-400 text-sm sm:text-base">
           Visão completa do seu negócio em tempo real
         </p>
@@ -36,7 +39,8 @@ const HeaderDashboard = ({ onRefresh }: HeaderDashboardProps) => {
               onClick={onRefresh}
               className="px-4 py-3 bg-[#FFA500] text-black rounded-lg font-semibold hover:bg-[#FF8C00] transition-colors flex items-center gap-2 whitespace-nowrap text-sm"
             >
-              🔄 Atualizar
+              <RefreshCcw className="w-4 h-4" />
+              Atualizar
             </button>
           </div>
         </div>

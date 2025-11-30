@@ -2,13 +2,15 @@
   "name": "kingsbarbershop",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev -H 0.0.0.0 -p 3000 --turbopack",
-    "build": "next build --turbopack --no-lint",
-    "export": "next export",
-    "start": "next start",
-    "lint": "eslint"
-  },
+"scripts": {
+  "dev": "next dev -H 0.0.0.0 -p 3000 --turbopack",
+  "build": "next build --turbopack --no-lint",
+  "export": "next export",
+  "start": "next start",
+  "lint": "eslint",
+  "dev:https": "next dev --https --ssl-cert ./certs/localhost+2.pem --ssl-key ./certs/localhost+2-key.pem",
+  "dev:https-simple": "next dev --https"
+},
   "dependencies": {
     "@prisma/client": "^6.17.0",
     "axios": "^1.12.2",

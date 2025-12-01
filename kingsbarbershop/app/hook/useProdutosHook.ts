@@ -8,95 +8,102 @@ export function useProdutos() {
   const [produtos, setProdutos] = useState<IProduto[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
   const mounted = useRef(true);
 
-  // 📌 Buscar todos os produtos
-  const fetchProdutos = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await produtoService.fetchProdutos();
-      if (mounted.current) setProdutos(data);
-    } catch (err: any) {
-      console.error(err);
-      if (mounted.current)
-        setError(err.message || "Erro ao carregar produtos");
-    } finally {
-      if (mounted.current) setLoading(false);
+const fetchProdutos = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const data = await produtoService.fetchProdutos(); // data já tem o status correto do backend
+
+    if (mounted.current) {
+      setProdutos(
+        data.map((p: IProduto) => ({
+          ...p,
+        }))
+      );
     }
-  }, []);
+  } catch (err: any) {
+    console.error(err);
+    if (mounted.current) setError(err.message || "Erro ao carregar produtos");
+  } finally {
+    if (mounted.current) setLoading(false);
+  }
+}, []);
+
 
   useEffect(() => {
     mounted.current = true;
-    fetchProdutos(); 
-    return () => {
-      mounted.current = false;
-    };
+    fetchProdutos();
+    return () => { mounted.current = false; };
   }, [fetchProdutos]);
 
-  // 📌 Adicionar novo produto
   const addProduto = useCallback(async (p: Omit<IProduto, "id">) => {
     setLoading(true);
     setError(null);
     try {
+      const preco = p.preco ?? 0;
+      const estoque = p.estoque ?? 0;
+      if (preco <= 0) throw new Error("O preço deve ser maior que zero");
+      if (estoque <= 0) throw new Error("O estoque deve ser maior que zero");
+
       const novo = await produtoService.createProduto(p);
       if (mounted.current) setProdutos((prev) => [...prev, novo]);
       return novo;
     } catch (err: any) {
       console.error(err);
-      if (mounted.current)
-        setError(err.message || "Erro ao adicionar produto");
+      if (mounted.current) setError(err.message || "Erro ao adicionar produto");
       throw err;
-    } finally {
-      if (mounted.current) setLoading(false);
-    }
+    } finally { if (mounted.current) setLoading(false); }
   }, []);
 
-  // 📌 Atualizar produto
-const updateProduto = useCallback(
-  async (id: string, p: Partial<Omit<IProduto, "id">>) => {
+  const updateProduto = useCallback(async (id: string, p: Partial<Omit<IProduto, "id">>) => {
     setLoading(true);
     setError(null);
-
     try {
+      if (p.preco !== undefined && (p.preco ?? 0) <= 0)
+        throw new Error("O preço deve ser maior que zero");
+      if (p.estoque !== undefined && (p.estoque ?? 0) <= 0)
+        throw new Error("O estoque deve ser maior que zero");
+
       const atualizado = await produtoService.updateProduto(id, p);
       if (atualizado && mounted.current) {
-        setProdutos((prev) =>
-          prev.map((item) => (item.id === id ? atualizado : item))
-        );
+        setProdutos((prev) => prev.map((item) => item.id === id ? atualizado : item));
       }
       return atualizado;
     } catch (err: any) {
       console.error(err);
-      if (mounted.current)
-        setError(err.message || "Erro ao atualizar produto");
+      if (mounted.current) setError(err.message || "Erro ao atualizar produto");
       throw err;
-    } finally {
-      if (mounted.current) setLoading(false);
-    }
-  },
-  []
-);
+    } finally { if (mounted.current) setLoading(false); }
+  }, []);
 
+const updateStatusProduto = useCallback(async (produto: IProduto, novoStatus: IProduto["status"]) => {
+  if (produto.status === "vendido") return; 
 
-  // 📌 Remover produto
+  const dadosParaEnvio: Partial<IProduto> = {
+    ...produto,
+    status: novoStatus, 
+    usuarioPendente: novoStatus === "pendente" ? produto.usuarioPendente || "" : ""
+  };
+
+  const atualizado = await updateProduto(produto.id, dadosParaEnvio);
+  if (atualizado && mounted.current) {
+    setProdutos((prev) => prev.map(p => p.id === produto.id ? atualizado : p));
+  }
+}, [updateProduto]);
+
   const removeProduto = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
     try {
       await produtoService.deleteProduto(id);
-      if (mounted.current) {
-        setProdutos((prev) => prev.filter((item) => item.id !== id));
-      }
+      if (mounted.current) setProdutos((prev) => prev.filter((item) => item.id !== id));
     } catch (err: any) {
       console.error(err);
-      if (mounted.current)
-        setError(err.message || "Erro ao remover produto");
+      if (mounted.current) setError(err.message || "Erro ao remover produto");
       throw err;
-    } finally {
-      if (mounted.current) setLoading(false);
-    }
+    } finally { if (mounted.current) setLoading(false); }
   }, []);
 
   return {
@@ -105,6 +112,7 @@ const updateProduto = useCallback(
     updateProduto,
     removeProduto,
     fetchProdutos,
+    updateStatusProduto,
     loading,
     error,
   };

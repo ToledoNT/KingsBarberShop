@@ -10,5 +10,5 @@ export interface IProduto {
   quantidade?: number;
   ativo?: boolean;
   status?: "disponivel" | "vendido" | "consumido" | "pendente";
-  usuarioPendente?: string; // Novo campo
+  usuarioPendente?: string;
 }

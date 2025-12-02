@@ -260,32 +260,31 @@ export default function ProdutosPage() {
     }
   };
 
-const handleExcluir = async (id: string) => {
-  const produto = produtos.find(p => p.id === id);
-  if (!produto) return;
+  const handleExcluir = async (id: string) => {
+    const produto = produtos.find(p => p.id === id);
+    if (!produto) return;
 
-  // 🔥 NOVO — bloqueia exclusão se estiver pendente
-  if (produto.status === "pendente") {
-    notify("Só é possível excluir quando o produto estiver pago.", "warning");
-    return;
-  }
+    // 🔥 NOVO — bloqueia exclusão se estiver pendente
+    if (produto.status === "pendente") {
+      notify("Só é possível excluir quando o produto estiver pago.", "warning");
+      return;
+    }
 
-  confirm(
-    "Excluir Produto",
-    `Tem certeza que deseja excluir o produto "${produto.nome}"?`,
-    async () => {
-      try {
-        await removeProduto(id);
-        notify("Produto deletado", "success");
-        setTimeout(() => fetchProdutos(), 500);
-      } catch {
-        notify("Erro ao deletar produto", "error");
-      }
-    },
-    "error"
-  );
-};
-
+    confirm(
+      "Excluir Produto",
+      `Tem certeza que deseja excluir o produto "${produto.nome}"?`,
+      async () => {
+        try {
+          await removeProduto(id);
+          notify("Produto deletado", "success");
+          setTimeout(() => fetchProdutos(), 500);
+        } catch {
+          notify("Erro ao deletar produto", "error");
+        }
+      },
+      "error"
+    );
+  };
 
   const handleConfirmarStatus = async () => {
     const { produto, novoStatus, usuarioPendente } = statusModal;
@@ -319,6 +318,11 @@ const handleExcluir = async (id: string) => {
       case "pendente": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
       default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
+  };
+
+  // ---------- Ajuste do mostrarAlerta ----------
+  const mostrarAlerta = (mensagem: string, callback: () => void) => {
+    confirm("Alterar Status", mensagem, callback, "info");
   };
 
   if (loadingAuth || loading) return <Loader />;
@@ -380,6 +384,7 @@ const handleExcluir = async (id: string) => {
                 getStatusColor={getStatusColor}
                 onLimparFiltros={limparFiltros}
                 filtrosAtivos={!!(filtros.busca || filtros.categoria !== "todos")}
+                mostrarAlerta={mostrarAlerta} // ✅ passa para lista
               />
 
             </div>

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-interface";
-import { Produto } from "../interfaces/produtosInterface";
+import { IProduto } from "../interfaces/produtosInterface";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -9,9 +9,9 @@ const api = axios.create({
 });
 
 export class ProductService {
-  async fetchProdutos(): Promise<Produto[]> {
+  async fetchProdutos(): Promise<IProduto[]> {
     try {
-      const res = await api.get<ResponseTemplateInterface<Produto[]>>("/produto/getall");
+      const res = await api.get<ResponseTemplateInterface<IProduto[]>>("/produto/getall");
       console.log(res)
       return res.data.data || [];
     } catch (err) {
@@ -20,9 +20,9 @@ export class ProductService {
     }
   }
 
-  async createProduto(data: Partial<Produto>): Promise<Produto> {
+  async createProduto(data: Partial<IProduto>): Promise<IProduto> {
     try {
-      const res = await api.post<ResponseTemplateInterface<Produto>>("/produto/create", data);
+      const res = await api.post<ResponseTemplateInterface<IProduto>>("/produto/create", data);
       if (!res.data.status) throw new Error(res.data.message);
       return res.data.data;
     } catch (err: any) {
@@ -31,9 +31,9 @@ export class ProductService {
     }
   }
 
-  async updateProduto(id: string, data: Partial<Produto>): Promise<Produto | null> {
+  async updateProduto(id: string, data: Partial<IProduto>): Promise<IProduto | null> {
     try {
-      const res = await api.put<ResponseTemplateInterface<Produto>>(`/produto/update/${id}`, data);
+      const res = await api.put<ResponseTemplateInterface<IProduto>>(`/produto/update/${id}`, data);
       if (!res.data.status) throw new Error(res.data.message);
       return res.data.data;
     } catch (err: any) {
@@ -52,9 +52,9 @@ export class ProductService {
     }
   }
 
-  async fetchProdutoById(id: string): Promise<Produto | null> {
+  async fetchProdutoById(id: string): Promise<IProduto | null> {
     try {
-      const res = await api.get<ResponseTemplateInterface<Produto>>(`/produto/${id}`);
+      const res = await api.get<ResponseTemplateInterface<IProduto>>(`/produto/${id}`);
       return res.data.data || null;
     } catch (err) {
       console.error("Erro ao buscar produto por ID:", err);

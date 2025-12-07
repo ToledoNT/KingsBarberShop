@@ -1,40 +1,44 @@
 💈 BarberApp
 
-Aplicação web completa para gerenciamento de agendamentos e administração de uma barbearia — rápida, moderna e dividida em Frontend (Next.js) e Backend (Express.js).
+Sistema completo para gerenciamento de agendamentos e administração de barbearias — moderno, rápido e dividido em Frontend (Next.js) e Backend (Express.js).
 
-🚀 Sobre o projeto
+🚀 Sobre o Projeto
 
-O BarberApp foi desenvolvido para facilitar o agendamento de serviços de barbearia de forma totalmente online.
-Clientes podem marcar horários facilmente, enquanto administradores possuem um painel completo para gerenciar a barbearia.
+O BarberApp foi criado para oferecer uma experiência totalmente digital no agendamento de serviços de barbearia.
+Clientes podem marcar horários com facilidade, enquanto administradores acessam um painel poderoso para gerenciar serviços, clientes e a agenda diária.
 
-A aplicação é dividida em:
+A aplicação é separada em dois módulos:
 
 Frontend: Next.js + React
 
-Backend: Node.js + Express + Prisma + MongoDB (ou seu banco atual)
+Backend: Node.js + Express + Prisma + MongoDB
 
 ⚙️ Funcionalidades
 🧔 Agendamentos para Clientes
 
-Página pública moderna para escolher serviço, data e horário.
+Página pública moderna e responsiva.
 
-Processo simples e rápido para criação de agendamentos.
+Seleção de serviço, data e horário.
+
+Processo rápido e intuitivo.
 
 🔐 Administração Protegida
 
-Sistema de login exclusivo para administradores.
+Login exclusivo para administradores.
 
-Sessão segura com JWT ou cookies (dependendo de como está usado).
+Sessão segura (JWT / Cookies).
 
-📊 Painel Administrativo
+Controle total das informações internas.
 
-Visualização de todos os agendamentos.
+📊 Painel Administrativo Completo
 
-Controle de status: Pendente, Confirmado, Cancelado, etc.
+Lista de todos os agendamentos.
 
-Gerenciamento de profissionais, serviços e clientes.
+Atualização de status: Pendente, Confirmado, Cancelado, etc.
 
-Dashboard com informações essenciais.
+Gerenciamento de serviços, profissionais e clientes.
+
+Dashboard com dados essenciais do dia.
 
 🛠️ Tecnologias Utilizadas
 Frontend (Next.js)
@@ -55,20 +59,20 @@ Node.js + Express
 
 Prisma ORM
 
-Banco de dados (MongoDB)
+MongoDB
 
-JWT para autenticação
+JWT Authentication
 
-CORS configurado
+CORS Configurado
 
 Rotas REST organizadas
 
 📦 Estrutura do Projeto
 /BarberApp
-  ├── frontend/        → Projeto Next.js
-  └── backend/         → Projeto Express.js
+ ├── frontend/   → Aplicação Next.js
+ └── backend/    → API Express.js
 
-▶️ Como rodar o projeto
+▶️ Como Rodar o Projeto
 Frontend
 cd frontend
 npm install
@@ -79,5 +83,8 @@ cd backend
 npm install
 npm run dev
 
-🌐 Funcionalidades em Produção
-https://www.kingsbarber.com.br/
+🌐 Produção
+
+A aplicação está rodando em produção em:
+
+🔗 https://www.kingsbarber.com.br/

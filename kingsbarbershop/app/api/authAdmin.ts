@@ -2,10 +2,11 @@ import { LoginData, LoginResult, VerifyTokenResponse } from "@/app/interfaces/lo
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true,  
+  baseURL: "https://www.kingsbarber.com.br/api",
   headers: { "Content-Type": "application/json" },
+  withCredentials: true,
 });
+
 
 export class AuthService {
   // ---------------- LOGIN ----------------

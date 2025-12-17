@@ -3,10 +3,11 @@ import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-in
 import { IProduto } from "../interfaces/produtosInterface";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: "https://www.kingsbarber.com.br/api",
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
 });
+
 
 export class ProductService {
   async fetchProdutos(): Promise<IProduto[]> {

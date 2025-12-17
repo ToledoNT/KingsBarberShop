@@ -3,11 +3,11 @@ import { HorarioDisponivel } from "../interfaces/agendamentoInterface";
 import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-interface";
 
 const api = axios.create({
-baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: "https://www.kingsbarber.com.br/api",
   headers: { "Content-Type": "application/json" },
-    withCredentials: true, 
-
+  withCredentials: true,
 });
+
 
 export class HorarioService {
   async fetchAllHorarios(): Promise<HorarioDisponivel[]> {

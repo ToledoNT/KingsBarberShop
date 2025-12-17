@@ -4,10 +4,10 @@ import { ResponseTemplateInterface } from "@/app/interfaces/response-templete-in
 import { HorarioDisponivel, Procedimento } from "@/app/interfaces/agendamentoInterface";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: "https://www.kingsbarber.com.br/api",
   headers: { "Content-Type": "application/json" },
   timeout: 10000,
-  withCredentials: true, // ✅ importante para cookies HTTP-only
+  withCredentials: true,
 });
 
 export class ProfissionalService {

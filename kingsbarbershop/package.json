@@ -2,15 +2,14 @@
   "name": "kingsbarbershop",
   "version": "0.1.0",
   "private": true,
-"scripts": {
-  "dev": "next dev -H 0.0.0.0 -p 3000 --turbopack",
-  "build": "next build --turbopack --no-lint",
-  "export": "next export",
-  "start": "next start",
-  "lint": "eslint",
-  "dev:https": "next dev --https --ssl-cert ./certs/localhost+2.pem --ssl-key ./certs/localhost+2-key.pem",
-  "dev:https-simple": "next dev --https"
-},
+  "scripts": {
+    "dev": "next dev -H 0.0.0.0 -p 3000",
+    "build": "next build --no-lint",
+    "start": "next start -p 3000",
+    "lint": "eslint",
+    "dev:https": "next dev --https --ssl-cert ./certs/localhost+2.pem --ssl-key ./certs/localhost+2-key.pem",
+    "dev:https-simple": "next dev --https"
+  },
   "dependencies": {
     "@prisma/client": "^6.17.0",
     "axios": "^1.12.2",
@@ -22,8 +21,8 @@
     "lucide-react": "^0.545.0",
     "next": "15.5.4",
     "react": "19.1.0",
-    "react-datepicker": "^8.7.0",
     "react-dom": "19.1.0",
+    "react-datepicker": "^8.7.0",
     "react-hot-toast": "^2.6.0",
     "react-icons": "^5.5.0",
     "react-time-picker": "^8.0.2"

@@ -78,7 +78,7 @@ const fetchProdutos = useCallback(async () => {
     } finally { if (mounted.current) setLoading(false); }
   }, []);
 
-const updateStatusProduto = useCallback(async (produto: IProduto, novoStatus: IProduto["status"]) => {
+  const updateStatusProduto = useCallback(async (produto: IProduto, novoStatus: IProduto["status"]) => {
   if (produto.status === "vendido") return; 
 
   const dadosParaEnvio: Partial<IProduto> = {

@@ -3,9 +3,9 @@ import { IFinanceiro } from "../interfaces/financeiroInterface";
 import { ResponseTemplateInterface } from "../interfaces/response-templete-interface";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true, // envia cookies automaticamente
+  baseURL: "https://www.kingsbarber.com.br/api",
   headers: { "Content-Type": "application/json" },
+  withCredentials: true,
 });
 
 export class FinanceiroService {

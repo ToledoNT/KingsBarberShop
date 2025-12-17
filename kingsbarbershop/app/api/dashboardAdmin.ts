@@ -2,13 +2,14 @@ import axios from "axios";
 import { DashboardResponse } from "@/app/interfaces/dashboardInterface";
 
 export class DashboardService {
-  private api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
-    withCredentials: true,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+private api = axios.create({
+  baseURL: "https://www.kingsbarber.com.br/api", 
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 
   async getDashboardData(): Promise<DashboardResponse> {
     try {

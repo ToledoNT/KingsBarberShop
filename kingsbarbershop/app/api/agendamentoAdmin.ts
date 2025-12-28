@@ -8,7 +8,6 @@ const api = axios.create({
   withCredentials: true,
 });
 
-
 export class AppointmentService {
   async fetchAppointments(): Promise<Agendamento[]> {
     try {

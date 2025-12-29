@@ -7,7 +7,6 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
 });
-
 export class AppointmentService {
   async fetchAppointments(): Promise<Agendamento[]> {
     try {

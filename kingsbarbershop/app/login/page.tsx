@@ -12,14 +12,21 @@ const FullScreenLoader = () => (
 );
 
 const MAX_ATTEMPTS = 5;
-const LOCKOUT_TIME = 5 * 60 * 1000;
+const LOCKOUT_TIME = 5 * 60 * 1000; // 5 minutos
 
 export default function LoginPage() {
   const { login, loading } = useAuth();
 
-  const [form, setForm] = useState<LoginData>({ email: "", password: "" });
-  const [touched, setTouched] = useState({ email: false, password: false });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [form, setForm] = useState<LoginData>({
+    email: "",
+    password: "",
+  });
+
+  const [touched, setTouched] = useState({
+    email: false,
+    password: false,
+  });
+
   const [attempts, setAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +37,9 @@ export default function LoginPage() {
      FOCUS
   ========================= */
   useEffect(() => {
-    if (!lockoutUntil) emailRef.current?.focus();
+    if (!lockoutUntil) {
+      emailRef.current?.focus();
+    }
   }, [lockoutUntil]);
 
   /* =========================
@@ -40,7 +49,9 @@ export default function LoginPage() {
     const savedAttempts = localStorage.getItem("loginAttempts");
     const savedLockout = localStorage.getItem("loginLockout");
 
-    if (savedAttempts) setAttempts(Number(savedAttempts));
+    if (savedAttempts) {
+      setAttempts(Number(savedAttempts));
+    }
 
     if (savedLockout && Date.now() < Number(savedLockout)) {
       setLockoutUntil(Number(savedLockout));
@@ -50,14 +61,15 @@ export default function LoginPage() {
     }
   }, []);
 
-  const isLocked = lockoutUntil !== null && Date.now() < lockoutUntil;
+  const isLocked =
+    lockoutUntil !== null && Date.now() < lockoutUntil;
 
   const minutesLeft = lockoutUntil
     ? Math.ceil((lockoutUntil - Date.now()) / 1000 / 60)
     : 0;
 
   /* =========================
-     ATTEMPTS
+     ATTEMPTS CONTROL
   ========================= */
   const failAttempt = () => {
     const next = attempts + 1;
@@ -80,10 +92,12 @@ export default function LoginPage() {
   /* =========================
      VALIDATION
   ========================= */
-  const isValid = () =>
-    form.email.includes("@") &&
-    form.email.includes(".") &&
-    form.password.length >= 6;
+  const isValid = () => {
+    if (!form.email.includes("@")) return false;
+    if (!form.email.includes(".")) return false;
+    if (form.password.length < 6) return false;
+    return true;
+  };
 
   /* =========================
      SUBMIT
@@ -93,7 +107,9 @@ export default function LoginPage() {
     setTouched({ email: true, password: true });
 
     if (isLocked) {
-      setError(`Muitas tentativas. Tente novamente em ${minutesLeft} minutos.`);
+      setError(
+        `Muitas tentativas. Tente novamente em ${minutesLeft} minutos.`
+      );
       return;
     }
 
@@ -102,7 +118,6 @@ export default function LoginPage() {
       return;
     }
 
-    setIsSubmitting(true);
     setError(null);
 
     try {
@@ -112,12 +127,10 @@ export default function LoginPage() {
       });
 
       successAttempt();
-      // 🚀 redirect é responsabilidade do HOOK
-    } catch {
+      // ✅ redirect acontece dentro do hook
+    } catch (err: any) {
       failAttempt();
       setError("Usuário ou senha inválidos");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -125,27 +138,38 @@ export default function LoginPage() {
      INPUT HANDLERS
   ========================= */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+
     if (error) setError(null);
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    setTouched((prev) => ({ ...prev, [e.target.name]: true }));
+    setTouched((prev) => ({
+      ...prev,
+      [e.target.name]: true,
+    }));
   };
-//aa
-  const disabled = loading || isSubmitting || isLocked;
+
+  const disabled = loading || isLocked;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0D0D0D] via-[#1A1A2E] to-[#16213E] p-4">
-      {(loading || isSubmitting) && <FullScreenLoader />}
+      {loading && <FullScreenLoader />}
 
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-md bg-[#1B1B1B]/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl space-y-6"
       >
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-[#FFA500]">Acesso Restrito</h1>
-          <p className="text-gray-400 text-sm">Faça login para continuar</p>
+          <h1 className="text-3xl font-bold text-[#FFA500]">
+            Acesso Restrito
+          </h1>
+          <p className="text-gray-400 text-sm">
+            Faça login para continuar
+          </p>
         </div>
 
         {error && (
@@ -189,12 +213,18 @@ export default function LoginPage() {
             className="w-full p-4 rounded-xl bg-[#2A2A2A] text-white"
           />
           {touched.password && form.password.length < 6 && (
-            <p className="text-xs text-red-400">Mínimo 6 caracteres</p>
+            <p className="text-xs text-red-400">
+              Mínimo 6 caracteres
+            </p>
           )}
         </div>
 
         <Button type="submit" disabled={disabled} fullWidth>
-          {isLocked ? "Bloqueado" : isSubmitting ? "Entrando..." : "Entrar"}
+          {isLocked
+            ? "Bloqueado"
+            : loading
+            ? "Entrando..."
+            : "Entrar"}
         </Button>
       </form>
     </div>

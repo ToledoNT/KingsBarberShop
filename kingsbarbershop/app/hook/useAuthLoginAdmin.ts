@@ -12,22 +12,29 @@ export function useAuth(): UseAuthReturn {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 // ------------------- LOGIN -------------------
 const login = async (data: LoginData): Promise<void> => {
+  if (loading) return; // evita clique duplo
+
   setLoading(true);
   setError(null);
 
   try {
     const user: LoginResult = await authService.login(data);
 
+    // 🔹 padroniza storage
     localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("role", user.role);
+    localStorage.setItem("userRole", user.role);
 
     setIsAuthenticated(true);
+
+router.push("/agendamentos");
   } catch (err: any) {
     const message =
       err?.response?.data?.message || err.message || "Erro ao logar";
+
     setError(message);
     setIsAuthenticated(false);
-    throw err; 
+
+    throw err; // mantém compatibilidade com o LoginPage
   } finally {
     setLoading(false);
   }

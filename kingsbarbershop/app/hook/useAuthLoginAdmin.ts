@@ -10,30 +10,28 @@ export function useAuth(): UseAuthReturn {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+// ------------------- LOGIN -------------------
+const login = async (data: LoginData): Promise<void> => {
+  setLoading(true);
+  setError(null);
 
-  // ------------------- LOGIN -------------------
-  const login = async (data: LoginData) => {
-    setLoading(true);
-    setError(null);
+  try {
+    const user: LoginResult = await authService.login(data);
 
-    try {
-      const user: LoginResult = await authService.login(data);
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("role", user.role);
 
-      // Armazenando os dados do usuário no localStorage
-      localStorage.setItem("user", JSON.stringify(user)); 
-      localStorage.setItem("userRole", user.role); 
-
-
-      setIsAuthenticated(true);
-      router.push("/dashboard");
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err.message || "Erro ao logar";
-      setError(message);
-      setIsAuthenticated(false);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setIsAuthenticated(true);
+  } catch (err: any) {
+    const message =
+      err?.response?.data?.message || err.message || "Erro ao logar";
+    setError(message);
+    setIsAuthenticated(false);
+    throw err; 
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ------------------- LOGOUT -------------------
   const logout = async () => {

@@ -503,15 +503,25 @@ const ListaMovimentos = ({
                                p-4 sm:p-5 shadow-md hover:shadow-lg hover:from-[#2A2A2A] hover:to-[#161616] 
                                transition-all duration-300"
                   >
-                    {/* Cliente e valor */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
-                      <span className="text-gray-300 font-medium">{mov.clienteNome || "-"}</span>
-                      <span className="text-white font-bold">
-                        {mov.valor != null
-                          ? mov.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-                          : "-"}
-                      </span>
-                    </div>
+                    {/* Cliente, profissional e valor */}
+<div className="flex flex-col gap-1 sm:gap-0">
+  <span className="text-gray-300 font-medium">
+    👤 {mov.clienteNome}
+  </span>
+
+  {mov.profissionalNome && (
+    <span className="text-gray-400 text-sm">
+      ✂️ {mov.profissionalNome}
+    </span>
+  )}
+
+  <span className="text-white font-bold mt-1 sm:mt-0">
+    {mov.valor.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    })}
+  </span>
+</div>
 
                     {/* Status e data */}
                     <div className="flex items-center gap-3 mt-2 sm:mt-0">

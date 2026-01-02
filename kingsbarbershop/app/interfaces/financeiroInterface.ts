@@ -7,10 +7,15 @@ export interface FinanceiroCardProps {
 export interface IFinanceiro {
   id?: string;
   agendamentoId: string;
-  clienteNome: string;        
+
+  clienteNome: string;
+  profissionalNome?: string; 
+
   procedimento?: string;
   valor: number;
-  status?: "Pago" | "pendente"; 
+
+  status?: "Pago" | "pendente";
+
   criadoEm?: Date;
   atualizadoEm?: Date;
 }

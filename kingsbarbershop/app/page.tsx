@@ -40,7 +40,7 @@ export default function Home() {
   const [formKey, setFormKey] = useState(0);
   const [showForm, setShowForm] = useState(false);
 
-  const whatsappNumber = "+555491405959";
+  const whatsappNumber = "+555499229241";
   const whatsappMessage = "Olá! Gostaria de mais informações sobre os serviços da barbearia.";
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
 
